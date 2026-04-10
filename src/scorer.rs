@@ -129,13 +129,6 @@ static SOCIAL_PROFILE_RE: LazyLock<fancy_regex::Regex> = LazyLock::new(|| {
     .unwrap_or_else(|_| fancy_regex::Regex::new("a]^").expect("infallible fallback"))
 });
 
-/// CSS selector for elements that indicate real content and should be
-/// protected from removal.
-pub const CONTENT_ELEMENT_SELECTOR: &str = concat!(
-    "math, .katex, .MathJax, mjx-container, ",
-    "code, pre, table, img, blockquote, figure"
-);
-
 const FOOTNOTE_REF_SELECTOR: &str = "a[href^=\"#fn\"], sup.reference";
 
 const FOOTNOTE_LIST_SELECTOR: &str = "ol.footnotes, div.footnotes";
@@ -284,23 +277,6 @@ fn score_footnotes_and_tables(html: &Html, node_id: NodeId) -> f64 {
 
 /// Find the best-scoring element from a list, above
 /// `min_score` threshold.
-/// Fix #14: on tie, pick the last element (>= instead of >).
-#[must_use]
-pub fn find_best_element(html: &Html, elements: &[NodeId], min_score: f64) -> Option<NodeId> {
-    let mut best: Option<(NodeId, f64)> = None;
-    for &id in elements {
-        let score = score_element(html, id);
-        if score < min_score {
-            continue;
-        }
-        let dominated = best.is_some_and(|(_, best_score)| score < best_score);
-        if !dominated {
-            best = Some((id, score));
-        }
-    }
-    best.map(|(id, _)| id)
-}
-
 /// Check if an element is likely content (should be preserved).
 pub fn is_likely_content(html: &Html, node_id: NodeId) -> bool {
     // Cheap attribute checks first

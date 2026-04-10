@@ -133,7 +133,7 @@ fn html_strips_non_allowed_attributes() {
 #[test]
 fn text_strips_all_html_tags() {
     let result = parse(SAMPLE_HTML, &default_opts());
-    let text = decruft::dom::strip_html_tags(&result.content);
+    let text = decruft::strip_html_tags(&result.content);
 
     assert!(!text.contains("<p>"), "text should not contain <p>");
     assert!(
@@ -147,7 +147,7 @@ fn text_strips_all_html_tags() {
 #[test]
 fn text_preserves_actual_content() {
     let result = parse(SAMPLE_HTML, &default_opts());
-    let text = decruft::dom::strip_html_tags(&result.content);
+    let text = decruft::strip_html_tags(&result.content);
 
     assert!(text.contains("first paragraph"));
     assert!(text.contains("formatted"));

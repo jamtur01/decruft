@@ -776,27 +776,6 @@ pub const FOOTNOTE_LIST_SELECTORS: &[&str] = &[
     "#footnotes",
 ];
 
-/// CSS selectors for content elements that should be preserved.
-pub const CONTENT_ELEMENT_SELECTOR: &[&str] = &[
-    "math",
-    "[data-mathml]",
-    ".katex",
-    ".katex-mathml",
-    ".katex-display",
-    ".MathJax",
-    ".MathJax_Display",
-    ".MathJax_SVG",
-    "mjx-container",
-    "pre",
-    "code",
-    "table",
-    "img",
-    "picture",
-    "video",
-    "blockquote",
-    "figure",
-];
-
 /// Pre-compiled CSS selectors from `EXACT_SELECTORS`, paired with
 /// the original string for debug output. Built once and reused
 /// across all cleanup passes.
@@ -804,30 +783,6 @@ pub static COMPILED_EXACT_SELECTORS: LazyLock<Vec<(&str, Selector)>> = LazyLock:
     EXACT_SELECTORS
         .iter()
         .filter_map(|s| Selector::parse(s).ok().map(|sel| (*s, sel)))
-        .collect()
-});
-
-/// Pre-compiled CSS selectors for footnote inline references.
-pub static COMPILED_FOOTNOTE_INLINE: LazyLock<Vec<Selector>> = LazyLock::new(|| {
-    FOOTNOTE_INLINE_REFERENCES
-        .iter()
-        .filter_map(|s| Selector::parse(s).ok())
-        .collect()
-});
-
-/// Pre-compiled CSS selectors for footnote list containers.
-pub static COMPILED_FOOTNOTE_LISTS: LazyLock<Vec<Selector>> = LazyLock::new(|| {
-    FOOTNOTE_LIST_SELECTORS
-        .iter()
-        .filter_map(|s| Selector::parse(s).ok())
-        .collect()
-});
-
-/// Pre-compiled CSS selectors for content element preservation.
-pub static COMPILED_CONTENT_ELEMENTS: LazyLock<Vec<Selector>> = LazyLock::new(|| {
-    CONTENT_ELEMENT_SELECTOR
-        .iter()
-        .filter_map(|s| Selector::parse(s).ok())
         .collect()
 });
 
@@ -968,10 +923,5 @@ mod tests {
     fn footnote_selectors_not_empty() {
         assert!(!FOOTNOTE_INLINE_REFERENCES.is_empty());
         assert!(!FOOTNOTE_LIST_SELECTORS.is_empty());
-    }
-
-    #[test]
-    fn content_element_selector_not_empty() {
-        assert!(!CONTENT_ELEMENT_SELECTOR.is_empty());
     }
 }

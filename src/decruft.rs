@@ -29,6 +29,31 @@ struct ParseResult {
 }
 
 /// Parse HTML and extract clean, readable content.
+///
+/// Runs the full extraction pipeline: metadata extraction, site-specific
+/// extractors, content scoring, and multi-stage cleanup with progressive
+/// relaxation when too little content is found.
+///
+/// # Arguments
+///
+/// * `html_str` - Raw HTML string to parse.
+/// * `options` - Configuration for the extraction pipeline. Use
+///   [`DecruftOptions::default()`] for sensible defaults.
+///
+/// # Returns
+///
+/// A [`DecruftResult`] containing the cleaned content, metadata, and
+/// optionally Markdown and debug information.
+///
+/// # Examples
+///
+/// ```
+/// use decruft::{parse, DecruftOptions};
+///
+/// let html = "<html><body><article><p>Hello world</p></article></body></html>";
+/// let result = parse(html, &DecruftOptions::default());
+/// assert!(result.content.contains("Hello world"));
+/// ```
 #[must_use]
 pub fn parse(html_str: &str, options: &DecruftOptions) -> DecruftResult {
     let start = Instant::now();

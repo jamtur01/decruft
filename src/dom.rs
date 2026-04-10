@@ -444,17 +444,6 @@ pub fn self_or_ancestor_matches(html: &Html, node_id: NodeId, selector_str: &str
     false
 }
 
-/// Count descendants of `node_id` matching a CSS selector.
-#[must_use]
-pub fn count_descendants_matching(html: &Html, node_id: NodeId, selector_str: &str) -> usize {
-    let Ok(sel) = Selector::parse(selector_str) else {
-        return 0;
-    };
-    html.select(&sel)
-        .filter(|el| is_ancestor(html, el.id(), node_id))
-        .count()
-}
-
 /// Collect href attribute values from descendant `<a>` elements.
 #[must_use]
 pub fn collect_link_hrefs(html: &Html, node_id: NodeId) -> Vec<String> {

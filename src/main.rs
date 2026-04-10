@@ -143,7 +143,7 @@ fn main() {
             write_stdout(md);
         }
         OutputFormat::Text => {
-            let text = decruft::dom::strip_html_tags(&result.content);
+            let text = decruft::strip_html_tags(&result.content);
             write_stdout(text.trim());
         }
     }

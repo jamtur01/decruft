@@ -128,9 +128,9 @@ pub struct Removal {
     pub text: String,
 }
 
-/// Metadata extracted from the page.
+/// Metadata extracted from the page (internal representation).
 #[derive(Debug, Clone, Default, Serialize)]
-pub struct Metadata {
+pub(crate) struct Metadata {
     pub title: String,
     pub description: String,
     pub domain: String,

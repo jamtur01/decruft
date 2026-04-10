@@ -23,26 +23,51 @@
 //! assert!(result.content.contains("The content."));
 //! assert!(!result.content.contains("Copyright"));
 //! ```
+//!
+//! Or even simpler with [`parse_with_defaults`]:
+//!
+//! ```
+//! let html = "<html><body><article><p>Hello</p></article></body></html>";
+//! let result = decruft::parse_with_defaults(html);
+//! assert!(result.content.contains("Hello"));
+//! ```
 
-pub mod callouts;
-pub mod cleanup;
-pub mod code_blocks;
-pub mod content;
+pub(crate) mod callouts;
+pub(crate) mod cleanup;
+pub(crate) mod code_blocks;
+pub(crate) mod content;
 mod decruft;
-pub mod dom;
-pub mod extractors;
-pub mod footnotes;
-pub mod math;
-pub mod metadata;
-pub mod metadata_block;
-pub mod noscript;
-pub mod patterns;
-pub mod schema_org;
-pub mod scorer;
-pub mod selectors;
-pub mod standardize;
-pub mod streaming_ssr;
-pub mod types;
+pub(crate) mod dom;
+pub(crate) mod extractors;
+pub(crate) mod footnotes;
+pub(crate) mod math;
+pub(crate) mod metadata;
+pub(crate) mod metadata_block;
+pub(crate) mod noscript;
+pub(crate) mod patterns;
+pub(crate) mod schema_org;
+pub(crate) mod scorer;
+pub(crate) mod selectors;
+pub(crate) mod standardize;
+pub(crate) mod streaming_ssr;
+pub(crate) mod types;
 
 pub use decruft::parse;
-pub use types::{DecruftOptions, DecruftResult};
+pub use dom::strip_html_tags;
+pub use types::{DebugInfo, DecruftOptions, DecruftResult, MetaTag, Removal};
+
+/// Parse HTML with default options.
+///
+/// Equivalent to `parse(html, &DecruftOptions::default())`.
+///
+/// # Examples
+///
+/// ```
+/// let html = "<html><body><article><p>Hello</p></article></body></html>";
+/// let result = decruft::parse_with_defaults(html);
+/// assert!(result.content.contains("Hello"));
+/// ```
+#[must_use]
+pub fn parse_with_defaults(html: &str) -> DecruftResult {
+    parse(html, &DecruftOptions::default())
+}

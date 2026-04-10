@@ -31,19 +31,19 @@ decruft = "0.1"
 ## CLI
 
 ```sh
-# From stdin
-curl -sL https://example.com/article | decruft --url https://example.com/article
+# Fetch a URL (auto-detected)
+decruft https://example.com/article
 
 # From file
 decruft page.html --url https://example.com/page
+
+# From stdin
+curl -sL https://example.com | decruft --url https://example.com
 
 # Output formats: json (default), html, text, markdown
 decruft page.html -f html
 decruft page.html -f text
 decruft page.html -f markdown
-
-# Fetch and extract
-decruft -F --url https://example.com/article
 
 # Debug mode (shows what was removed and why)
 decruft page.html --debug | jq '.debug.removals'
@@ -78,6 +78,16 @@ Options:
 
 ## Library
 
+### Quick start
+
+```rust
+// One-liner with defaults
+let result = decruft::parse_with_defaults("<html><body><article><p>Content</p></article></body></html>");
+assert!(result.content.contains("Content"));
+```
+
+### With options
+
 ```rust
 use decruft::{parse, DecruftOptions};
 
@@ -93,10 +103,8 @@ let html = r#"<html>
   </body>
 </html>"#;
 
-let options = DecruftOptions {
-    url: Some("https://example.com/article".into()),
-    ..DecruftOptions::default()
-};
+let mut options = DecruftOptions::default();
+options.url = Some("https://example.com/article".into());
 
 let result = parse(html, &options);
 
