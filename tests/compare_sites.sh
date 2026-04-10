@@ -75,14 +75,14 @@ for url in "${URLS[@]}"; do
     dc_end=$(python3 -c "import time; print(int(time.time()*1000))")
     dc_ms=$((dc_end - dc_start))
 
-    # ── Defuddle (json only — avoids timeout on large pages) ──
+    # ── Defuddle (all 3 formats: json, html, markdown) ──
     df_start=$(python3 -c "import time; print(int(time.time()*1000))")
-    if ! timeout 30 npx defuddle parse --json "$url" >"$OUTDIR/${name}.df.json" 2>/dev/null; then
-        timeout 30 npx defuddle parse --json "$html_file" >"$OUTDIR/${name}.df.json" 2>/dev/null || {
-            echo "SKIP (defuddle failed)"
-            SKIP=$((SKIP + 1)); continue
-        }
+    if ! timeout 45 npx defuddle parse --json "$html_file" >"$OUTDIR/${name}.df.json" 2>/dev/null; then
+        echo "SKIP (defuddle json failed)"
+        SKIP=$((SKIP + 1)); continue
     fi
+    timeout 45 npx defuddle parse "$html_file" >"$OUTDIR/${name}.df.html" 2>/dev/null || true
+    timeout 45 npx defuddle parse --markdown "$html_file" >"$OUTDIR/${name}.df.md" 2>/dev/null || true
     df_end=$(python3 -c "import time; print(int(time.time()*1000))")
     df_ms=$((df_end - df_start))
 
@@ -110,37 +110,68 @@ def lt(p):
 dc = lj(f"{o}/{n}.dc.json")
 df = lj(f"{o}/{n}.df.json")
 dc_html = lt(f"{o}/{n}.dc.html")
+df_html = lt(f"{o}/{n}.df.html")
 dc_md = lt(f"{o}/{n}.dc.md")
+df_md = lt(f"{o}/{n}.df.md")
 dc_text = lt(f"{o}/{n}.dc.text")
+
+def wc(text):
+    return len(text.split()) if text.strip() else 0
+
+def strip_tags(html):
+    return re.sub(r'<[^>]+>', ' ', html)
 
 issues = []
 dc_wc = dc.get('word_count', 0)
 df_wc = df.get('wordCount', 0)
 
-# Metadata
+# ── JSON metadata ──
 if dc.get('title','') != df.get('title',''):
-    issues.append(f"title diff")
+    issues.append("title")
 if df_wc > 50:
     r = dc_wc / max(df_wc, 1)
     if r < 0.5 or r > 2.0:
-        issues.append(f"words {dc_wc}/{df_wc} ({r:.1f}x)")
+        issues.append(f"json:{dc_wc}/{df_wc}w")
 if 'data-decruft-' in dc.get('content', ''):
-    issues.append("leaked attrs")
+    issues.append("leaked-attrs")
 
-# Format checks
+# ── HTML comparison ──
+dc_hw = wc(strip_tags(dc_html))
+df_hw = wc(strip_tags(df_html))
+if df_hw > 50:
+    hr = dc_hw / max(df_hw, 1)
+    if hr < 0.5 or hr > 2.0:
+        issues.append(f"html:{dc_hw}/{df_hw}w")
+
+# ── Markdown comparison ──
+dc_mw = wc(dc_md)
+df_mw = wc(df_md)
+if df_mw > 50:
+    mr = dc_mw / max(df_mw, 1)
+    if mr < 0.5 or mr > 2.0:
+        issues.append(f"md:{dc_mw}/{df_mw}w")
+if dc_md and dc_md.lstrip().startswith('<p>'):
+    issues.append("md=html")
+
+# ── Text comparison (strip tags from defuddle HTML for comparison) ──
+dc_tw = wc(dc_text)
+df_tw = wc(strip_tags(df_html))  # defuddle has no text mode; derive from HTML
 if dc_text and '<p>' in dc_text:
-    issues.append("text has HTML")
-if dc_md and dc_md.lstrip().startswith('<') and '<p>' in dc_md[:100]:
-    issues.append("md is HTML")
+    issues.append("text=html")
+if df_tw > 50:
+    tr = dc_tw / max(df_tw, 1)
+    if tr < 0.5 or tr > 2.0:
+        issues.append(f"text:{dc_tw}/{df_tw}w")
 
-# Performance
+# ── Output ──
 spd = f"{df_ms//max(dc_ms,1)}x" if dc_ms < df_ms else f"{dc_ms/max(df_ms,1):.1f}x slow"
 pct = f"{dc_wc/max(df_wc,1)*100:.0f}%" if df_wc > 0 else "n/a"
+fmt = f"json:{dc_wc}/{df_wc} html:{dc_hw}/{df_hw} md:{dc_mw}/{df_mw} text:{dc_tw}/{df_tw}"
 
 if issues:
-    print(f"ISSUES [{', '.join(issues)}]  {dc_wc}/{df_wc}w ({pct})  {dc_ms}ms/{df_ms}ms ({spd})")
+    print(f"ISSUES [{', '.join(issues)}]  {fmt}  {dc_ms}/{df_ms}ms ({spd})")
 else:
-    print(f"OK  {dc_wc}/{df_wc}w ({pct})  {dc_ms}ms/{df_ms}ms ({spd})")
+    print(f"OK  {fmt}  {dc_ms}/{df_ms}ms ({spd})")
 
 print("__STATUS__:ISSUE" if issues else "__STATUS__:OK")
 PYEOF
