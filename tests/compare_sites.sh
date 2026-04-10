@@ -31,7 +31,8 @@ URLS=(
     "https://github.com/kepano/defuddle/issues/56"
     # ── Hacker News (extractor) ──
     "https://news.ycombinator.com/item?id=42338514"
-    # ── Academic ──
+    # ── Academic (we correctly extract abstract + metadata only;
+    #    defuddle includes ~230 words of sidebar tools) ──
     "https://arxiv.org/abs/2401.00001"
     # ── Hugo static site ──
     "https://gohugo.io/getting-started/quick-start/"
