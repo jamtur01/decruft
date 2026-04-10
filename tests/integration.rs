@@ -645,3 +645,72 @@ fn wikipedia_if_available() {
         result.language
     );
 }
+
+#[test]
+fn wikipedia_bengaluru_extraction() {
+    let Ok(html) = std::fs::read_to_string(format!(
+        "{}/tests/fixtures/wikipedia_bengaluru.html",
+        env!("CARGO_MANIFEST_DIR")
+    )) else {
+        return;
+    };
+
+    let result = parse(&html, &{
+        let mut o = DecruftOptions::default();
+        o.url = Some("https://en.wikipedia.org/wiki/Bengaluru".into());
+        o
+    });
+
+    // Title should preserve Wikipedia suffix
+    assert_eq!(
+        result.title, "Bengaluru - Wikipedia",
+        "title: {}",
+        result.title
+    );
+
+    // Metadata
+    assert_eq!(result.language, "en");
+    assert_eq!(result.domain, "en.wikipedia.org");
+
+    // Content should include the article text
+    assert!(
+        result.content.contains("Bengaluru"),
+        "should contain city name"
+    );
+    assert!(
+        result.content.contains("Karnataka"),
+        "should contain state name"
+    );
+
+    // Should NOT contain navboxes, infoboxes, reference lists
+    assert!(
+        !result.content.contains("class=\"navbox"),
+        "should strip navbox tables"
+    );
+    assert!(
+        !result.content.contains("class=\"infobox"),
+        "should strip infobox tables"
+    );
+    assert!(
+        !result.content.contains("class=\"reflist"),
+        "should strip reference lists"
+    );
+
+    // Should NOT leak internal attributes
+    assert!(
+        !result.content.contains("data-decruft-"),
+        "should strip internal data-decruft attributes"
+    );
+
+    // Word count should be reasonable (within range of defuddle's ~13400)
+    assert!(
+        result.word_count > 8000,
+        "too few words: {}",
+        result.word_count
+    );
+    assert!(
+        result.word_count < 20000,
+        "too many words (including clutter?): {}",
+        result.word_count
+    );
+}

@@ -164,6 +164,14 @@ pub const EXACT_SELECTORS: &[&str] = &[
     "#NYT_ABOVE_MAIN_CONTENT_REGION",
     "[data-testid=\"photoviewer-children-figure\"] > span",
     "table.infobox",
+    ".infobox",
+    // Wikipedia navigation / reference
+    "table.navbox",
+    ".navbox",
+    ".navbox-container",
+    ".reflist",
+    ".references",
+    ".mw-references-wrap",
     "[data-optimizely=\"related-articles-section\" i]",
     "[data-orientation=\"vertical\"]",
     // GitHub sticky headers

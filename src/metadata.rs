@@ -12,10 +12,10 @@ pub fn extract_metadata(
     url: Option<&str>,
     schema: Option<&serde_json::Value>,
 ) -> Metadata {
-    let title = extract_title(html, schema);
+    let site_name = extract_site_name(html, schema);
+    let title = extract_title(html, schema, &site_name);
     let author = extract_author(html, schema);
     let published = extract_published(html, schema);
-    let site_name = extract_site_name(html, schema);
     let description = extract_description(html, schema);
     let image = extract_image(html, schema);
     let language = extract_language(html, schema);
@@ -68,7 +68,7 @@ fn schema_str(schema: Option<&serde_json::Value>, path: &str) -> Option<String> 
 // Title
 // ------------------------------------------------------------------
 
-fn extract_title(html: &Html, schema: Option<&serde_json::Value>) -> String {
+fn extract_title(html: &Html, schema: Option<&serde_json::Value>, site_name: &str) -> String {
     let raw = get_meta_content(html, "property", "og:title")
         .or_else(|| get_meta_content(html, "name", "twitter:title"))
         .or_else(|| get_meta_content(html, "property", "twitter:title"))
@@ -80,7 +80,7 @@ fn extract_title(html: &Html, schema: Option<&serde_json::Value>) -> String {
     let Some(title) = raw else {
         return String::new();
     };
-    clean_title(&title)
+    clean_title(&title, site_name)
 }
 
 fn title_element_text(html: &Html) -> Option<String> {
@@ -97,19 +97,38 @@ fn title_element_text(html: &Html) -> Option<String> {
 }
 
 /// Remove site-name suffixes/prefixes separated by common delimiters.
-fn clean_title(title: &str) -> String {
+/// When a site name is known, only strips the part that matches it.
+/// Otherwise falls back to a length heuristic (shorter part is likely
+/// the site name).
+fn clean_title(title: &str, site_name: &str) -> String {
     let separators = [" | ", " - ", " -- ", " / ", " · "];
     for sep in &separators {
-        if let Some(idx) = title.rfind(sep) {
-            let before = title[..idx].trim();
-            let after = title[idx + sep.len()..].trim();
-            if !before.is_empty() && !after.is_empty() {
-                if before.len() >= after.len() {
-                    return before.to_string();
-                }
+        let Some(idx) = title.rfind(sep) else {
+            continue;
+        };
+        let before = title[..idx].trim();
+        let after = title[idx + sep.len()..].trim();
+        if before.is_empty() || after.is_empty() {
+            continue;
+        }
+
+        if !site_name.is_empty() {
+            let site_lower = site_name.to_lowercase();
+            if after.to_lowercase() == site_lower {
+                return before.to_string();
+            }
+            if before.to_lowercase() == site_lower {
                 return after.to_string();
             }
+            // Site name known but doesn't match either side
+            continue;
         }
+
+        // No site name: use length heuristic
+        if before.len() >= after.len() {
+            return before.to_string();
+        }
+        return after.to_string();
     }
     title.to_string()
 }
@@ -546,6 +565,30 @@ mod tests {
         );
         let m = extract_metadata(&doc, None, None);
         assert_eq!(m.title, "A Much Longer Article Title");
+    }
+
+    #[test]
+    fn title_stripped_when_site_name_matches() {
+        let doc = Html::parse_document(
+            r#"<html><head>
+            <meta property="og:site_name" content="Wikipedia">
+            <title>Bengaluru - Wikipedia</title>
+            </head><body></body></html>"#,
+        );
+        let m = extract_metadata(&doc, None, None);
+        assert_eq!(m.title, "Bengaluru");
+    }
+
+    #[test]
+    fn title_not_stripped_when_site_name_mismatches() {
+        let doc = Html::parse_document(
+            r#"<html><head>
+            <meta property="og:site_name" content="MyBlog">
+            <title>Part A - Part B</title>
+            </head><body></body></html>"#,
+        );
+        let m = extract_metadata(&doc, None, None);
+        assert_eq!(m.title, "Part A - Part B");
     }
 
     #[test]
