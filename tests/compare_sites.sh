@@ -35,6 +35,10 @@ URLS=(
     "https://news.ycombinator.com/item?id=42338514"
     # ── C2 Wiki extractor (API fetch) ──
     "https://wiki.c2.com/?ExtremeProgramming"
+    # ── Stack Overflow extractor (API fallback) ──
+    "https://stackoverflow.com/questions/11227809/why-is-processing-a-sorted-array-faster-than-processing-an-unsorted-array"
+    # ── Lobste.rs extractor (API) ──
+    "https://lobste.rs/s/xfbwic"
 )
 
 PASS=0
