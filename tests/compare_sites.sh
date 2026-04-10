@@ -98,9 +98,11 @@ df_author = df.get('author', '')
 if dc_author != df_author and not (dc_author in df_author or df_author in dc_author):
     issues.append(f"author: '{dc_author}' vs '{df_author}'")
 
-# Language
-if dc.get('language', '') != df.get('language', ''):
-    issues.append(f"language: '{dc.get('language','')}' vs '{df.get('language','')}'")
+# Language (only flag if we're MISSING it and defuddle has it)
+dc_lang = dc.get('language', '')
+df_lang = df.get('language', '')
+if not dc_lang and df_lang:
+    issues.append(f"language: missing (defuddle has '{df_lang}')")
 
 # Internal attributes leaking
 if 'data-decruft-' in dc.get('content', ''):

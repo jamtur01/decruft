@@ -204,12 +204,23 @@ fn strip_site_name(title: &str, site_name: &str) -> String {
         let after_lower = after.to_lowercase();
         let before_lower = before.to_lowercase();
 
+        let after_matches = is_site_name_match(&after_lower, &site_lower);
+        let before_matches = is_site_name_match(&before_lower, &site_lower);
+
+        // If both match, keep the longer one (it's the real title)
+        if after_matches && before_matches {
+            return if before.len() >= after.len() {
+                before.to_string()
+            } else {
+                after.to_string()
+            };
+        }
         // Check trailing segment (most common: "Title - SiteName")
-        if is_site_name_match(&after_lower, &site_lower) {
+        if after_matches {
             return before.to_string();
         }
         // Check leading segment ("SiteName | Title")
-        if is_site_name_match(&before_lower, &site_lower) {
+        if before_matches {
             return after.to_string();
         }
     }
@@ -223,13 +234,20 @@ fn is_site_name_match(segment: &str, site_name_lower: &str) -> bool {
     if segment == site_name_lower {
         return true;
     }
-    // Segment is a word that appears in the site name
-    // e.g., "wikipedia" in "wikimedia foundation, inc." — close but
-    // not contained. Check first-word match instead.
+    // Check containment
+    if segment.contains(site_name_lower) || site_name_lower.contains(segment) {
+        return true;
+    }
+    // Segment is a single word matching the site name's first word
+    // e.g., "wikipedia" matching "wikimedia" (close but different)
+    // Only match if the segment is a SINGLE word (no spaces)
     let seg_first_word = segment.split_whitespace().next().unwrap_or("");
     let site_first_word = site_name_lower.split_whitespace().next().unwrap_or("");
+    if segment.contains(' ') {
+        // Multi-word segments should only match via containment (above)
+        return false;
+    }
     if !seg_first_word.is_empty() && !site_first_word.is_empty() && seg_first_word.len() >= 4 {
-        // Match if first words share a long common prefix (>= 5 chars)
         let common_prefix_len = seg_first_word
             .chars()
             .zip(site_first_word.chars())
