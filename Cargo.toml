@@ -1,6 +1,6 @@
 [package]
 name = "decruft"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2024"
 description = "Extract clean, readable content from web pages"
 license = "MIT"
@@ -50,3 +50,7 @@ criterion = { version = "0.8.2", features = ["html_reports"] }
 [[bench]]
 name = "extraction"
 harness = false
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
