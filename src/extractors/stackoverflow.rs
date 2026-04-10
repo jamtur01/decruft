@@ -476,6 +476,37 @@ mod tests {
     }
 
     #[test]
+    fn build_from_api_canned_json() {
+        let item = serde_json::json!({
+            "title": "How to reverse a string in Rust?",
+            "body": "<p>I want to reverse a string in Rust. What is the idiomatic way?</p>",
+            "owner": {
+                "display_name": "RustNewbie"
+            },
+            "creation_date": 1_705_276_800
+        });
+
+        let result = build_from_api(&item, "12345", "stackoverflow", false).unwrap();
+        assert_eq!(
+            result.title.as_deref(),
+            Some("How to reverse a string in Rust?")
+        );
+        assert_eq!(result.author.as_deref(), Some("RustNewbie"));
+        assert_eq!(result.site.as_deref(), Some("Stack Overflow"));
+        assert!(result.content.contains("reverse a string"));
+    }
+
+    #[test]
+    fn build_from_api_empty_body_returns_none() {
+        let item = serde_json::json!({
+            "title": "Empty question",
+            "body": "   ",
+            "owner": {"display_name": "user"}
+        });
+        assert!(build_from_api(&item, "1", "stackoverflow", false).is_none());
+    }
+
+    #[test]
     #[ignore = "real network call"]
     fn api_fetch_live() {
         let url = "https://stackoverflow.com/questions/927358/\

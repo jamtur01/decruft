@@ -631,6 +631,42 @@ mod tests {
     }
 
     #[test]
+    fn build_story_from_api_canned_json() {
+        let json = serde_json::json!({
+            "type": "story",
+            "title": "Show HN: A Rust parser",
+            "by": "rustfan",
+            "url": "https://example.com/parser",
+            "text": "I built a parser in Rust. It's fast.",
+            "time": 1_705_276_800_i64,
+            "kids": []
+        });
+
+        let result = build_story_from_api(&json, false);
+        assert_eq!(result.title.as_deref(), Some("Show HN: A Rust parser"));
+        assert_eq!(result.author.as_deref(), Some("rustfan"));
+        assert_eq!(result.published.as_deref(), Some("2024-01-15"));
+        assert_eq!(result.site.as_deref(), Some("Hacker News"));
+        assert!(result.content.contains("example.com/parser"));
+        assert!(result.content.contains("parser in Rust"));
+    }
+
+    #[test]
+    fn build_story_from_api_no_text() {
+        let json = serde_json::json!({
+            "type": "story",
+            "title": "Link-only story",
+            "by": "poster",
+            "url": "https://example.com/article",
+            "time": 1_705_276_800_i64
+        });
+
+        let result = build_story_from_api(&json, false);
+        assert_eq!(result.title.as_deref(), Some("Link-only story"));
+        assert!(result.content.contains("example.com/article"));
+    }
+
+    #[test]
     fn extract_hn_story_with_comments() {
         let html_str = load_fixture("comments--news.ycombinator.com-item-id=12345678.html");
         let url = Some("https://news.ycombinator.com/item?id=12345678");

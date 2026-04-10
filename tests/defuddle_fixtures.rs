@@ -218,6 +218,107 @@ fn defuddle_fixtures_extract_content() {
     }
 }
 
+// ── Key fixtures: exact metadata assertions ─────────────────────
+
+/// Fixtures with stable, known-correct metadata. Metadata mismatches
+/// in these fixtures are fatal (not just warnings).
+#[test]
+fn key_fixtures_metadata_exact() {
+    // (fixture filename, expected title, expected author, expected published date prefix)
+    let checks: &[(&str, &str, &str, &str)] = &[
+        (
+            "general--stephango.com-buy-wisely.html",
+            "Buy wisely",
+            "Steph Ango",
+            "2023-09-30",
+        ),
+        ("general--wikipedia.html", "Obsidian (software)", "", ""),
+        (
+            "general--appendix-heading.html",
+            "Article with Appendix",
+            "",
+            "",
+        ),
+        (
+            "general--back-nav-link.html",
+            "An Article About Sorting",
+            "",
+            "",
+        ),
+        (
+            "general--trailing-cta-newsletter.html",
+            "New Feature Announcement",
+            "Engineering Team",
+            "",
+        ),
+        (
+            "general--inline-comments-and-link-lists.html",
+            "New Product Announced with Major Upgrades",
+            "Jane Smith",
+            "",
+        ),
+        (
+            "content-patterns--card-grid-stripped-headings.html",
+            "How Spacecraft Plumbing Works",
+            "Jane Smith",
+            "",
+        ),
+        (
+            "content-patterns--trailing-related-posts.html",
+            "Coffee Cooling Article",
+            "",
+            "",
+        ),
+        (
+            "general--daringfireball.net-2025-02-the_iphone_16e.html",
+            "The iPhone 16e",
+            "",
+            "",
+        ),
+        (
+            "general--cp4space-jordan-algebra.html",
+            "The exceptional Jordan algebra",
+            "apgoucher",
+            "2020-10-28",
+        ),
+    ];
+
+    let mut failures: Vec<String> = Vec::new();
+
+    for &(file, expected_title, expected_author, expected_published) in checks {
+        let html = load_fixture(file);
+        let name = stem(file);
+        let url = url_from_fixture(&html, name);
+        let result = parse(&html, &opts_for(&url));
+
+        if result.title != expected_title {
+            failures.push(format!(
+                "{name}: title mismatch: got {:?}, expected {:?}",
+                result.title, expected_title
+            ));
+        }
+        if result.author != expected_author {
+            failures.push(format!(
+                "{name}: author mismatch: got {:?}, expected {:?}",
+                result.author, expected_author
+            ));
+        }
+        if !expected_published.is_empty() && !result.published.contains(expected_published) {
+            failures.push(format!(
+                "{name}: published mismatch: got {:?}, expected to contain {:?}",
+                result.published, expected_published
+            ));
+        }
+    }
+
+    assert!(
+        failures.is_empty(),
+        "{} key fixture metadata mismatch(es):\n  {}",
+        failures.len(),
+        failures.join("\n  ")
+    );
+}
+
 // ── General extraction tests ─────────────────────────────────────
 
 #[test]

@@ -307,12 +307,12 @@ fn all_formats_have_same_metadata() {
 
 #[test]
 fn wikipedia_all_formats() {
-    let Ok(html) = std::fs::read_to_string(format!(
+    let path = format!(
         "{}/tests/fixtures/wikipedia_bengaluru.html",
         env!("CARGO_MANIFEST_DIR")
-    )) else {
-        return;
-    };
+    );
+    let html =
+        std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("fixture missing: {path}: {e}"));
 
     let mut opts = DecruftOptions::default();
     opts.url = Some("https://en.wikipedia.org/wiki/Bengaluru".into());
@@ -339,12 +339,12 @@ fn wikipedia_all_formats() {
 
 #[test]
 fn complex_blog_all_formats() {
-    let Ok(html) = std::fs::read_to_string(format!(
+    let path = format!(
         "{}/tests/fixtures/complex_blog.html",
         env!("CARGO_MANIFEST_DIR")
-    )) else {
-        return;
-    };
+    );
+    let html =
+        std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("fixture missing: {path}: {e}"));
 
     let mut opts = DecruftOptions::default();
     opts.url = Some("https://example.com/article".into());
@@ -390,12 +390,12 @@ fn favicon_extracted_from_link_icon() {
 
 #[test]
 fn extractor_type_set_for_github() {
-    let Ok(html) = std::fs::read_to_string(format!(
+    let path = format!(
         "{}/tests/fixtures/defuddle/general--github.com-issue-56.html",
         env!("CARGO_MANIFEST_DIR")
-    )) else {
-        return;
-    };
+    );
+    let html =
+        std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("fixture missing: {path}: {e}"));
     let mut opts = DecruftOptions::default();
     opts.url = Some("https://github.com/kepano/defuddle/issues/56".into());
     let result = parse(&html, &opts);
@@ -408,12 +408,12 @@ fn extractor_type_set_for_github() {
 
 #[test]
 fn include_replies_false_reduces_content() {
-    let Ok(html) = std::fs::read_to_string(format!(
+    let path = format!(
         "{}/tests/fixtures/defuddle/general--github.com-issue-56.html",
         env!("CARGO_MANIFEST_DIR")
-    )) else {
-        return;
-    };
+    );
+    let html =
+        std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("fixture missing: {path}: {e}"));
     let mut with_replies = DecruftOptions::default();
     with_replies.url = Some("https://github.com/kepano/defuddle/issues/56".into());
     with_replies.include_replies = true;

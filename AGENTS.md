@@ -48,4 +48,11 @@ decruft is a Rust port of [defuddle](https://github.com/kepano/defuddle) — a w
 - 144 HTML fixtures in `tests/fixtures/defuddle/` from defuddle's test suite
 - 146 expected markdown files in `tests/expected/defuddle/`
 - Our own fixtures in `tests/fixtures/` (complex_blog, news_article, wikipedia)
-- Fixture-dependent tests gracefully skip if files are missing
+- Fixture-dependent tests panic if files are missing — all fixtures are checked in
+
+## Network tests
+
+Tests that make real HTTP requests are marked `#[ignore]` and only run with
+`cargo test -- --ignored`. They should never run in CI. Each extractor with an
+API fallback (GitHub, HN, Stack Overflow, Lobsters, C2 Wiki) also has mock-based
+tests that validate the JSON parsing logic on canned data without network calls.

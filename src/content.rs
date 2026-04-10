@@ -164,17 +164,6 @@ mod tests {
     }
 
     #[test]
-    fn entry_point_selectors_not_empty() {
-        assert!(!ENTRY_POINT_SELECTORS.is_empty());
-    }
-
-    #[test]
-    fn last_entry_point_is_body() {
-        let last = ENTRY_POINT_SELECTORS.last().copied().unwrap_or_default();
-        assert_eq!(last, "body");
-    }
-
-    #[test]
     fn find_main_content_picks_article_over_nav() {
         let words = "word ".repeat(120);
         let html_str = format!(

@@ -571,12 +571,12 @@ fn handles_multiple_articles() {
 
 #[test]
 fn paulgraham_if_available() {
-    let Ok(html) = std::fs::read_to_string(format!(
+    let path = format!(
         "{}/tests/fixtures/paulgraham.html",
         env!("CARGO_MANIFEST_DIR")
-    )) else {
-        return; // Skip if fixture not available
-    };
+    );
+    let html =
+        std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("fixture missing: {path}: {e}"));
 
     let result = parse(&html, &{
         let mut o = DecruftOptions::default();
@@ -598,12 +598,12 @@ fn paulgraham_if_available() {
 
 #[test]
 fn rust_blog_if_available() {
-    let Ok(html) = std::fs::read_to_string(format!(
+    let path = format!(
         "{}/tests/fixtures/rust_blog.html",
         env!("CARGO_MANIFEST_DIR")
-    )) else {
-        return;
-    };
+    );
+    let html =
+        std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("fixture missing: {path}: {e}"));
 
     let result = parse(&html, &{
         let mut o = DecruftOptions::default();
@@ -621,12 +621,12 @@ fn rust_blog_if_available() {
 
 #[test]
 fn wikipedia_if_available() {
-    let Ok(html) = std::fs::read_to_string(format!(
+    let path = format!(
         "{}/tests/fixtures/wikipedia.html",
         env!("CARGO_MANIFEST_DIR")
-    )) else {
-        return;
-    };
+    );
+    let html =
+        std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("fixture missing: {path}: {e}"));
 
     let result = parse(&html, &{
         let mut o = DecruftOptions::default();
@@ -648,12 +648,12 @@ fn wikipedia_if_available() {
 
 #[test]
 fn wikipedia_bengaluru_extraction() {
-    let Ok(html) = std::fs::read_to_string(format!(
+    let path = format!(
         "{}/tests/fixtures/wikipedia_bengaluru.html",
         env!("CARGO_MANIFEST_DIR")
-    )) else {
-        return;
-    };
+    );
+    let html =
+        std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("fixture missing: {path}: {e}"));
 
     let result = parse(&html, &{
         let mut o = DecruftOptions::default();

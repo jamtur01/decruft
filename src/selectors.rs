@@ -902,17 +902,6 @@ mod tests {
         assert!(re.is_match("also-related").unwrap());
     }
 
-    #[test]
-    fn exact_selectors_not_empty() {
-        assert!(!EXACT_SELECTORS.is_empty());
-    }
-
-    #[test]
-    fn partial_attributes_has_class_and_id() {
-        assert!(PARTIAL_ATTRIBUTES.contains(&"class"));
-        assert!(PARTIAL_ATTRIBUTES.contains(&"id"));
-    }
-
     #[expect(clippy::unwrap_used)]
     #[test]
     fn lazy_static_works() {
@@ -920,8 +909,64 @@ mod tests {
     }
 
     #[test]
-    fn footnote_selectors_not_empty() {
-        assert!(!FOOTNOTE_INLINE_REFERENCES.is_empty());
-        assert!(!FOOTNOTE_LIST_SELECTORS.is_empty());
+    fn exact_selectors_match_real_html() {
+        use scraper::{Html, Selector};
+
+        let html_str = r#"<html><body>
+            <nav><a href="/">Home</a></nav>
+            <footer><p>Copyright</p></footer>
+            <div class="sidebar">Sidebar</div>
+            <aside>Related</aside>
+            <div id="comments">User comments</div>
+            <article><p>Main content</p></article>
+        </body></html>"#;
+        let doc = Html::parse_document(html_str);
+
+        let matched_tags: Vec<&str> = EXACT_SELECTORS
+            .iter()
+            .filter(|s| {
+                Selector::parse(s)
+                    .ok()
+                    .is_some_and(|sel| doc.select(&sel).next().is_some())
+            })
+            .copied()
+            .collect();
+
+        assert!(matched_tags.contains(&"nav"), "should match <nav>");
+        assert!(matched_tags.contains(&"footer"), "should match <footer>");
+        assert!(matched_tags.contains(&".sidebar"), "should match .sidebar");
+        assert!(
+            matched_tags.contains(&"aside:not([class*=\"callout\"])"),
+            "should match plain <aside>"
+        );
+        assert!(
+            matched_tags.contains(&"[id=\"comments\" i]"),
+            "should match #comments"
+        );
+    }
+
+    #[test]
+    fn partial_patterns_match_real_class_names() {
+        let class_names = [
+            "sidebar-content",
+            "newsletter-signup-form",
+            "social-share-buttons",
+            "comment-thread-wrapper",
+            "breadcrumb-container",
+        ];
+        for name in &class_names {
+            assert!(matches_partial(name), "should match class name: {name}");
+        }
+    }
+
+    #[test]
+    fn partial_patterns_reject_content_classes() {
+        let safe_names = ["article-body", "content-main", "paragraph", "text-block"];
+        for name in &safe_names {
+            assert!(
+                !matches_partial(name),
+                "should NOT match content class: {name}"
+            );
+        }
     }
 }
