@@ -106,16 +106,7 @@ fn try_oembed(tweet_url: &str) -> Option<ExtractorResult> {
         urlencoding(tweet_url),
     );
 
-    let output = std::process::Command::new("curl")
-        .args(["-sL", "--max-time", "10", &api_url])
-        .output()
-        .ok()?;
-
-    if !output.status.success() {
-        return None;
-    }
-
-    let body = String::from_utf8_lossy(&output.stdout);
+    let body = crate::http::get(&api_url)?;
     let json: serde_json::Value = serde_json::from_str(&body).ok()?;
 
     let html = json.get("html")?.as_str()?;

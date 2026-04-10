@@ -520,16 +520,7 @@ fn collect_kids_flat(
 /// Fetch a single item from the HN Firebase API.
 fn fetch_hn_json(id: &str) -> Option<serde_json::Value> {
     let url = format!("{HN_API_BASE}/{id}.json");
-    let output = std::process::Command::new("curl")
-        .args(["-sL", "--max-time", "10", &url])
-        .output()
-        .ok()?;
-
-    if !output.status.success() {
-        return None;
-    }
-
-    let body = String::from_utf8_lossy(&output.stdout);
+    let body = crate::http::get(&url)?;
     serde_json::from_str(&body).ok()
 }
 

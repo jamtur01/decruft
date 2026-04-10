@@ -69,17 +69,7 @@ fn try_rendered(html: &Html, url: Option<&str>) -> Option<ExtractorResult> {
 /// Fetch content from the C2 Wiki JSON API.
 fn try_api_fetch(page_name: &str) -> Option<ExtractorResult> {
     let api_url = format!("https://c2.com/wiki/remodel/pages/{page_name}");
-
-    let output = std::process::Command::new("curl")
-        .args(["-sL", "--max-time", "10", &api_url])
-        .output()
-        .ok()?;
-
-    if !output.status.success() {
-        return None;
-    }
-
-    let body = String::from_utf8_lossy(&output.stdout);
+    let body = crate::http::get(&api_url)?;
     let json: serde_json::Value = serde_json::from_str(&body).ok()?;
 
     let text = json.get("text")?.as_str()?;

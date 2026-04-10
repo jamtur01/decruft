@@ -304,16 +304,7 @@ fn build_api_comments(json: &serde_json::Value) -> String {
 }
 
 fn fetch_lobsters_json(url: &str) -> Option<serde_json::Value> {
-    let output = std::process::Command::new("curl")
-        .args(["-sL", "--max-time", "10", url])
-        .output()
-        .ok()?;
-
-    if !output.status.success() {
-        return None;
-    }
-
-    let body = String::from_utf8_lossy(&output.stdout);
+    let body = crate::http::get(url)?;
     serde_json::from_str(&body).ok()
 }
 

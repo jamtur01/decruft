@@ -344,16 +344,7 @@ fn fetch_se_question(id: &str, site: &str) -> Option<serde_json::Value> {
 }
 
 fn fetch_se_json(url: &str) -> Option<serde_json::Value> {
-    let output = std::process::Command::new("curl")
-        .args(["--compressed", "-sL", "--max-time", "10", url])
-        .output()
-        .ok()?;
-
-    if !output.status.success() {
-        return None;
-    }
-
-    let body = String::from_utf8_lossy(&output.stdout);
+    let body = crate::http::get(url)?;
     serde_json::from_str(&body).ok()
 }
 

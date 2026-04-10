@@ -92,7 +92,7 @@ fn decode_entity_str(s: &str) -> String {
     result = result.replace("&gt;", ">");
     result = result.replace("&quot;", "\"");
 
-    // Decode numeric character references: &#NNN;
+    // Decode numeric character references: &#NNN; and &#xHHHH;
     let mut output = String::with_capacity(result.len());
     let mut chars = result.as_str();
     while let Some(pos) = chars.find("&#") {
@@ -100,7 +100,13 @@ fn decode_entity_str(s: &str) -> String {
         let rest = &chars[pos + 2..];
         if let Some(semi) = rest.find(';') {
             let num_str = &rest[..semi];
-            let decoded = num_str.parse::<u32>().ok().and_then(char::from_u32);
+            let decoded = if num_str.starts_with('x') || num_str.starts_with('X') {
+                u32::from_str_radix(&num_str[1..], 16)
+                    .ok()
+                    .and_then(char::from_u32)
+            } else {
+                num_str.parse::<u32>().ok().and_then(char::from_u32)
+            };
             if let Some(ch) = decoded {
                 output.push(ch);
                 chars = &rest[semi + 1..];
@@ -387,6 +393,30 @@ mod tests {
         let mut val = Value::String("A &amp; B &lt; C &gt; D &quot;E&#65;".into());
         decode_entities(&mut val);
         assert_eq!(val.as_str(), Some("A & B < C > D \"EA"));
+    }
+
+    #[test]
+    fn test_decode_hex_entities() {
+        // &#x2019; = right single quotation mark (U+2019)
+        let mut val = Value::String("it&#x2019;s a test".into());
+        decode_entities(&mut val);
+        assert_eq!(val.as_str(), Some("it\u{2019}s a test"));
+    }
+
+    #[test]
+    fn test_decode_hex_entity_ampersand() {
+        // &#x26; = &
+        let mut val = Value::String("A &#x26; B".into());
+        decode_entities(&mut val);
+        assert_eq!(val.as_str(), Some("A & B"));
+    }
+
+    #[test]
+    fn test_decode_uppercase_hex() {
+        // &#X41; = A
+        let mut val = Value::String("&#X41;BC".into());
+        decode_entities(&mut val);
+        assert_eq!(val.as_str(), Some("ABC"));
     }
 
     #[test]

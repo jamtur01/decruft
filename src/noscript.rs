@@ -92,9 +92,22 @@ fn find_placeholder_sibling(
     let node_ref = html.tree.get(noscript_id)?;
 
     // Check previous siblings (up to 3 elements away).
+    if let Some(found) = find_in_previous_siblings(html, &node_ref) {
+        return Some(found);
+    }
+
+    // Check next siblings (up to 3 elements away).
+    find_in_next_siblings(html, &node_ref)
+}
+
+/// Search up to 3 previous siblings for a placeholder image.
+fn find_in_previous_siblings(
+    html: &Html,
+    node_ref: &ego_tree::NodeRef<scraper::Node>,
+) -> Option<ego_tree::NodeId> {
     let mut prev = node_ref.prev_sibling();
     for _ in 0..3 {
-        let sibling = prev?;
+        let Some(sibling) = prev else { break };
         if let Node::Element(_) = sibling.value()
             && let Some(id) = check_placeholder_img(html, sibling.id())
         {
@@ -102,11 +115,17 @@ fn find_placeholder_sibling(
         }
         prev = sibling.prev_sibling();
     }
+    None
+}
 
-    // Check next siblings (up to 3 elements away).
+/// Search up to 3 next siblings for a placeholder image.
+fn find_in_next_siblings(
+    html: &Html,
+    node_ref: &ego_tree::NodeRef<scraper::Node>,
+) -> Option<ego_tree::NodeId> {
     let mut next = node_ref.next_sibling();
     for _ in 0..3 {
-        let sibling = next?;
+        let Some(sibling) = next else { break };
         if let Node::Element(_) = sibling.value()
             && let Some(id) = check_placeholder_img(html, sibling.id())
         {
@@ -114,7 +133,6 @@ fn find_placeholder_sibling(
         }
         next = sibling.next_sibling();
     }
-
     None
 }
 
@@ -222,6 +240,19 @@ mod tests {
         let html_str = r#"<html><body>
             <img src="">
             <noscript><img src="real.jpg"></noscript>
+        </body></html>"#;
+        let mut doc = Html::parse_document(html_str);
+        resolve_noscript_images(&mut doc);
+        let output = dom::outer_html(&doc, doc.tree.root().id());
+        assert!(output.contains(r#"src="real.jpg""#));
+        assert!(!output.contains("noscript"));
+    }
+
+    #[test]
+    fn promotes_noscript_img_to_next_sibling_placeholder() {
+        let html_str = r#"<html><body>
+            <noscript><img src="real.jpg"></noscript>
+            <img src="" data-src="lazy.jpg">
         </body></html>"#;
         let mut doc = Html::parse_document(html_str);
         resolve_noscript_images(&mut doc);

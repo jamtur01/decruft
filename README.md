@@ -38,7 +38,7 @@ decruft https://example.com/article
 decruft page.html --url https://example.com/page
 
 # From stdin
-curl -sL https://example.com | decruft --url https://example.com
+cat page.html | decruft --url https://example.com
 
 # Output formats: json (default), html, text, markdown
 decruft page.html -f html

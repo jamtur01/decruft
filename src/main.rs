@@ -12,7 +12,7 @@ use clap::Parser;
 /// Examples:
 ///   decruft page.html
 ///   decruft <https://example.com/article>
-///   curl -sL <https://example.com> | decruft --url <https://example.com>
+///   cat page.html | decruft --url <https://example.com>
 ///   decruft page.html -f markdown
 ///   decruft page.html -f text
 #[derive(Parser, Debug)]
@@ -163,28 +163,27 @@ fn write_stdout(s: &str) {
 }
 
 fn fetch_url(url: &str) -> String {
-    let output = std::process::Command::new("curl")
-        .args([
-            "-sL",
-            "--max-time",
-            "30",
-            "-A",
+    let response = ureq::get(url)
+        .header(
+            "User-Agent",
             "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
-            url,
-        ])
-        .output();
+        )
+        .call();
 
-    match output {
-        Ok(out) if out.status.success() => String::from_utf8_lossy(&out.stdout).into_owned(),
-        Ok(out) => {
-            eprintln!(
-                "Error fetching {url}: {}",
-                String::from_utf8_lossy(&out.stderr)
-            );
+    match response {
+        Ok(resp) if resp.status() == 200 => match resp.into_body().read_to_string() {
+            Ok(body) => body,
+            Err(e) => {
+                eprintln!("Error reading response for {url}: {e}");
+                std::process::exit(1);
+            }
+        },
+        Ok(resp) => {
+            eprintln!("Error fetching {url}: HTTP {}", resp.status());
             std::process::exit(1);
         }
         Err(e) => {
-            eprintln!("Failed to run curl: {e}");
+            eprintln!("Error fetching {url}: {e}");
             std::process::exit(1);
         }
     }

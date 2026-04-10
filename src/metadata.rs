@@ -50,10 +50,10 @@ fn get_meta_content(html: &Html, attr: &str, value: &str) -> Option<String> {
     Some(trimmed.to_string())
 }
 
-/// Dig into a `serde_json::Value` by a dot-separated path.
-/// Returns the leaf value as a trimmed, non-empty string.
-fn schema_str(schema: Option<&serde_json::Value>, path: &str) -> Option<String> {
-    let mut current = schema?;
+/// Walk a dot-separated path on a single JSON object, returning a
+/// trimmed, non-empty string.
+fn walk_schema_path(value: &serde_json::Value, path: &str) -> Option<String> {
+    let mut current = value;
     for key in path.split('.') {
         current = current.get(key)?;
     }
@@ -62,6 +62,26 @@ fn schema_str(schema: Option<&serde_json::Value>, path: &str) -> Option<String> 
         return None;
     }
     Some(text.to_string())
+}
+
+/// Dig into a `serde_json::Value` by a dot-separated path.
+/// Returns the leaf value as a trimmed, non-empty string.
+/// Handles both single objects and arrays (tries each item).
+fn schema_str(schema: Option<&serde_json::Value>, path: &str) -> Option<String> {
+    let data = schema?;
+    // Direct path on object
+    if let Some(result) = walk_schema_path(data, path) {
+        return Some(result);
+    }
+    // If array, try each item
+    if let serde_json::Value::Array(items) = data {
+        for item in items {
+            if let Some(result) = walk_schema_path(item, path) {
+                return Some(result);
+            }
+        }
+    }
+    None
 }
 
 // ------------------------------------------------------------------
@@ -395,18 +415,57 @@ fn authors_link_elements(html: &Html) -> Option<String> {
     Some(names.join(", "))
 }
 
-fn schema_author(schema: Option<&serde_json::Value>) -> Option<String> {
-    let author = schema?.get("author")?;
+/// Extract author from a single schema object's "author" field.
+fn extract_author_from_value(author: &serde_json::Value) -> Option<String> {
+    // Single author object: {"name": "Alice"}
     if let Some(name) = author.get("name").and_then(|v| v.as_str()) {
         let trimmed = name.trim();
         if !trimmed.is_empty() {
             return Some(trimmed.to_string());
         }
     }
+    // Author as plain string
     if let Some(s) = author.as_str() {
         let trimmed = s.trim();
         if !trimmed.is_empty() {
             return Some(trimmed.to_string());
+        }
+    }
+    // Author as array: [{"name": "Alice"}, {"name": "Bob"}]
+    if let serde_json::Value::Array(authors) = author {
+        let names: Vec<&str> = authors
+            .iter()
+            .filter_map(|a| {
+                a.get("name")
+                    .and_then(|v| v.as_str())
+                    .or_else(|| a.as_str())
+            })
+            .map(str::trim)
+            .filter(|s| !s.is_empty())
+            .collect();
+        if !names.is_empty() {
+            return Some(names.join(", "));
+        }
+    }
+    None
+}
+
+fn schema_author(schema: Option<&serde_json::Value>) -> Option<String> {
+    let data = schema?;
+    // Direct object with "author" key
+    if let Some(author) = data.get("author")
+        && let Some(result) = extract_author_from_value(author)
+    {
+        return Some(result);
+    }
+    // If array, try each item
+    if let serde_json::Value::Array(items) = data {
+        for item in items {
+            if let Some(author) = item.get("author")
+                && let Some(result) = extract_author_from_value(author)
+            {
+                return Some(result);
+            }
         }
     }
     None
@@ -537,10 +596,10 @@ fn extract_site_name(html: &Html, schema: Option<&serde_json::Value>) -> String 
         .unwrap_or_default()
 }
 
-/// Search Schema.org `@graph` for `@type: "WebSite"` and return its
-/// `name`.
-fn schema_graph_website_name(schema: Option<&serde_json::Value>) -> Option<String> {
-    let graph = schema?.get("@graph")?.as_array()?;
+/// Search a single schema object's `@graph` for `@type: "WebSite"`
+/// and return its `name`.
+fn website_name_from_graph(obj: &serde_json::Value) -> Option<String> {
+    let graph = obj.get("@graph")?.as_array()?;
     for item in graph {
         let Some(type_val) = item.get("@type") else {
             continue;
@@ -558,6 +617,23 @@ fn schema_graph_website_name(schema: Option<&serde_json::Value>) -> Option<Strin
         let trimmed = name.trim();
         if !trimmed.is_empty() {
             return Some(trimmed.to_string());
+        }
+    }
+    None
+}
+
+/// Search Schema.org `@graph` for `@type: "WebSite"` and return its
+/// `name`. Handles both single objects and arrays.
+fn schema_graph_website_name(schema: Option<&serde_json::Value>) -> Option<String> {
+    let data = schema?;
+    if let Some(result) = website_name_from_graph(data) {
+        return Some(result);
+    }
+    if let serde_json::Value::Array(items) = data {
+        for item in items {
+            if let Some(result) = website_name_from_graph(item) {
+                return Some(result);
+            }
         }
     }
     None
@@ -904,5 +980,52 @@ mod tests {
         assert!(m.author.is_empty());
         assert!(m.published.is_empty());
         assert!(m.domain.is_empty());
+    }
+
+    #[test]
+    fn schema_str_from_array() {
+        let schema: serde_json::Value = serde_json::json!([
+            {"@type": "WebPage"},
+            {"@type": "Article", "headline": "Array Title", "datePublished": "2025-06-01"}
+        ]);
+        let doc = Html::parse_document("<html><body></body></html>");
+        let m = extract_metadata(&doc, None, Some(&schema));
+        assert_eq!(m.title, "Array Title");
+        assert_eq!(m.published, "2025-06-01");
+    }
+
+    #[test]
+    fn author_from_schema_array() {
+        let schema: serde_json::Value = serde_json::json!({
+            "author": [{"name": "Alice"}, {"name": "Bob"}]
+        });
+        let doc = Html::parse_document("<html><body></body></html>");
+        let m = extract_metadata(&doc, None, Some(&schema));
+        assert_eq!(m.author, "Alice, Bob");
+    }
+
+    #[test]
+    fn author_from_array_schema_item() {
+        let schema: serde_json::Value = serde_json::json!([
+            {"@type": "WebPage"},
+            {"@type": "Article", "author": {"name": "Charlie"}}
+        ]);
+        let doc = Html::parse_document("<html><body></body></html>");
+        let m = extract_metadata(&doc, None, Some(&schema));
+        assert_eq!(m.author, "Charlie");
+    }
+
+    #[test]
+    fn graph_website_name_from_array_schema() {
+        let schema: serde_json::Value = serde_json::json!([
+            {
+                "@graph": [
+                    {"@type": "WebSite", "name": "My Blog"}
+                ]
+            }
+        ]);
+        let doc = Html::parse_document("<html><body></body></html>");
+        let m = extract_metadata(&doc, None, Some(&schema));
+        assert_eq!(m.site_name, "My Blog");
     }
 }

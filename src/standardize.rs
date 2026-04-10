@@ -426,6 +426,7 @@ pub fn resolve_urls(html: &mut Html, main_content: NodeId, base_url: &str) {
         ("img", "srcset"),
         ("video", "poster"),
         ("source", "src"),
+        ("source", "srcset"),
         ("iframe", "src"),
     ];
 
@@ -514,4 +515,41 @@ pub fn sanitize_html_string(html_str: &str) -> String {
     let mut html = Html::parse_fragment(html_str);
     strip_unsafe_elements(&mut html);
     dom::inner_html(&html, html.tree.root().id())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn resolve_source_srcset() {
+        let html_str = r#"<html><body>
+            <picture>
+                <source srcset="/small.jpg 1x, /large.jpg 2x">
+                <img src="/fallback.jpg">
+            </picture>
+        </body></html>"#;
+        let mut doc = Html::parse_document(html_str);
+        let body_ids = dom::select_ids(&doc, "body");
+        let body = body_ids[0];
+        resolve_urls(&mut doc, body, "https://example.com");
+        let output = dom::outer_html(&doc, body);
+        assert!(output.contains("https://example.com/small.jpg 1x"));
+        assert!(output.contains("https://example.com/large.jpg 2x"));
+        assert!(output.contains("https://example.com/fallback.jpg"));
+    }
+
+    #[test]
+    fn resolve_mixed_srcset() {
+        let html_str = r#"<html><body>
+            <img srcset="https://cdn.example.com/abs.jpg 1x, /relative.jpg 2x">
+        </body></html>"#;
+        let mut doc = Html::parse_document(html_str);
+        let body_ids = dom::select_ids(&doc, "body");
+        let body = body_ids[0];
+        resolve_urls(&mut doc, body, "https://example.com");
+        let output = dom::outer_html(&doc, body);
+        assert!(output.contains("https://cdn.example.com/abs.jpg 1x"));
+        assert!(output.contains("https://example.com/relative.jpg 2x"));
+    }
 }

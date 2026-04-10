@@ -40,6 +40,7 @@ mod decruft;
 pub(crate) mod dom;
 pub(crate) mod extractors;
 pub(crate) mod footnotes;
+pub(crate) mod http;
 pub(crate) mod math;
 pub(crate) mod metadata;
 pub(crate) mod metadata_block;

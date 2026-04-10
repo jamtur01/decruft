@@ -478,27 +478,9 @@ fn fetch_api_comments(owner: &str, repo: &str, number: &str) -> String {
     build_comment_tree(&comments)
 }
 
-/// Run curl to fetch JSON from a GitHub API endpoint.
+/// Fetch JSON from a GitHub API endpoint.
 fn fetch_github_json(url: &str) -> Option<serde_json::Value> {
-    let output = std::process::Command::new("curl")
-        .args([
-            "-sL",
-            "--max-time",
-            "10",
-            "-H",
-            "Accept: application/vnd.github+json",
-            "-H",
-            "User-Agent: decruft/0.1",
-            url,
-        ])
-        .output()
-        .ok()?;
-
-    if !output.status.success() {
-        return None;
-    }
-
-    let body = String::from_utf8_lossy(&output.stdout);
+    let body = crate::http::get_with_headers(url, &[("Accept", "application/vnd.github+json")])?;
     serde_json::from_str(&body).ok()
 }
 
@@ -564,7 +546,8 @@ fn flush_paragraph(html: &mut String, lines: &mut Vec<&str>) {
         return;
     }
     let text = lines.join(" ");
-    let _ = writeln!(html, "<p>{text}</p>");
+    let escaped = dom::html_escape(&text);
+    let _ = writeln!(html, "<p>{escaped}</p>");
     lines.clear();
 }
 
@@ -577,7 +560,8 @@ fn parse_md_header(line: &str) -> Option<String> {
     if rest.is_empty() {
         return None;
     }
-    Some(format!("<h{level}>{rest}</h{level}>\n"))
+    let escaped = dom::html_escape(rest);
+    Some(format!("<h{level}>{escaped}</h{level}>\n"))
 }
 
 #[cfg(test)]
@@ -655,6 +639,16 @@ mod tests {
         assert!(html.contains("<h2>Header</h2>"));
         assert!(html.contains("<pre><code>"));
         assert!(html.contains("code"));
+    }
+
+    #[test]
+    fn markdown_to_html_escapes_html_in_text() {
+        let md = "Use <script>alert('xss')</script> tag\n\n## <b>Bold</b> header";
+        let html = markdown_to_html(md);
+        assert!(!html.contains("<script>"));
+        assert!(html.contains("&lt;script&gt;"));
+        assert!(!html.contains("<b>Bold</b> header</h2>"));
+        assert!(html.contains("&lt;b&gt;Bold&lt;/b&gt;"));
     }
 
     #[test]
