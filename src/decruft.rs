@@ -9,9 +9,7 @@ use crate::metadata;
 use crate::patterns;
 use crate::schema_org;
 use crate::standardize;
-use crate::types::{
-    DebugInfo, DecruftOptions, DecruftResult, Removal,
-};
+use crate::types::{DebugInfo, DecruftOptions, DecruftResult, Removal};
 
 /// Parse HTML and extract clean, readable content.
 #[must_use]
@@ -22,31 +20,20 @@ pub fn parse(html_str: &str, options: &DecruftOptions) -> DecruftResult {
 
     let schema_data = schema_org::extract_schema_org(&html);
     let meta_tags = cleanup::collect_meta_tags(&html);
-    let meta = metadata::extract_metadata(
-        &html,
-        options.url.as_deref(),
-        schema_data.as_ref(),
-    );
+    let meta = metadata::extract_metadata(&html, options.url.as_deref(), schema_data.as_ref());
 
     let main_content = resolve_content_root(&html, options);
     let content_selector_path = dom::selector_path(&html, main_content);
 
-    run_cleanup_pipeline(
-        &mut html,
-        main_content,
-        &mut removals,
-        options,
-    );
+    run_cleanup_pipeline(&mut html, main_content, &mut removals, options);
 
     let content_html = dom::outer_html(&html, main_content);
     let word_count = dom::count_words_html(&content_html);
-    let (final_content, final_word_count) =
-        if word_count < 50 && !has_relaxed_options(options) {
-            retry_with_relaxed_options(html_str, options)
-                .unwrap_or((content_html, word_count))
-        } else {
-            (content_html, word_count)
-        };
+    let (final_content, final_word_count) = if word_count < 50 && !has_relaxed_options(options) {
+        retry_with_relaxed_options(html_str, options).unwrap_or((content_html, word_count))
+    } else {
+        (content_html, word_count)
+    };
 
     let elapsed = start.elapsed();
 
@@ -66,10 +53,7 @@ pub fn parse(html_str: &str, options: &DecruftOptions) -> DecruftResult {
     )
 }
 
-fn resolve_content_root(
-    html: &Html,
-    options: &DecruftOptions,
-) -> ego_tree::NodeId {
+fn resolve_content_root(html: &Html, options: &DecruftOptions) -> ego_tree::NodeId {
     if let Some(ref sel) = options.content_selector {
         dom::select_ids(html, sel)
             .into_iter()
@@ -93,34 +77,22 @@ fn run_cleanup_pipeline(
         cleanup::remove_small_images(html, main_content);
     }
     if options.remove_hidden_elements {
-        cleanup::remove_hidden_elements(
-            html, main_content, removals, options.debug,
-        );
+        cleanup::remove_hidden_elements(html, main_content, removals, options.debug);
     }
     if options.remove_exact_selectors {
-        cleanup::remove_exact_selectors(
-            html, main_content, removals, options.debug,
-        );
+        cleanup::remove_exact_selectors(html, main_content, removals, options.debug);
     }
     if options.remove_partial_selectors {
-        cleanup::remove_partial_selectors(
-            html, main_content, removals, options.debug,
-        );
+        cleanup::remove_partial_selectors(html, main_content, removals, options.debug);
     }
     if options.remove_low_scoring {
-        cleanup::score_and_remove(
-            html, main_content, removals, options.debug,
-        );
+        cleanup::score_and_remove(html, main_content, removals, options.debug);
     }
     if options.remove_content_patterns {
-        patterns::remove_content_patterns(
-            html, main_content, removals, options.debug,
-        );
+        patterns::remove_content_patterns(html, main_content, removals, options.debug);
     }
     if options.standardize {
-        standardize::standardize_content(
-            html, main_content, options.debug,
-        );
+        standardize::standardize_content(html, main_content, options.debug);
     }
     if let Some(ref url) = options.url {
         standardize::resolve_urls(html, main_content, url);
@@ -176,10 +148,7 @@ fn has_relaxed_options(options: &DecruftOptions) -> bool {
         && !options.remove_low_scoring
 }
 
-fn retry_with_relaxed_options(
-    html_str: &str,
-    options: &DecruftOptions,
-) -> Option<(String, usize)> {
+fn retry_with_relaxed_options(html_str: &str, options: &DecruftOptions) -> Option<(String, usize)> {
     let mut relaxed = options.clone();
     relaxed.remove_partial_selectors = false;
     relaxed.remove_hidden_elements = false;
@@ -187,23 +156,17 @@ fn retry_with_relaxed_options(
     relaxed.remove_content_patterns = false;
 
     let mut html = Html::parse_document(html_str);
-    let main_content =
-        if let Some(ref sel) = relaxed.content_selector {
-            dom::select_ids(&html, sel)
-                .into_iter()
-                .next()
-                .unwrap_or_else(|| find_main(&html))
-        } else {
-            find_main(&html)
-        };
+    let main_content = if let Some(ref sel) = relaxed.content_selector {
+        dom::select_ids(&html, sel)
+            .into_iter()
+            .next()
+            .unwrap_or_else(|| find_main(&html))
+    } else {
+        find_main(&html)
+    };
 
     if relaxed.remove_exact_selectors {
-        cleanup::remove_exact_selectors(
-            &mut html,
-            main_content,
-            &mut Vec::new(),
-            false,
-        );
+        cleanup::remove_exact_selectors(&mut html, main_content, &mut Vec::new(), false);
     }
 
     if relaxed.standardize {
@@ -212,9 +175,5 @@ fn retry_with_relaxed_options(
 
     let content = dom::outer_html(&html, main_content);
     let wc = dom::count_words_html(&content);
-    if wc > 50 {
-        Some((content, wc))
-    } else {
-        None
-    }
+    if wc > 50 { Some((content, wc)) } else { None }
 }

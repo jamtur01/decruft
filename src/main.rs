@@ -112,17 +112,15 @@ fn main() {
     let result = decruft::parse(&html, &options);
 
     match cli.format {
-        OutputFormat::Json => {
-            match serde_json::to_string_pretty(&result) {
-                Ok(json) => {
-                    write_stdout(&json);
-                }
-                Err(e) => {
-                    eprintln!("Error serializing result: {e}");
-                    std::process::exit(1);
-                }
+        OutputFormat::Json => match serde_json::to_string_pretty(&result) {
+            Ok(json) => {
+                write_stdout(&json);
             }
-        }
+            Err(e) => {
+                eprintln!("Error serializing result: {e}");
+                std::process::exit(1);
+            }
+        },
         OutputFormat::Html => {
             write_stdout(&result.content);
         }
@@ -159,9 +157,7 @@ fn strip_tags_simple(html: &str) -> String {
 fn fetch_url(url: &str) -> String {
     // Minimal HTTP fetch using std - no extra dependencies
     // For production use, users would pipe curl output
-    eprintln!(
-        "Tip: For fetching, pipe curl output: curl -sL '{url}' | decruft --url '{url}'"
-    );
+    eprintln!("Tip: For fetching, pipe curl output: curl -sL '{url}' | decruft --url '{url}'");
     eprintln!("Attempting basic fetch...");
 
     let output = std::process::Command::new("curl")
@@ -169,14 +165,9 @@ fn fetch_url(url: &str) -> String {
         .output();
 
     match output {
-        Ok(out) if out.status.success() => {
-            String::from_utf8_lossy(&out.stdout).into_owned()
-        }
+        Ok(out) if out.status.success() => String::from_utf8_lossy(&out.stdout).into_owned(),
         Ok(out) => {
-            eprintln!(
-                "curl failed: {}",
-                String::from_utf8_lossy(&out.stderr)
-            );
+            eprintln!("curl failed: {}", String::from_utf8_lossy(&out.stderr));
             std::process::exit(1);
         }
         Err(e) => {

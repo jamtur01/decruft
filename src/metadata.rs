@@ -36,11 +36,7 @@ pub fn extract_metadata(
 }
 
 /// Query `meta[{attr}="{value}"]` and return the `content` attribute.
-fn get_meta_content(
-    html: &Html,
-    attr: &str,
-    value: &str,
-) -> Option<String> {
+fn get_meta_content(html: &Html, attr: &str, value: &str) -> Option<String> {
     let selector_str = format!("meta[{attr}=\"{value}\"]");
     let Ok(sel) = Selector::parse(&selector_str) else {
         return None;
@@ -56,10 +52,7 @@ fn get_meta_content(
 
 /// Dig into a `serde_json::Value` by a dot-separated path.
 /// Returns the leaf value as a trimmed, non-empty string.
-fn schema_str(
-    schema: Option<&serde_json::Value>,
-    path: &str,
-) -> Option<String> {
+fn schema_str(schema: Option<&serde_json::Value>, path: &str) -> Option<String> {
     let mut current = schema?;
     for key in path.split('.') {
         current = current.get(key)?;
@@ -75,15 +68,10 @@ fn schema_str(
 // Title
 // ------------------------------------------------------------------
 
-fn extract_title(
-    html: &Html,
-    schema: Option<&serde_json::Value>,
-) -> String {
+fn extract_title(html: &Html, schema: Option<&serde_json::Value>) -> String {
     let raw = get_meta_content(html, "property", "og:title")
         .or_else(|| get_meta_content(html, "name", "twitter:title"))
-        .or_else(|| {
-            get_meta_content(html, "property", "twitter:title")
-        })
+        .or_else(|| get_meta_content(html, "property", "twitter:title"))
         .or_else(|| schema_str(schema, "headline"))
         .or_else(|| get_meta_content(html, "name", "title"))
         .or_else(|| title_element_text(html));
@@ -129,10 +117,7 @@ fn clean_title(title: &str) -> String {
 // Author
 // ------------------------------------------------------------------
 
-fn extract_author(
-    html: &Html,
-    schema: Option<&serde_json::Value>,
-) -> String {
+fn extract_author(html: &Html, schema: Option<&serde_json::Value>) -> String {
     if let Some(v) = get_meta_content(html, "property", "author")
         .or_else(|| get_meta_content(html, "name", "author"))
     {
@@ -154,9 +139,7 @@ fn extract_author(
     String::new()
 }
 
-fn schema_author(
-    schema: Option<&serde_json::Value>,
-) -> Option<String> {
+fn schema_author(schema: Option<&serde_json::Value>) -> Option<String> {
     let author = schema?.get("author")?;
     if let Some(name) = author.get("name").and_then(|v| v.as_str()) {
         let trimmed = name.trim();
@@ -211,21 +194,10 @@ fn class_author(html: &Html) -> Option<String> {
 // Published date
 // ------------------------------------------------------------------
 
-fn extract_published(
-    html: &Html,
-    schema: Option<&serde_json::Value>,
-) -> String {
+fn extract_published(html: &Html, schema: Option<&serde_json::Value>) -> String {
     schema_str(schema, "datePublished")
-        .or_else(|| {
-            get_meta_content(html, "name", "publishDate")
-        })
-        .or_else(|| {
-            get_meta_content(
-                html,
-                "property",
-                "article:published_time",
-            )
-        })
+        .or_else(|| get_meta_content(html, "name", "publishDate"))
+        .or_else(|| get_meta_content(html, "property", "article:published_time"))
         .or_else(|| first_time_element(html))
         .unwrap_or_default()
 }
@@ -253,17 +225,10 @@ fn first_time_element(html: &Html) -> Option<String> {
 // Site name
 // ------------------------------------------------------------------
 
-fn extract_site_name(
-    html: &Html,
-    schema: Option<&serde_json::Value>,
-) -> String {
+fn extract_site_name(html: &Html, schema: Option<&serde_json::Value>) -> String {
     schema_str(schema, "publisher.name")
-        .or_else(|| {
-            get_meta_content(html, "property", "og:site_name")
-        })
-        .or_else(|| {
-            get_meta_content(html, "name", "application-name")
-        })
+        .or_else(|| get_meta_content(html, "property", "og:site_name"))
+        .or_else(|| get_meta_content(html, "name", "application-name"))
         .unwrap_or_default()
 }
 
@@ -271,24 +236,11 @@ fn extract_site_name(
 // Description
 // ------------------------------------------------------------------
 
-fn extract_description(
-    html: &Html,
-    schema: Option<&serde_json::Value>,
-) -> String {
+fn extract_description(html: &Html, schema: Option<&serde_json::Value>) -> String {
     get_meta_content(html, "name", "description")
-        .or_else(|| {
-            get_meta_content(html, "property", "og:description")
-        })
-        .or_else(|| {
-            get_meta_content(
-                html,
-                "property",
-                "twitter:description",
-            )
-        })
-        .or_else(|| {
-            get_meta_content(html, "name", "twitter:description")
-        })
+        .or_else(|| get_meta_content(html, "property", "og:description"))
+        .or_else(|| get_meta_content(html, "property", "twitter:description"))
+        .or_else(|| get_meta_content(html, "name", "twitter:description"))
         .or_else(|| schema_str(schema, "description"))
         .unwrap_or_default()
 }
@@ -297,24 +249,15 @@ fn extract_description(
 // Image
 // ------------------------------------------------------------------
 
-fn extract_image(
-    html: &Html,
-    schema: Option<&serde_json::Value>,
-) -> String {
+fn extract_image(html: &Html, schema: Option<&serde_json::Value>) -> String {
     get_meta_content(html, "property", "og:image")
-        .or_else(|| {
-            get_meta_content(html, "property", "twitter:image")
-        })
-        .or_else(|| {
-            get_meta_content(html, "name", "twitter:image")
-        })
+        .or_else(|| get_meta_content(html, "property", "twitter:image"))
+        .or_else(|| get_meta_content(html, "name", "twitter:image"))
         .or_else(|| schema_image(schema))
         .unwrap_or_default()
 }
 
-fn schema_image(
-    schema: Option<&serde_json::Value>,
-) -> Option<String> {
+fn schema_image(schema: Option<&serde_json::Value>) -> Option<String> {
     let image = schema?.get("image")?;
     if let Some(url) = image.get("url").and_then(|v| v.as_str()) {
         let trimmed = url.trim();
@@ -337,15 +280,9 @@ fn schema_image(
 
 fn extract_language(html: &Html) -> String {
     html_lang(html)
-        .or_else(|| {
-            get_meta_content(html, "name", "content-language")
-        })
-        .or_else(|| {
-            get_meta_content(html, "http-equiv", "content-language")
-        })
-        .or_else(|| {
-            get_meta_content(html, "property", "og:locale")
-        })
+        .or_else(|| get_meta_content(html, "name", "content-language"))
+        .or_else(|| get_meta_content(html, "http-equiv", "content-language"))
+        .or_else(|| get_meta_content(html, "property", "og:locale"))
         .unwrap_or_default()
 }
 
@@ -478,30 +415,20 @@ mod tests {
     #[test]
     fn domain_extracted_from_url() {
         let doc = Html::parse_document("<html><body></body></html>");
-        let m = extract_metadata(
-            &doc,
-            Some("https://example.com/page"),
-            None,
-        );
+        let m = extract_metadata(&doc, Some("https://example.com/page"), None);
         assert_eq!(m.domain, "example.com");
     }
 
     #[test]
     fn favicon_fallback_to_root() {
         let doc = Html::parse_document("<html><body></body></html>");
-        let m = extract_metadata(
-            &doc,
-            Some("https://example.com/a/b"),
-            None,
-        );
+        let m = extract_metadata(&doc, Some("https://example.com/a/b"), None);
         assert_eq!(m.favicon, "https://example.com/favicon.ico");
     }
 
     #[test]
     fn language_from_html_attr() {
-        let doc = Html::parse_document(
-            r#"<html lang="en-US"><body></body></html>"#,
-        );
+        let doc = Html::parse_document(r#"<html lang="en-US"><body></body></html>"#);
         let m = extract_metadata(&doc, None, None);
         assert_eq!(m.language, "en-US");
     }

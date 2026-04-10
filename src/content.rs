@@ -25,7 +25,7 @@ const FALLBACK_SELECTOR: &str = "div, section, article, main";
 const MIN_WORDS_FOR_CHILD_PREFERENCE: usize = 50;
 
 /// Find the body element's `NodeId`.
-#[must_use] 
+#[must_use]
 pub fn find_body(html: &Html) -> Option<NodeId> {
     let Ok(sel) = Selector::parse("body") else {
         return None;
@@ -35,11 +35,10 @@ pub fn find_body(html: &Html) -> Option<NodeId> {
 
 /// Find the main content element in the document.
 /// Returns the `NodeId` of the best content container.
-#[must_use] 
+#[must_use]
 pub fn find_main_content(html: &Html) -> NodeId {
     let total_selectors = ENTRY_POINT_SELECTORS.len();
-    let (candidates, only_body_matched) =
-        collect_candidates(html, total_selectors);
+    let (candidates, only_body_matched) = collect_candidates(html, total_selectors);
 
     let best = if only_body_matched {
         pick_fallback(html).or_else(|| extract_body(&candidates, html))
@@ -60,10 +59,7 @@ struct Candidate {
 
 /// Score and collect all candidates from entry-point selectors.
 /// Returns the sorted list and whether only `body` produced matches.
-fn collect_candidates(
-    html: &Html,
-    total_selectors: usize,
-) -> (Vec<Candidate>, bool) {
+fn collect_candidates(html: &Html, total_selectors: usize) -> (Vec<Candidate>, bool) {
     let mut candidates = Vec::new();
     let mut non_body_matched = false;
     let body_index = total_selectors - 1;
@@ -75,8 +71,7 @@ fn collect_candidates(
         for el_ref in html.select(&sel) {
             let node_id = el_ref.id();
             #[allow(clippy::cast_precision_loss)]
-            let priority_bonus =
-                (total_selectors - idx) as f64 * 40.0;
+            let priority_bonus = (total_selectors - idx) as f64 * 40.0;
             let element_score = scorer::score_element(html, node_id);
             let score = priority_bonus + element_score;
 
@@ -102,10 +97,7 @@ fn collect_candidates(
 /// Among top candidates, check if the best contains a child from a
 /// higher-priority selector with enough content. If so, prefer the
 /// more specific child.
-fn pick_best(
-    html: &Html,
-    candidates: &[Candidate],
-) -> Option<NodeId> {
+fn pick_best(html: &Html, candidates: &[Candidate]) -> Option<NodeId> {
     let best = candidates.first()?;
     let best_id = best.node_id;
     let best_selector_idx = best.selector_index;
@@ -165,9 +157,7 @@ mod tests {
 
     #[test]
     fn find_body_returns_body() {
-        let html = Html::parse_document(
-            "<html><body><p>hello</p></body></html>",
-        );
+        let html = Html::parse_document("<html><body><p>hello</p></body></html>");
         let body = find_body(&html);
         assert!(body.is_some());
     }
@@ -179,10 +169,7 @@ mod tests {
 
     #[test]
     fn last_entry_point_is_body() {
-        let last = ENTRY_POINT_SELECTORS
-            .last()
-            .copied()
-            .unwrap_or_default();
+        let last = ENTRY_POINT_SELECTORS.last().copied().unwrap_or_default();
         assert_eq!(last, "body");
     }
 }

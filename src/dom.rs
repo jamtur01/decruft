@@ -4,7 +4,7 @@ use ego_tree::NodeId;
 use scraper::{Html, Node, Selector};
 
 /// Get the text content of a node and its descendants.
-#[must_use] 
+#[must_use]
 pub fn text_content(html: &Html, node_id: NodeId) -> String {
     let mut text = String::new();
     collect_text(html, node_id, &mut text);
@@ -26,7 +26,7 @@ fn collect_text(html: &Html, node_id: NodeId, buf: &mut String) {
 }
 
 /// Get the outer HTML of a node.
-#[must_use] 
+#[must_use]
 pub fn outer_html(html: &Html, node_id: NodeId) -> String {
     let node_ref = html.tree.get(node_id);
     let Some(node_ref) = node_ref else {
@@ -65,11 +65,7 @@ fn serialize_node(html: &Html, node_id: NodeId, node: &Node) -> String {
                 return out;
             };
             for child in node_ref.children() {
-                out.push_str(&serialize_node(
-                    html,
-                    child.id(),
-                    child.value(),
-                ));
+                out.push_str(&serialize_node(html, child.id(), child.value()));
             }
             let _ = write!(out, "</{tag}>");
             out
@@ -143,7 +139,7 @@ pub fn get_attr(html: &Html, node_id: NodeId, attr: &str) -> Option<String> {
 }
 
 /// Check if a node is an element with the given tag name.
-#[must_use] 
+#[must_use]
 pub fn is_tag(html: &Html, node_id: NodeId, tag: &str) -> bool {
     let Some(node_ref) = html.tree.get(node_id) else {
         return false;
@@ -156,7 +152,7 @@ pub fn is_tag(html: &Html, node_id: NodeId, tag: &str) -> bool {
 }
 
 /// Get the tag name of an element node.
-#[must_use] 
+#[must_use]
 pub fn tag_name(html: &Html, node_id: NodeId) -> Option<String> {
     let node_ref = html.tree.get(node_id)?;
     if let Node::Element(el) = node_ref.value() {
@@ -167,7 +163,7 @@ pub fn tag_name(html: &Html, node_id: NodeId) -> Option<String> {
 }
 
 /// Get all element node IDs matching a CSS selector.
-#[must_use] 
+#[must_use]
 pub fn select_ids(html: &Html, selector_str: &str) -> Vec<NodeId> {
     let Ok(sel) = Selector::parse(selector_str) else {
         return Vec::new();
@@ -176,7 +172,7 @@ pub fn select_ids(html: &Html, selector_str: &str) -> Vec<NodeId> {
 }
 
 /// Count words in text, with CJK awareness.
-#[must_use] 
+#[must_use]
 pub fn count_words(text: &str) -> usize {
     let mut count = 0usize;
     let mut in_word = false;
@@ -207,7 +203,7 @@ fn is_cjk(ch: char) -> bool {
 }
 
 /// Count words in HTML by stripping tags.
-#[must_use] 
+#[must_use]
 pub fn count_words_html(html_str: &str) -> usize {
     let text = strip_tags(html_str);
     let decoded = decode_entities(&text);
@@ -239,7 +235,7 @@ fn decode_entities(s: &str) -> String {
 }
 
 /// Get the parent element's node ID.
-#[must_use] 
+#[must_use]
 pub fn parent_element(html: &Html, node_id: NodeId) -> Option<NodeId> {
     let node_ref = html.tree.get(node_id)?;
     let parent = node_ref.parent()?;
@@ -251,7 +247,7 @@ pub fn parent_element(html: &Html, node_id: NodeId) -> Option<NodeId> {
 }
 
 /// Check if `ancestor_id` is an ancestor of `node_id`.
-#[must_use] 
+#[must_use]
 pub fn is_ancestor(html: &Html, node_id: NodeId, ancestor_id: NodeId) -> bool {
     let mut current = node_id;
     loop {
@@ -269,7 +265,7 @@ pub fn is_ancestor(html: &Html, node_id: NodeId, ancestor_id: NodeId) -> bool {
 }
 
 /// Get all child element node IDs.
-#[must_use] 
+#[must_use]
 pub fn child_elements(html: &Html, node_id: NodeId) -> Vec<NodeId> {
     let Some(node_ref) = html.tree.get(node_id) else {
         return Vec::new();
@@ -282,7 +278,7 @@ pub fn child_elements(html: &Html, node_id: NodeId) -> Vec<NodeId> {
 }
 
 /// Compute link density: ratio of text inside `<a>` tags to total text.
-#[must_use] 
+#[must_use]
 pub fn link_density(html: &Html, node_id: NodeId) -> f64 {
     let total_text = text_content(html, node_id);
     let total_len = total_text.trim().len();
@@ -299,23 +295,14 @@ pub fn link_density(html: &Html, node_id: NodeId) -> f64 {
 }
 
 /// Find all descendant elements with a specific tag.
-#[must_use] 
-pub fn descendant_elements_by_tag(
-    html: &Html,
-    node_id: NodeId,
-    tag: &str,
-) -> Vec<NodeId> {
+#[must_use]
+pub fn descendant_elements_by_tag(html: &Html, node_id: NodeId, tag: &str) -> Vec<NodeId> {
     let mut result = Vec::new();
     collect_descendants_by_tag(html, node_id, tag, &mut result);
     result
 }
 
-fn collect_descendants_by_tag(
-    html: &Html,
-    node_id: NodeId,
-    tag: &str,
-    result: &mut Vec<NodeId>,
-) {
+fn collect_descendants_by_tag(html: &Html, node_id: NodeId, tag: &str, result: &mut Vec<NodeId>) {
     let Some(node_ref) = html.tree.get(node_id) else {
         return;
     };
@@ -330,21 +317,14 @@ fn collect_descendants_by_tag(
 }
 
 /// Get all descendant element IDs.
-#[must_use] 
-pub fn all_descendant_elements(
-    html: &Html,
-    node_id: NodeId,
-) -> Vec<NodeId> {
+#[must_use]
+pub fn all_descendant_elements(html: &Html, node_id: NodeId) -> Vec<NodeId> {
     let mut result = Vec::new();
     collect_all_descendants(html, node_id, &mut result);
     result
 }
 
-fn collect_all_descendants(
-    html: &Html,
-    node_id: NodeId,
-    result: &mut Vec<NodeId>,
-) {
+fn collect_all_descendants(html: &Html, node_id: NodeId, result: &mut Vec<NodeId>) {
     let Some(node_ref) = html.tree.get(node_id) else {
         return;
     };
@@ -357,7 +337,7 @@ fn collect_all_descendants(
 }
 
 /// Generate a CSS selector path for a node (for debug output).
-#[must_use] 
+#[must_use]
 pub fn selector_path(html: &Html, node_id: NodeId) -> String {
     let mut parts = Vec::new();
     let mut current = Some(node_id);

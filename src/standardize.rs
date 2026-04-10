@@ -1,5 +1,5 @@
 use ego_tree::NodeId;
-use markup5ever::{ns, QualName};
+use markup5ever::{QualName, ns};
 use scraper::{Html, Node};
 
 use crate::dom;
@@ -53,19 +53,14 @@ const ALLOWED_ATTRIBUTES: &[&str] = &[
 
 /// Elements that are allowed to be empty.
 const ALLOWED_EMPTY: &[&str] = &[
-    "area", "audio", "base", "br", "circle", "col", "defs", "ellipse",
-    "embed", "figure", "g", "hr", "iframe", "img", "input", "line",
-    "link", "mask", "meta", "object", "param", "path", "pattern",
-    "picture", "polygon", "polyline", "rect", "source", "stop", "svg",
-    "td", "th", "track", "use", "video", "wbr",
+    "area", "audio", "base", "br", "circle", "col", "defs", "ellipse", "embed", "figure", "g",
+    "hr", "iframe", "img", "input", "line", "link", "mask", "meta", "object", "param", "path",
+    "pattern", "picture", "polygon", "polyline", "rect", "source", "stop", "svg", "td", "th",
+    "track", "use", "video", "wbr",
 ];
 
 /// Standardize content: clean attributes, remove empty elements, fix headings.
-pub fn standardize_content(
-    html: &mut Html,
-    main_content: NodeId,
-    debug: bool,
-) {
+pub fn standardize_content(html: &mut Html, main_content: NodeId, debug: bool) {
     clean_attributes(html, main_content, debug);
     remove_empty_elements(html, main_content);
     normalize_headings(html, main_content);
@@ -86,9 +81,19 @@ fn clean_attributes(html: &mut Html, main_content: NodeId, debug: bool) {
         let tag = el.name.local.as_ref().to_string();
         let is_svg_related = matches!(
             tag.as_str(),
-            "svg" | "path" | "circle" | "rect" | "line"
-                | "polygon" | "polyline" | "g" | "defs"
-                | "use" | "mask" | "ellipse" | "stop"
+            "svg"
+                | "path"
+                | "circle"
+                | "rect"
+                | "line"
+                | "polygon"
+                | "polyline"
+                | "g"
+                | "defs"
+                | "use"
+                | "mask"
+                | "ellipse"
+                | "stop"
                 | "pattern"
         );
 
@@ -163,9 +168,23 @@ fn normalize_headings(html: &mut Html, main_content: NodeId) {
 /// Unwrap non-semantic wrapper divs (single-child divs containing a block).
 fn unwrap_wrapper_divs(html: &mut Html, main_content: NodeId) {
     let block_tags = [
-        "article", "section", "div", "main", "p", "blockquote",
-        "figure", "table", "ul", "ol", "dl", "h1", "h2", "h3", "h4",
-        "h5", "h6",
+        "article",
+        "section",
+        "div",
+        "main",
+        "p",
+        "blockquote",
+        "figure",
+        "table",
+        "ul",
+        "ol",
+        "dl",
+        "h1",
+        "h2",
+        "h3",
+        "h4",
+        "h5",
+        "h6",
     ];
 
     let descendants = dom::all_descendant_elements(html, main_content);
@@ -216,16 +235,12 @@ pub fn resolve_urls(html: &mut Html, main_content: NodeId, base_url: &str) {
     let attrs_to_resolve = [("a", "href"), ("img", "src"), ("img", "srcset")];
 
     for (tag, attr) in &attrs_to_resolve {
-        let elements =
-            dom::descendant_elements_by_tag(html, main_content, tag);
+        let elements = dom::descendant_elements_by_tag(html, main_content, tag);
         for node_id in elements {
             let Some(val) = dom::get_attr(html, node_id, attr) else {
                 continue;
             };
-            if val.starts_with("http://")
-                || val.starts_with("https://")
-                || val.starts_with("//")
-            {
+            if val.starts_with("http://") || val.starts_with("https://") || val.starts_with("//") {
                 continue;
             }
             if *attr == "srcset" {
@@ -257,11 +272,8 @@ fn resolve_srcset(html: &mut Html, node_id: NodeId, base: &url::Url) {
         let Some(url_part) = tokens.next() else {
             continue;
         };
-        let descriptor: String =
-            tokens.collect::<Vec<_>>().join(" ");
-        let resolved = if url_part.starts_with("http://")
-            || url_part.starts_with("https://")
-        {
+        let descriptor: String = tokens.collect::<Vec<_>>().join(" ");
+        let resolved = if url_part.starts_with("http://") || url_part.starts_with("https://") {
             url_part.to_string()
         } else {
             base.join(url_part)

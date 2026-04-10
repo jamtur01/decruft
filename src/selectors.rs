@@ -142,11 +142,10 @@ const PARTIAL_PATTERNS: &[&str] = &[
 
 /// Compiled regex matching any partial pattern as a substring,
 /// case-insensitive.
-pub static PARTIAL_REGEX: LazyLock<Regex> =
-    LazyLock::new(build_partial_pattern);
+pub static PARTIAL_REGEX: LazyLock<Regex> = LazyLock::new(build_partial_pattern);
 
 /// Get a reference to the compiled partial pattern regex.
-#[must_use] 
+#[must_use]
 pub fn partial_pattern() -> &'static Regex {
     &PARTIAL_REGEX
 }

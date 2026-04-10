@@ -140,9 +140,7 @@ pub fn remove_hidden_elements(
             if has_responsive {
                 false
             } else {
-                classes
-                    .iter()
-                    .any(|c| *c == "hidden" || *c == ":hidden")
+                classes.iter().any(|c| *c == "hidden" || *c == ":hidden")
             }
         } else {
             false
@@ -175,8 +173,7 @@ pub fn score_and_remove(
     debug: bool,
 ) {
     let block_tags = [
-        "div", "section", "article", "main", "aside", "header",
-        "footer", "nav",
+        "div", "section", "article", "main", "aside", "header", "footer", "nav",
     ];
 
     let mut to_remove = Vec::new();
@@ -237,12 +234,8 @@ pub fn remove_small_images(html: &mut Html, main_content: NodeId) {
             continue;
         };
 
-        let width = el
-            .attr("width")
-            .and_then(|w| w.parse::<u32>().ok());
-        let height = el
-            .attr("height")
-            .and_then(|h| h.parse::<u32>().ok());
+        let width = el.attr("width").and_then(|w| w.parse::<u32>().ok());
+        let height = el.attr("height").and_then(|h| h.parse::<u32>().ok());
 
         let is_small = match (width, height) {
             (Some(w), _) if w < 33 => true,
@@ -250,9 +243,9 @@ pub fn remove_small_images(html: &mut Html, main_content: NodeId) {
             _ => false,
         };
 
-        let is_placeholder = el.attr("src").is_none_or(|s| {
-            s.is_empty() || s.starts_with("data:image/gif")
-        });
+        let is_placeholder = el
+            .attr("src")
+            .is_none_or(|s| s.is_empty() || s.starts_with("data:image/gif"));
 
         if is_small || is_placeholder {
             to_remove.push(img_id);
@@ -266,13 +259,11 @@ pub fn remove_small_images(html: &mut Html, main_content: NodeId) {
 
 /// Remove all images from content.
 pub fn remove_all_images(html: &mut Html, main_content: NodeId) {
-    let img_ids =
-        dom::descendant_elements_by_tag(html, main_content, "img");
+    let img_ids = dom::descendant_elements_by_tag(html, main_content, "img");
     for id in img_ids {
         dom::remove_node(html, id);
     }
-    let picture_ids =
-        dom::descendant_elements_by_tag(html, main_content, "picture");
+    let picture_ids = dom::descendant_elements_by_tag(html, main_content, "picture");
     for id in picture_ids {
         dom::remove_node(html, id);
     }
@@ -284,11 +275,7 @@ fn collect_all_elements(html: &Html) -> Vec<NodeId> {
     result
 }
 
-fn collect_elements_recursive(
-    html: &Html,
-    node_id: NodeId,
-    result: &mut Vec<NodeId>,
-) {
+fn collect_elements_recursive(html: &Html, node_id: NodeId, result: &mut Vec<NodeId>) {
     let Some(node_ref) = html.tree.get(node_id) else {
         return;
     };
@@ -329,9 +316,7 @@ fn truncate(s: &str, max_len: usize) -> String {
 }
 
 /// Collect all meta tags from the document.
-pub fn collect_meta_tags(
-    html: &Html,
-) -> Vec<crate::types::MetaTag> {
+pub fn collect_meta_tags(html: &Html) -> Vec<crate::types::MetaTag> {
     let mut tags = Vec::new();
     let ids = dom::select_ids(html, "meta");
     for id in ids {
@@ -352,15 +337,13 @@ pub fn collect_meta_tags(
 
 /// Deduplicate images with same alt text, keeping highest resolution.
 pub fn deduplicate_images(html: &mut Html, main_content: NodeId) {
-    let img_ids =
-        dom::descendant_elements_by_tag(html, main_content, "img");
+    let img_ids = dom::descendant_elements_by_tag(html, main_content, "img");
 
     let mut seen_alts: HashSet<String> = HashSet::new();
     let mut to_remove = Vec::new();
 
     for img_id in img_ids {
-        let alt = dom::get_attr(html, img_id, "alt")
-            .unwrap_or_default();
+        let alt = dom::get_attr(html, img_id, "alt").unwrap_or_default();
         if alt.is_empty() {
             continue;
         }

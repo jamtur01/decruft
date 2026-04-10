@@ -7,15 +7,11 @@ use scraper::Html;
 use crate::dom;
 use crate::types::Removal;
 
-static READ_TIME_RE: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r"(?i)\d+\s*min(ute)?s?\s*(read|to read)")
-        .expect("valid regex")
-});
+static READ_TIME_RE: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"(?i)\d+\s*min(ute)?s?\s*(read|to read)").expect("valid regex"));
 
-static BYLINE_RE: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r"(?i)^(by|written by|author:)\s+\S")
-        .expect("valid regex")
-});
+static BYLINE_RE: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"(?i)^(by|written by|author:)\s+\S").expect("valid regex"));
 
 static DATE_RE: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(
@@ -63,18 +59,12 @@ fn remove_read_time(
     let mut to_remove = Vec::new();
 
     for tag in &tags {
-        let elements =
-            dom::descendant_elements_by_tag(html, main_content, tag);
+        let elements = dom::descendant_elements_by_tag(html, main_content, tag);
         for node_id in elements {
             let text = dom::text_content(html, node_id);
             let word_count = dom::count_words(&text);
             if word_count <= 10 && READ_TIME_RE.is_match(&text) {
-                record_removal(
-                    removals,
-                    debug,
-                    "read time",
-                    &text,
-                );
+                record_removal(removals, debug, "read time", &text);
                 to_remove.push(node_id);
             }
         }
@@ -85,18 +75,12 @@ fn remove_read_time(
     }
 }
 
-fn remove_bylines(
-    html: &mut Html,
-    main_content: NodeId,
-    removals: &mut Vec<Removal>,
-    debug: bool,
-) {
+fn remove_bylines(html: &mut Html, main_content: NodeId, removals: &mut Vec<Removal>, debug: bool) {
     let tags = ["p", "span", "div"];
     let mut to_remove = Vec::new();
 
     for tag in &tags {
-        let elements =
-            dom::descendant_elements_by_tag(html, main_content, tag);
+        let elements = dom::descendant_elements_by_tag(html, main_content, tag);
         for node_id in elements {
             let text = dom::text_content(html, node_id);
             if text.len() > 600 {
@@ -105,12 +89,7 @@ fn remove_bylines(
             if BYLINE_RE.is_match(text.trim()) {
                 let word_count = dom::count_words(&text);
                 if word_count <= 15 {
-                    record_removal(
-                        removals,
-                        debug,
-                        "byline",
-                        &text,
-                    );
+                    record_removal(removals, debug, "byline", &text);
                     to_remove.push(node_id);
                 }
             }
@@ -132,18 +111,12 @@ fn remove_boilerplate(
     let mut to_remove = Vec::new();
 
     for tag in &tags {
-        let elements =
-            dom::descendant_elements_by_tag(html, main_content, tag);
+        let elements = dom::descendant_elements_by_tag(html, main_content, tag);
         for node_id in elements {
             let text = dom::text_content(html, node_id);
             let word_count = dom::count_words(&text);
             if word_count <= 30 && BOILERPLATE_RE.is_match(&text) {
-                record_removal(
-                    removals,
-                    debug,
-                    "boilerplate",
-                    &text,
-                );
+                record_removal(removals, debug, "boilerplate", &text);
                 to_remove.push(node_id);
             }
         }
@@ -164,25 +137,17 @@ fn remove_related_headings(
     let mut to_remove = Vec::new();
 
     for tag in &heading_tags {
-        let elements =
-            dom::descendant_elements_by_tag(html, main_content, tag);
+        let elements = dom::descendant_elements_by_tag(html, main_content, tag);
         for node_id in elements {
             let text = dom::text_content(html, node_id);
             if RELATED_HEADING_RE.is_match(text.trim()) {
-                record_removal(
-                    removals,
-                    debug,
-                    "related heading",
-                    &text,
-                );
+                record_removal(removals, debug, "related heading", &text);
                 to_remove.push(node_id);
 
                 // Also remove the next sibling if it's a list or div
-                if let Some(next) = next_element_sibling(html, node_id)
-                {
+                if let Some(next) = next_element_sibling(html, node_id) {
                     let next_tag = dom::tag_name(html, next);
-                    if next_tag.as_deref()
-                        == Some("ul")
+                    if next_tag.as_deref() == Some("ul")
                         || next_tag.as_deref() == Some("ol")
                         || next_tag.as_deref() == Some("div")
                     {
@@ -204,8 +169,7 @@ fn remove_boundary_time_elements(
     removals: &mut Vec<Removal>,
     debug: bool,
 ) {
-    let time_elements =
-        dom::descendant_elements_by_tag(html, main_content, "time");
+    let time_elements = dom::descendant_elements_by_tag(html, main_content, "time");
     let mut to_remove = Vec::new();
 
     for time_id in time_elements {
@@ -218,19 +182,11 @@ fn remove_boundary_time_elements(
         // Check if it's near the start or end of content
         if let Some(parent_id) = dom::parent_element(html, time_id) {
             let parent_tag = dom::tag_name(html, parent_id);
-            if parent_tag.as_deref() == Some("p")
-                || parent_tag.as_deref() == Some("div")
-            {
-                let parent_text =
-                    dom::text_content(html, parent_id);
+            if parent_tag.as_deref() == Some("p") || parent_tag.as_deref() == Some("div") {
+                let parent_text = dom::text_content(html, parent_id);
                 let parent_words = dom::count_words(&parent_text);
                 if parent_words <= 8 && DATE_RE.is_match(&text) {
-                    record_removal(
-                        removals,
-                        debug,
-                        "boundary time",
-                        &text,
-                    );
+                    record_removal(removals, debug, "boundary time", &text);
                     to_remove.push(parent_id);
                 }
             }
@@ -260,17 +216,13 @@ fn remove_trailing_link_lists(
     let start = len.saturating_sub(3);
     for &child_id in &children[start..] {
         let tag = dom::tag_name(html, child_id);
-        let is_section = matches!(
-            tag.as_deref(),
-            Some("div" | "section" | "aside")
-        );
+        let is_section = matches!(tag.as_deref(), Some("div" | "section" | "aside"));
         if !is_section {
             continue;
         }
 
         let density = dom::link_density(html, child_id);
-        let word_count =
-            dom::count_words(&dom::text_content(html, child_id));
+        let word_count = dom::count_words(&dom::text_content(html, child_id));
         if density > 0.5 && word_count < 100 {
             record_removal(
                 removals,
@@ -299,12 +251,7 @@ fn next_element_sibling(html: &Html, node_id: NodeId) -> Option<NodeId> {
     None
 }
 
-fn record_removal(
-    removals: &mut Vec<Removal>,
-    debug: bool,
-    reason: &str,
-    text: &str,
-) {
+fn record_removal(removals: &mut Vec<Removal>, debug: bool, reason: &str, text: &str) {
     if debug {
         let trimmed = text.split_whitespace().collect::<Vec<_>>().join(" ");
         let preview = if trimmed.len() > 80 {

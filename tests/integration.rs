@@ -1,6 +1,6 @@
 #![allow(clippy::panic)]
 
-use decruft::{parse, DecruftOptions};
+use decruft::{DecruftOptions, parse};
 
 fn opts() -> DecruftOptions {
     DecruftOptions {
@@ -18,10 +18,7 @@ fn opts_debug() -> DecruftOptions {
 }
 
 fn load_fixture(name: &str) -> String {
-    let path = format!(
-        "{}/tests/fixtures/{name}",
-        env!("CARGO_MANIFEST_DIR")
-    );
+    let path = format!("{}/tests/fixtures/{name}", env!("CARGO_MANIFEST_DIR"));
     std::fs::read_to_string(&path)
         .unwrap_or_else(|e| panic!("fixture {name} not found at {path}: {e}"))
 }
@@ -236,7 +233,10 @@ fn blog_extracts_schema_org() {
     let html = load_fixture("complex_blog.html");
     let result = parse(&html, &opts());
 
-    assert!(result.schema_org_data.is_some(), "should have schema.org data");
+    assert!(
+        result.schema_org_data.is_some(),
+        "should have schema.org data"
+    );
     let schema = result.schema_org_data.as_ref().expect("schema");
     assert_eq!(
         schema.get("@type").and_then(|v| v.as_str()),
@@ -392,7 +392,10 @@ fn news_extracts_metadata() {
     let html = load_fixture("news_article.html");
     let result = parse(&html, &opts());
 
-    assert_eq!(result.title, "Scientists Discover New Species in Deep Ocean");
+    assert_eq!(
+        result.title,
+        "Scientists Discover New Species in Deep Ocean"
+    );
     assert_eq!(result.author, "Sarah Mitchell");
     assert_eq!(result.site, "World News Today");
     assert!(result.published.contains("2025-06-20"));
@@ -418,10 +421,7 @@ fn debug_mode_includes_removals() {
 
     assert!(result.debug.is_some(), "debug info should be present");
     let debug = result.debug.as_ref().expect("debug");
-    assert!(
-        !debug.removals.is_empty(),
-        "should have recorded removals"
-    );
+    assert!(!debug.removals.is_empty(), "should have recorded removals");
     assert!(
         !debug.content_selector.is_empty(),
         "should have content selector path"
@@ -453,10 +453,7 @@ fn no_images_removes_all_images() {
     };
     let result = parse(&html, &opts);
 
-    assert!(
-        !result.content.contains("<img"),
-        "should remove all images"
-    );
+    assert!(!result.content.contains("<img"), "should remove all images");
 }
 
 #[test]
@@ -621,10 +618,7 @@ fn rust_blog_if_available() {
     let result = parse(
         &html,
         &DecruftOptions {
-            url: Some(
-                "https://blog.rust-lang.org/2024/11/28/Rust-2024-Edition.html"
-                    .into(),
-            ),
+            url: Some("https://blog.rust-lang.org/2024/11/28/Rust-2024-Edition.html".into()),
             ..DecruftOptions::default()
         },
     );
@@ -649,10 +643,7 @@ fn wikipedia_if_available() {
     let result = parse(
         &html,
         &DecruftOptions {
-            url: Some(
-                "https://en.wikipedia.org/wiki/Rust_(programming_language)"
-                    .into(),
-            ),
+            url: Some("https://en.wikipedia.org/wiki/Rust_(programming_language)".into()),
             ..DecruftOptions::default()
         },
     );

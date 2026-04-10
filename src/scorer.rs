@@ -7,9 +7,8 @@ use scraper::Html;
 use crate::dom;
 
 static CONTENT_CLASS_RE: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r"(?i)(content|article|post)").unwrap_or_else(|_| {
-        Regex::new("a]^").expect("infallible fallback")
-    })
+    Regex::new(r"(?i)(content|article|post)")
+        .unwrap_or_else(|_| Regex::new("a]^").expect("infallible fallback"))
 });
 
 static LIKELY_CONTENT_CLASS_RE: LazyLock<Regex> = LazyLock::new(|| {
@@ -57,15 +56,12 @@ static DATE_RE: LazyLock<Regex> = LazyLock::new(|| {
 });
 
 static SENTENCE_PUNCT_RE: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r"[.!?]")
-        .unwrap_or_else(|_| Regex::new("a]^").expect("infallible fallback"))
+    Regex::new(r"[.!?]").unwrap_or_else(|_| Regex::new("a]^").expect("infallible fallback"))
 });
 
 fn class_and_id(html: &Html, node_id: NodeId) -> String {
-    let class = dom::get_attr(html, node_id, "class")
-        .unwrap_or_default();
-    let id = dom::get_attr(html, node_id, "id")
-        .unwrap_or_default();
+    let class = dom::get_attr(html, node_id, "class").unwrap_or_default();
+    let id = dom::get_attr(html, node_id, "id").unwrap_or_default();
     format!("{class} {id}")
 }
 
@@ -94,18 +90,15 @@ fn count_commas(text: &str) -> usize {
 pub fn score_element(html: &Html, node_id: NodeId) -> f64 {
     let text = dom::text_content(html, node_id);
     let words = dom::count_words(&text);
-    let paragraphs =
-        dom::descendant_elements_by_tag(html, node_id, "p").len();
+    let paragraphs = dom::descendant_elements_by_tag(html, node_id, "p").len();
     let commas = count_commas(&text);
-    let images =
-        dom::descendant_elements_by_tag(html, node_id, "img").len();
+    let images = dom::descendant_elements_by_tag(html, node_id, "img").len();
 
     let mut score = words as f64;
     score += paragraphs as f64 * 10.0;
     score += commas as f64;
 
-    let image_density =
-        images as f64 / words.max(1) as f64;
+    let image_density = images as f64 / words.max(1) as f64;
     score -= image_density * 3.0;
 
     let class_id = class_and_id(html, node_id);
@@ -122,19 +115,14 @@ pub fn score_element(html: &Html, node_id: NodeId) -> f64 {
 /// Find the best-scoring element from a list, above
 /// `min_score` threshold.
 #[must_use]
-pub fn find_best_element(
-    html: &Html,
-    elements: &[NodeId],
-    min_score: f64,
-) -> Option<NodeId> {
+pub fn find_best_element(html: &Html, elements: &[NodeId], min_score: f64) -> Option<NodeId> {
     let mut best: Option<(NodeId, f64)> = None;
     for &id in elements {
         let score = score_element(html, id);
         if score < min_score {
             continue;
         }
-        let dominated = best
-            .is_some_and(|(_, best_score)| score <= best_score);
+        let dominated = best.is_some_and(|(_, best_score)| score <= best_score);
         if !dominated {
             best = Some((id, score));
         }
@@ -161,10 +149,8 @@ pub fn is_likely_content(html: &Html, node_id: NodeId) -> bool {
 
     let text = dom::text_content(html, node_id);
     let word_count = dom::count_words(&text);
-    let paragraph_count =
-        dom::descendant_elements_by_tag(html, node_id, "p").len();
-    let list_item_count =
-        dom::descendant_elements_by_tag(html, node_id, "li").len();
+    let paragraph_count = dom::descendant_elements_by_tag(html, node_id, "p").len();
+    let list_item_count = dom::descendant_elements_by_tag(html, node_id, "li").len();
 
     if word_count > 100 {
         return true;
@@ -185,8 +171,7 @@ pub fn is_likely_content(html: &Html, node_id: NodeId) -> bool {
 fn has_structural_content(html: &Html, node_id: NodeId) -> bool {
     let tags = ["pre", "table", "figure", "picture"];
     for tag in &tags {
-        if !dom::descendant_elements_by_tag(html, node_id, tag).is_empty()
-        {
+        if !dom::descendant_elements_by_tag(html, node_id, tag).is_empty() {
             return true;
         }
     }
@@ -218,26 +203,17 @@ pub fn score_non_content(html: &Html, node_id: NodeId) -> f64 {
     let pattern_matches = NON_CONTENT_RE.find_iter(&class_id).count();
     score -= pattern_matches as f64 * 8.0;
 
-    if word_count < 15
-        && BYLINE_RE.is_match(&text)
-        && DATE_RE.is_match(&text)
-    {
+    if word_count < 15 && BYLINE_RE.is_match(&text) && DATE_RE.is_match(&text) {
         score -= 10.0;
     }
 
     score
 }
 
-fn apply_link_heavy_penalty(
-    html: &Html,
-    node_id: NodeId,
-    text: &str,
-    mut score: f64,
-) -> f64 {
+fn apply_link_heavy_penalty(html: &Html, node_id: NodeId, text: &str, mut score: f64) -> f64 {
     let links = dom::descendant_elements_by_tag(html, node_id, "a");
     let words = dom::count_words(text);
-    if links.len() > 1 && words < 80 && link_text_ratio(html, node_id) > 0.8
-    {
+    if links.len() > 1 && words < 80 && link_text_ratio(html, node_id) > 0.8 {
         score -= 15.0;
     }
     score

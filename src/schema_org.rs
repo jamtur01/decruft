@@ -6,9 +6,7 @@ use serde_json::Value;
 /// flattens @graph arrays, and returns combined data.
 #[must_use]
 pub fn extract_schema_org(html: &Html) -> Option<Value> {
-    let Ok(selector) =
-        Selector::parse(r#"script[type="application/ld+json"]"#)
-    else {
+    let Ok(selector) = Selector::parse(r#"script[type="application/ld+json"]"#) else {
         return None;
     };
 
@@ -17,8 +15,7 @@ pub fn extract_schema_org(html: &Html) -> Option<Value> {
     for element in html.select(&selector) {
         let raw = element.text().collect::<String>();
         let cleaned = strip_json_comments(&raw);
-        let Ok(mut parsed) = serde_json::from_str::<Value>(&cleaned)
-        else {
+        let Ok(mut parsed) = serde_json::from_str::<Value>(&cleaned) else {
             continue;
         };
         decode_entities(&mut parsed);
@@ -102,10 +99,7 @@ fn decode_entity_str(s: &str) -> String {
         let rest = &chars[pos + 2..];
         if let Some(semi) = rest.find(';') {
             let num_str = &rest[..semi];
-            let decoded = num_str
-                .parse::<u32>()
-                .ok()
-                .and_then(char::from_u32);
+            let decoded = num_str.parse::<u32>().ok().and_then(char::from_u32);
             if let Some(ch) = decoded {
                 output.push(ch);
                 chars = &rest[semi + 1..];
@@ -126,14 +120,8 @@ fn decode_entity_str(s: &str) -> String {
 /// before parsing as JSON.
 fn strip_json_comments(s: &str) -> String {
     // Strip CDATA wrappers
-    let s = s
-        .trim()
-        .strip_prefix("<![CDATA[")
-        .unwrap_or(s.trim());
-    let s = s
-        .strip_suffix("]]>")
-        .unwrap_or(s)
-        .trim();
+    let s = s.trim().strip_prefix("<![CDATA[").unwrap_or(s.trim());
+    let s = s.strip_suffix("]]>").unwrap_or(s).trim();
 
     let mut result = String::with_capacity(s.len());
     let bytes = s.as_bytes();
@@ -176,9 +164,7 @@ fn strip_json_comments(s: &str) -> String {
         // Block comment
         if bytes[i] == b'/' && i + 1 < len && bytes[i + 1] == b'*' {
             i += 2;
-            while i + 1 < len
-                && !(bytes[i] == b'*' && bytes[i + 1] == b'/')
-            {
+            while i + 1 < len && !(bytes[i] == b'*' && bytes[i + 1] == b'/') {
                 i += 1;
             }
             if i + 1 < len {
@@ -213,8 +199,7 @@ fn collect_items(value: &Value, items: &mut Vec<Value>) {
         // Also include fields beyond @graph at the top level
         let mut top = obj.clone();
         top.remove("@graph");
-        if top.len() > 1 || (top.len() == 1 && !top.contains_key("@context"))
-        {
+        if top.len() > 1 || (top.len() == 1 && !top.contains_key("@context")) {
             items.push(Value::Object(top));
         }
     } else {
@@ -250,10 +235,7 @@ fn walk_path(value: &Value, segments: &[&str]) -> Option<String> {
 }
 
 /// Search recursively for a path through nested objects.
-fn recursive_search(
-    value: &Value,
-    segments: &[&str],
-) -> Option<String> {
+fn recursive_search(value: &Value, segments: &[&str]) -> Option<String> {
     if segments.is_empty() {
         return value_to_string(value);
     }
@@ -327,8 +309,7 @@ mod tests {
         assert!(data.is_some());
         let data = data.as_ref();
         assert_eq!(
-            data.and_then(|d| d.get("name"))
-                .and_then(Value::as_str),
+            data.and_then(|d| d.get("name")).and_then(Value::as_str),
             Some("Test")
         );
     }
@@ -354,11 +335,10 @@ mod tests {
 
     #[test]
     fn test_get_property_simple() {
-        let data: Value = serde_json::from_str(
-            r#"{"author": {"name": "Alice"}, "datePublished": "2024"}"#,
-        )
-        .ok()
-        .unwrap_or_default();
+        let data: Value =
+            serde_json::from_str(r#"{"author": {"name": "Alice"}, "datePublished": "2024"}"#)
+                .ok()
+                .unwrap_or_default();
         assert_eq!(
             get_property(&data, "author.name"),
             Some("Alice".to_string())
@@ -371,34 +351,24 @@ mod tests {
 
     #[test]
     fn test_get_property_array() {
-        let data: Value = serde_json::from_str(
-            r#"{"author": [{"name": "A"}, {"name": "B"}]}"#,
-        )
-        .ok()
-        .unwrap_or_default();
-        assert_eq!(
-            get_property(&data, "author.[].name"),
-            Some("A".to_string())
-        );
+        let data: Value = serde_json::from_str(r#"{"author": [{"name": "A"}, {"name": "B"}]}"#)
+            .ok()
+            .unwrap_or_default();
+        assert_eq!(get_property(&data, "author.[].name"), Some("A".to_string()));
     }
 
     #[test]
     fn test_get_text() {
-        let data: Value = serde_json::from_str(
-            r#"{"@type": "Article", "articleBody": "Hello world"}"#,
-        )
-        .ok()
-        .unwrap_or_default();
-        assert_eq!(
-            get_text(&data),
-            Some("Hello world".to_string())
-        );
+        let data: Value =
+            serde_json::from_str(r#"{"@type": "Article", "articleBody": "Hello world"}"#)
+                .ok()
+                .unwrap_or_default();
+        assert_eq!(get_text(&data), Some("Hello world".to_string()));
     }
 
     #[test]
     fn test_decode_entities() {
-        let mut val =
-            Value::String("A &amp; B &lt; C &gt; D &quot;E&#65;".into());
+        let mut val = Value::String("A &amp; B &lt; C &gt; D &quot;E&#65;".into());
         decode_entities(&mut val);
         assert_eq!(val.as_str(), Some("A & B < C > D \"EA"));
     }
@@ -410,12 +380,8 @@ mod tests {
             "key": "value" /* block */
         }"#;
         let cleaned = strip_json_comments(input);
-        let parsed: Value =
-            serde_json::from_str(&cleaned).ok().unwrap_or_default();
-        assert_eq!(
-            parsed.get("key").and_then(Value::as_str),
-            Some("value")
-        );
+        let parsed: Value = serde_json::from_str(&cleaned).ok().unwrap_or_default();
+        assert_eq!(parsed.get("key").and_then(Value::as_str), Some("value"));
     }
 
     #[test]
@@ -429,12 +395,8 @@ mod tests {
     fn test_cdata_stripping() {
         let input = r#"<![CDATA[{"name": "test"}]]>"#;
         let cleaned = strip_json_comments(input);
-        let parsed: Value =
-            serde_json::from_str(&cleaned).ok().unwrap_or_default();
-        assert_eq!(
-            parsed.get("name").and_then(Value::as_str),
-            Some("test")
-        );
+        let parsed: Value = serde_json::from_str(&cleaned).ok().unwrap_or_default();
+        assert_eq!(parsed.get("name").and_then(Value::as_str), Some("test"));
     }
 
     #[test]
@@ -444,10 +406,7 @@ mod tests {
         )
         .ok()
         .unwrap_or_default();
-        assert_eq!(
-            get_property(&data, "author.name"),
-            Some("Bob".to_string())
-        );
+        assert_eq!(get_property(&data, "author.name"), Some("Bob".to_string()));
     }
 
     #[test]
@@ -457,9 +416,6 @@ mod tests {
         )
         .ok()
         .unwrap_or_default();
-        assert_eq!(
-            get_text(&data),
-            Some("Content".to_string())
-        );
+        assert_eq!(get_text(&data), Some("Content".to_string()));
     }
 }
