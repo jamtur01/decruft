@@ -65,7 +65,7 @@ pub fn remove_partial_selectors(
         let mut matched = false;
         for attr in selectors::PARTIAL_ATTRIBUTES {
             if let Some(val) = el.attr(attr)
-                && pattern.is_match(val)
+                && pattern.is_match(val).unwrap_or(false)
             {
                 matched = true;
                 break;

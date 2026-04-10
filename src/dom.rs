@@ -336,6 +336,39 @@ fn collect_all_descendants(html: &Html, node_id: NodeId, result: &mut Vec<NodeId
     }
 }
 
+/// Check if any descendant of `node_id` matches a CSS selector.
+#[must_use]
+pub fn has_descendant_matching(html: &Html, node_id: NodeId, selector_str: &str) -> bool {
+    let Ok(sel) = Selector::parse(selector_str) else {
+        return false;
+    };
+    html.select(&sel)
+        .any(|el| is_ancestor(html, el.id(), node_id))
+}
+
+/// Count descendants of `node_id` matching a CSS selector.
+#[must_use]
+pub fn count_descendants_matching(html: &Html, node_id: NodeId, selector_str: &str) -> usize {
+    let Ok(sel) = Selector::parse(selector_str) else {
+        return 0;
+    };
+    html.select(&sel)
+        .filter(|el| is_ancestor(html, el.id(), node_id))
+        .count()
+}
+
+/// Collect href attribute values from descendant `<a>` elements.
+#[must_use]
+pub fn collect_link_hrefs(html: &Html, node_id: NodeId) -> Vec<String> {
+    let mut hrefs = Vec::new();
+    for a_id in descendant_elements_by_tag(html, node_id, "a") {
+        if let Some(href) = get_attr(html, a_id, "href") {
+            hrefs.push(href);
+        }
+    }
+    hrefs
+}
+
 /// Generate a CSS selector path for a node (for debug output).
 #[must_use]
 pub fn selector_path(html: &Html, node_id: NodeId) -> String {

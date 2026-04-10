@@ -29,6 +29,7 @@ pub mod content;
 mod decruft;
 pub mod dom;
 pub mod metadata;
+pub mod noscript;
 pub mod patterns;
 pub mod schema_org;
 pub mod scorer;
