@@ -1,19 +1,7 @@
 use ego_tree::NodeId;
-use markup5ever::{QualName, ns};
 use scraper::{Html, Node};
 
 use crate::dom;
-
-fn qual_name(name: &str) -> QualName {
-    QualName::new(None, ns!(), markup5ever::LocalName::from(name))
-}
-
-fn set_attr(el: &mut scraper::node::Element, name: &str, value: &str) {
-    let qn = qual_name(name);
-    el.attrs.retain(|(n, _)| n != &qn);
-    el.attrs
-        .push((qn, markup5ever::tendril::StrTendril::from(value)));
-}
 
 /// Allowed attributes to preserve on elements.
 const ALLOWED_ATTRIBUTES: &[&str] = &[
@@ -476,13 +464,7 @@ fn resolve_single_attr(html: &mut Html, node_id: NodeId, base: &url::Url, attr: 
     let Ok(resolved) = base.join(&val) else {
         return;
     };
-    let Some(mut node_mut) = html.tree.get_mut(node_id) else {
-        return;
-    };
-    let Node::Element(el) = node_mut.value() else {
-        return;
-    };
-    set_attr(el, attr, resolved.as_ref());
+    dom::set_attr(html, node_id, attr, resolved.as_ref());
 }
 
 fn resolve_srcset(html: &mut Html, node_id: NodeId, base: &url::Url) {
@@ -510,13 +492,7 @@ fn resolve_srcset(html: &mut Html, node_id: NodeId, base: &url::Url) {
         }
     }
     let new_val = parts.join(", ");
-    let Some(mut node_mut) = html.tree.get_mut(node_id) else {
-        return;
-    };
-    let Node::Element(el) = node_mut.value() else {
-        return;
-    };
-    set_attr(el, "srcset", &new_val);
+    dom::set_attr(html, node_id, "srcset", &new_val);
 }
 
 /// Parse an HTML string, strip unsafe elements and attributes, then

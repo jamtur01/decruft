@@ -42,12 +42,15 @@ fn is_old_reddit(html: &Html) -> bool {
 }
 
 fn get_subreddit(url: Option<&str>) -> String {
+    use std::sync::LazyLock;
+    static SUBREDDIT_RE: LazyLock<regex::Regex> =
+        LazyLock::new(|| regex::Regex::new(r"/r/([^/]+)").expect("subreddit regex is valid"));
+
     let Some(u) = url else {
         return String::new();
     };
-    regex::Regex::new(r"/r/([^/]+)")
-        .ok()
-        .and_then(|re| re.captures(u))
+    SUBREDDIT_RE
+        .captures(u)
         .and_then(|caps| caps.get(1))
         .map(|m| m.as_str().to_string())
         .unwrap_or_default()

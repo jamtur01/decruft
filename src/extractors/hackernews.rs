@@ -101,9 +101,10 @@ fn extract_story_content(html: &Html, fatitem: ego_tree::NodeId) -> String {
     if let Some(&link_id) = link_ids.first()
         && let Some(href) = dom::get_attr(html, link_id, "href")
     {
+        let escaped = html_attr_escape(&href);
         let _ = write!(
             content,
-            "<p><a href=\"{href}\" target=\"_blank\">{href}</a></p>"
+            "<p><a href=\"{escaped}\" target=\"_blank\">{escaped}</a></p>"
         );
     }
 
@@ -174,28 +175,21 @@ fn extract_main_comment(html: &Html, fatitem: ego_tree::NodeId) -> Option<Commen
 }
 
 fn build_comment_title(comment: &CommentData) -> String {
-    let text = strip_html_simple(&comment.content);
-    let preview = if text.len() > 50 {
-        format!("{}...", &text[..50])
-    } else {
-        text.clone()
+    let text = dom::strip_html_tags(&comment.content);
+    let trimmed = text.trim();
+    let preview = match trimmed.char_indices().nth(50) {
+        Some((i, _)) => format!("{}...", &trimmed[..i]),
+        None => trimmed.to_string(),
     };
     format!("Comment by {}: {preview}", comment.author)
 }
 
-fn strip_html_simple(html_str: &str) -> String {
-    let mut result = String::with_capacity(html_str.len());
-    let mut in_tag = false;
-    for ch in html_str.chars() {
-        if ch == '<' {
-            in_tag = true;
-        } else if ch == '>' {
-            in_tag = false;
-        } else if !in_tag {
-            result.push(ch);
-        }
-    }
-    result.trim().to_string()
+/// Escape a string for safe use inside an HTML attribute value.
+fn html_attr_escape(s: &str) -> String {
+    s.replace('&', "&amp;")
+        .replace('"', "&quot;")
+        .replace('<', "&lt;")
+        .replace('>', "&gt;")
 }
 
 // --- Comment extraction (shared) ---

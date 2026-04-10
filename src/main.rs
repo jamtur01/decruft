@@ -100,21 +100,18 @@ fn main() {
         }
     };
 
-    let options = decruft::DecruftOptions {
-        url: cli.url,
-        debug: cli.debug,
-        remove_exact_selectors: !cli.no_exact_selectors,
-        remove_partial_selectors: !cli.no_partial_selectors,
-        remove_images: cli.no_images,
-        remove_hidden_elements: !cli.no_hidden,
-        remove_low_scoring: !cli.no_scoring,
-        remove_small_images: true,
-        standardize: !cli.no_standardize,
-        remove_content_patterns: !cli.no_patterns,
-        content_selector: cli.selector,
-        markdown: cli.markdown || matches!(cli.format, OutputFormat::Markdown),
-        separate_markdown: false,
-    };
+    let mut options = decruft::DecruftOptions::default();
+    options.url = cli.url;
+    options.debug = cli.debug;
+    options.remove_exact_selectors = !cli.no_exact_selectors;
+    options.remove_partial_selectors = !cli.no_partial_selectors;
+    options.remove_images = cli.no_images;
+    options.remove_hidden_elements = !cli.no_hidden;
+    options.remove_low_scoring = !cli.no_scoring;
+    options.standardize = !cli.no_standardize;
+    options.remove_content_patterns = !cli.no_patterns;
+    options.content_selector = cli.selector;
+    options.markdown = cli.markdown || matches!(cli.format, OutputFormat::Markdown);
 
     let result = decruft::parse(&html, &options);
 
@@ -139,7 +136,7 @@ fn main() {
             write_stdout(md);
         }
         OutputFormat::Text => {
-            let text = strip_tags_simple(&result.content);
+            let text = decruft::dom::strip_html_tags(&result.content);
             write_stdout(text.trim());
         }
     }
@@ -149,23 +146,13 @@ fn write_stdout(s: &str) {
     use std::io::Write;
     let stdout = std::io::stdout();
     let mut handle = stdout.lock();
-    let _ = writeln!(handle, "{s}");
-}
-
-fn strip_tags_simple(html: &str) -> String {
-    let mut result = String::with_capacity(html.len());
-    let mut in_tag = false;
-    for ch in html.chars() {
-        if ch == '<' {
-            in_tag = true;
-        } else if ch == '>' {
-            in_tag = false;
-            result.push(' ');
-        } else if !in_tag {
-            result.push(ch);
+    if let Err(e) = writeln!(handle, "{s}") {
+        if e.kind() == std::io::ErrorKind::BrokenPipe {
+            std::process::exit(0);
         }
+        eprintln!("Error writing output: {e}");
+        std::process::exit(1);
     }
-    result
 }
 
 fn fetch_url(url: &str) -> String {

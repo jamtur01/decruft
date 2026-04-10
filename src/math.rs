@@ -98,9 +98,9 @@ fn standardize_mathml(html: &mut Html, main_content: NodeId) {
     for id in ids {
         let latex = dom::get_attr(html, id, "alttext").or_else(|| find_annotation_latex(html, id));
         let Some(latex) = latex else { continue };
-        set_attr(html, id, "data-latex", &latex);
+        dom::set_attr(html, id, "data-latex", &latex);
         if dom::get_attr(html, id, "xmlns").is_none() {
-            set_attr(html, id, "xmlns", "http://www.w3.org/1998/Math/MathML");
+            dom::set_attr(html, id, "xmlns", "http://www.w3.org/1998/Math/MathML");
         }
     }
 }
@@ -116,7 +116,7 @@ fn standardize_wikipedia_math(html: &mut Html, main_content: NodeId) {
         let Some(alttext) = dom::get_attr(html, id, "alttext") else {
             continue;
         };
-        set_attr(html, id, "data-latex", &alttext);
+        dom::set_attr(html, id, "data-latex", &alttext);
     }
 }
 
@@ -277,30 +277,9 @@ fn create_math_element(latex: &str, tag: &str) -> scraper::node::Element {
     scraper::node::Element::new(name, attrs)
 }
 
-/// Set an attribute on an element node.
-fn set_attr(html: &mut Html, node_id: NodeId, name: &str, value: &str) {
-    let Some(mut node_mut) = html.tree.get_mut(node_id) else {
-        return;
-    };
-    let Node::Element(el) = node_mut.value() else {
-        return;
-    };
-    let qn = QualName::new(None, ns!(), markup5ever::LocalName::from(name));
-    el.attrs.retain(|(n, _)| n != &qn);
-    el.attrs
-        .push((qn, markup5ever::tendril::StrTendril::from(value)));
-}
-
 /// Check if an element has a specific CSS class.
 fn has_class(html: &Html, node_id: NodeId, class: &str) -> bool {
-    let Some(node_ref) = html.tree.get(node_id) else {
-        return false;
-    };
-    let Node::Element(el) = node_ref.value() else {
-        return false;
-    };
-    el.attr("class")
-        .is_some_and(|c| c.split_whitespace().any(|cls| cls == class))
+    dom::has_class(html, node_id, class)
 }
 
 /// Determine if a math element is block-level display.

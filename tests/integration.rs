@@ -3,18 +3,16 @@
 use decruft::{DecruftOptions, parse};
 
 fn opts() -> DecruftOptions {
-    DecruftOptions {
-        url: Some("https://example.com/article".into()),
-        ..DecruftOptions::default()
-    }
+    let mut o = DecruftOptions::default();
+    o.url = Some("https://example.com/article".into());
+    o
 }
 
 fn opts_debug() -> DecruftOptions {
-    DecruftOptions {
-        url: Some("https://example.com/article".into()),
-        debug: true,
-        ..DecruftOptions::default()
-    }
+    let mut o = DecruftOptions::default();
+    o.url = Some("https://example.com/article".into());
+    o.debug = true;
+    o
 }
 
 fn load_fixture(name: &str) -> String {
@@ -446,11 +444,9 @@ fn debug_mode_includes_meta_tags() {
 #[test]
 fn no_images_removes_all_images() {
     let html = load_fixture("news_article.html");
-    let opts = DecruftOptions {
-        url: Some("https://example.com".into()),
-        remove_images: true,
-        ..DecruftOptions::default()
-    };
+    let mut opts = DecruftOptions::default();
+    opts.url = Some("https://example.com".into());
+    opts.remove_images = true;
     let result = parse(&html, &opts);
 
     assert!(!result.content.contains("<img"), "should remove all images");
@@ -459,11 +455,9 @@ fn no_images_removes_all_images() {
 #[test]
 fn custom_selector_overrides_detection() {
     let html = load_fixture("complex_blog.html");
-    let opts = DecruftOptions {
-        url: Some("https://example.com".into()),
-        content_selector: Some("article.post-content".into()),
-        ..DecruftOptions::default()
-    };
+    let mut opts = DecruftOptions::default();
+    opts.url = Some("https://example.com".into());
+    opts.content_selector = Some("article.post-content".into());
     let result = parse(&html, &opts);
 
     assert!(
@@ -476,18 +470,16 @@ fn custom_selector_overrides_detection() {
 fn disabling_all_filters_preserves_more_content() {
     let html = load_fixture("complex_blog.html");
     let strict = parse(&html, &opts());
-    let relaxed = parse(
-        &html,
-        &DecruftOptions {
-            url: Some("https://example.com".into()),
-            remove_exact_selectors: false,
-            remove_partial_selectors: false,
-            remove_hidden_elements: false,
-            remove_low_scoring: false,
-            remove_content_patterns: false,
-            ..DecruftOptions::default()
-        },
-    );
+    let relaxed = parse(&html, &{
+        let mut o = DecruftOptions::default();
+        o.url = Some("https://example.com".into());
+        o.remove_exact_selectors = false;
+        o.remove_partial_selectors = false;
+        o.remove_hidden_elements = false;
+        o.remove_low_scoring = false;
+        o.remove_content_patterns = false;
+        o
+    });
 
     assert!(
         relaxed.word_count >= strict.word_count,
@@ -586,13 +578,11 @@ fn paulgraham_if_available() {
         return; // Skip if fixture not available
     };
 
-    let result = parse(
-        &html,
-        &DecruftOptions {
-            url: Some("https://www.paulgraham.com/read.html".into()),
-            ..DecruftOptions::default()
-        },
-    );
+    let result = parse(&html, &{
+        let mut o = DecruftOptions::default();
+        o.url = Some("https://www.paulgraham.com/read.html".into());
+        o
+    });
 
     assert!(
         result.word_count > 100,
@@ -615,13 +605,11 @@ fn rust_blog_if_available() {
         return;
     };
 
-    let result = parse(
-        &html,
-        &DecruftOptions {
-            url: Some("https://blog.rust-lang.org/2024/11/28/Rust-2024-Edition.html".into()),
-            ..DecruftOptions::default()
-        },
-    );
+    let result = parse(&html, &{
+        let mut o = DecruftOptions::default();
+        o.url = Some("https://blog.rust-lang.org/2024/11/28/Rust-2024-Edition.html".into());
+        o
+    });
 
     assert!(
         result.word_count > 100,
@@ -640,13 +628,11 @@ fn wikipedia_if_available() {
         return;
     };
 
-    let result = parse(
-        &html,
-        &DecruftOptions {
-            url: Some("https://en.wikipedia.org/wiki/Rust_(programming_language)".into()),
-            ..DecruftOptions::default()
-        },
-    );
+    let result = parse(&html, &{
+        let mut o = DecruftOptions::default();
+        o.url = Some("https://en.wikipedia.org/wiki/Rust_(programming_language)".into());
+        o
+    });
 
     assert!(
         result.word_count > 500,

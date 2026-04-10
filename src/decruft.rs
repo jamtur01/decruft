@@ -342,33 +342,21 @@ fn find_element_by_schema_text(html_str: &str, schema_text: &str) -> Option<Stri
 /// Extract the first `max_chars` characters from the first paragraph
 /// of text (after stripping HTML tags).
 fn extract_first_paragraph_prefix(html_text: &str, max_chars: usize) -> String {
-    let plain = strip_tags_simple(html_text);
+    let plain = dom::strip_html_tags(html_text);
     let trimmed = plain.trim();
 
     let paragraph = trimmed.split("\n\n").next().unwrap_or(trimmed).trim();
 
-    if paragraph.len() <= max_chars {
-        paragraph.to_string()
-    } else {
-        paragraph[..max_chars].to_string()
-    }
+    safe_truncate(paragraph, max_chars).to_string()
 }
 
-/// Simple tag stripping for schema text comparison.
-fn strip_tags_simple(html: &str) -> String {
-    let mut result = String::with_capacity(html.len());
-    let mut in_tag = false;
-    for ch in html.chars() {
-        if ch == '<' {
-            in_tag = true;
-        } else if ch == '>' {
-            in_tag = false;
-            result.push(' ');
-        } else if !in_tag {
-            result.push(ch);
-        }
+/// Truncate a string to at most `max_chars` characters, respecting
+/// UTF-8 char boundaries.
+fn safe_truncate(s: &str, max_chars: usize) -> &str {
+    match s.char_indices().nth(max_chars) {
+        Some((i, _)) => &s[..i],
+        None => s,
     }
-    result
 }
 
 /// Strip HTML-like tags from inside comments to prevent html5ever
@@ -746,16 +734,20 @@ fn convert_to_markdown(html: &str) -> Option<String> {
 /// `Yey! ![IMG](url)`.
 fn fix_bang_image_collision(md: &str) -> String {
     use regex::Regex;
+    use std::sync::LazyLock;
     // Insert a space when text ending with `!` (preceded by a word
     // char) runs into markdown image `![` or linked image `[![`.
     // `Yey!![IMG](url)` -> `Yey! ![IMG](url)`
     // `Hello![![photo](url)](url)` -> `Hello! [![photo](url)](url)`
-    let re = Regex::new(r"(\w!)\[?!\[").expect("fix_bang_image_collision regex is valid");
-    re.replace_all(md, |caps: &regex::Captures| {
-        let prefix = &caps[1];
-        let matched = &caps[0];
-        let rest = &matched[prefix.len()..];
-        format!("{prefix} {rest}")
-    })
-    .into_owned()
+    static BANG_IMAGE_RE: LazyLock<Regex> = LazyLock::new(|| {
+        Regex::new(r"(\w!)\[?!\[").expect("fix_bang_image_collision regex is valid")
+    });
+    BANG_IMAGE_RE
+        .replace_all(md, |caps: &regex::Captures| {
+            let prefix = &caps[1];
+            let matched = &caps[0];
+            let rest = &matched[prefix.len()..];
+            format!("{prefix} {rest}")
+        })
+        .into_owned()
 }

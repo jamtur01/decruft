@@ -1024,10 +1024,9 @@ fn next_element_sibling(html: &Html, node_id: NodeId) -> Option<NodeId> {
 fn record_removal(removals: &mut Vec<Removal>, debug: bool, reason: &str, text: &str) {
     if debug {
         let trimmed = text.split_whitespace().collect::<Vec<_>>().join(" ");
-        let preview = if trimmed.len() > 80 {
-            format!("{}...", &trimmed[..80])
-        } else {
-            trimmed
+        let preview = match trimmed.char_indices().nth(80) {
+            Some((i, _)) => format!("{}...", &trimmed[..i]),
+            None => trimmed,
         };
         removals.push(Removal {
             step: "removeByContentPattern".into(),

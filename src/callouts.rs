@@ -190,10 +190,7 @@ fn extract_child_title(html: &Html, node_id: NodeId, selector: &str) -> Option<S
 
 /// Check if an element has a specific class.
 fn has_class(html: &Html, node_id: NodeId, class: &str) -> bool {
-    let Some(class_val) = dom::get_attr(html, node_id, "class") else {
-        return false;
-    };
-    class_val.split_whitespace().any(|c| c == class)
+    dom::has_class(html, node_id, class)
 }
 
 /// Capitalize the first letter of a string.

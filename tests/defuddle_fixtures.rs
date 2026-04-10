@@ -67,10 +67,9 @@ fn url_from_fixture(html: &str, name: &str) -> String {
 }
 
 fn opts_for(url: &str) -> DecruftOptions {
-    DecruftOptions {
-        url: Some(url.to_string()),
-        ..DecruftOptions::default()
-    }
+    let mut opts = DecruftOptions::default();
+    opts.url = Some(url.to_string());
+    opts
 }
 
 fn load_fixture(name: &str) -> String {

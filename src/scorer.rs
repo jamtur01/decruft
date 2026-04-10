@@ -85,21 +85,6 @@ fn class_and_id(html: &Html, node_id: NodeId) -> String {
     format!("{class} {id}")
 }
 
-fn link_text_ratio(html: &Html, node_id: NodeId) -> f64 {
-    let total_text = dom::text_content(html, node_id);
-    let total_len = total_text.trim().len();
-    if total_len == 0 {
-        return 0.0;
-    }
-    let mut link_len = 0usize;
-    for a_id in dom::descendant_elements_by_tag(html, node_id, "a") {
-        link_len += dom::text_content(html, a_id).trim().len();
-    }
-    #[allow(clippy::cast_precision_loss)]
-    let ratio = link_len as f64 / total_len as f64;
-    ratio
-}
-
 fn count_commas(text: &str) -> usize {
     text.chars().filter(|&c| c == ',').count()
 }
@@ -162,7 +147,7 @@ pub fn score_element(html: &Html, node_id: NodeId) -> f64 {
         score += 15.0;
     }
 
-    let ratio = link_text_ratio(html, node_id);
+    let ratio = dom::link_density(html, node_id);
     score *= 1.0 - ratio.min(0.5);
 
     score += score_alignment_and_metadata(html, node_id, &text);
@@ -408,7 +393,7 @@ fn score_social_and_card_penalties(html: &Html, node_id: NodeId, word_count: usi
 fn apply_link_heavy_penalty(html: &Html, node_id: NodeId, text: &str, mut score: f64) -> f64 {
     let links = dom::descendant_elements_by_tag(html, node_id, "a");
     let words = dom::count_words(text);
-    if links.len() > 1 && words < 80 && link_text_ratio(html, node_id) > 0.8 {
+    if links.len() > 1 && words < 80 && dom::link_density(html, node_id) > 0.8 {
         score -= 15.0;
     }
     score

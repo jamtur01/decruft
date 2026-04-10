@@ -1,3 +1,5 @@
+use std::sync::LazyLock;
+
 use regex::Regex;
 use scraper::{Html, Selector};
 
@@ -51,6 +53,24 @@ fn extract_group_name(html: &Html) -> Option<String> {
         .map(String::from)
 }
 
+static BBCODE_URL_RE: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r#"\[url="?([^"\]]+)"?\](.*?)\[/url\]"#).expect("bbcode url regex is valid")
+});
+
+static BBCODE_YOUTUBE_RE: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r#"\[previewyoutube="?([^;"\]]+)[^"]*"?\]\[/previewyoutube\]"#)
+        .expect("bbcode youtube regex is valid")
+});
+
+static BBCODE_IMG_RE: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"\[img\](.*?)\[/img\]").expect("bbcode img regex is valid"));
+
+/// Check if a URL has a safe scheme for use in href attributes.
+fn is_safe_url(url: &str) -> bool {
+    let trimmed = url.trim().to_ascii_lowercase();
+    trimmed.starts_with("http://") || trimmed.starts_with("https://") || trimmed.starts_with('/')
+}
+
 /// Convert basic `BBCode` markup to HTML.
 fn bbcode_to_html(bbcode: &str) -> String {
     let mut out = bbcode.to_string();
@@ -73,24 +93,30 @@ fn bbcode_to_html(bbcode: &str) -> String {
     out = out.replace("[*]", "<li>");
 
     // URL tags: [url="X"]text[/url] and [url=X]text[/url]
-    if let Ok(re) = Regex::new(r#"\[url="?([^"\]]+)"?\](.*?)\[/url\]"#) {
-        out = re.replace_all(&out, r#"<a href="$1">$2</a>"#).to_string();
-    }
+    out = BBCODE_URL_RE
+        .replace_all(&out, |caps: &regex::Captures| {
+            let url = &caps[1];
+            let text = &caps[2];
+            if is_safe_url(url) {
+                format!("<a href=\"{url}\">{text}</a>")
+            } else {
+                text.to_string()
+            }
+        })
+        .to_string();
 
     // YouTube preview: [previewyoutube="ID;params"][/previewyoutube]
-    if let Ok(re) = Regex::new(r#"\[previewyoutube="?([^;"\]]+)[^"]*"?\]\[/previewyoutube\]"#) {
-        out = re
-            .replace_all(
-                &out,
-                r#"<iframe src="https://www.youtube.com/embed/$1"></iframe>"#,
-            )
-            .to_string();
-    }
+    out = BBCODE_YOUTUBE_RE
+        .replace_all(
+            &out,
+            r#"<iframe src="https://www.youtube.com/embed/$1"></iframe>"#,
+        )
+        .to_string();
 
     // Image tags: [img]URL[/img]
-    if let Ok(re) = Regex::new(r"\[img\](.*?)\[/img\]") {
-        out = re.replace_all(&out, r#"<img src="$1">"#).to_string();
-    }
+    out = BBCODE_IMG_RE
+        .replace_all(&out, r#"<img src="$1">"#)
+        .to_string();
 
     out
 }

@@ -359,16 +359,22 @@ fn extract_site_name(html: &Html, schema: Option<&serde_json::Value>) -> String 
 fn schema_graph_website_name(schema: Option<&serde_json::Value>) -> Option<String> {
     let graph = schema?.get("@graph")?.as_array()?;
     for item in graph {
-        let type_val = item.get("@type")?;
+        let Some(type_val) = item.get("@type") else {
+            continue;
+        };
         let is_website = type_val.as_str() == Some("WebSite")
             || type_val
                 .as_array()
                 .is_some_and(|a| a.iter().any(|v| v.as_str() == Some("WebSite")));
-        if is_website {
-            let name = item.get("name")?.as_str()?.trim();
-            if !name.is_empty() {
-                return Some(name.to_string());
-            }
+        if !is_website {
+            continue;
+        }
+        let Some(name) = item.get("name").and_then(|v| v.as_str()) else {
+            continue;
+        };
+        let trimmed = name.trim();
+        if !trimmed.is_empty() {
+            return Some(trimmed.to_string());
         }
     }
     None

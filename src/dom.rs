@@ -238,6 +238,12 @@ pub fn count_words_html(html_str: &str) -> usize {
     count_words(&decoded)
 }
 
+/// Strip HTML tags, replacing closing `>` with a space.
+#[must_use]
+pub fn strip_html_tags(html: &str) -> String {
+    strip_tags(html)
+}
+
 fn strip_tags(html: &str) -> String {
     let mut result = String::with_capacity(html.len());
     let mut in_tag = false;
@@ -260,6 +266,19 @@ fn decode_entities(s: &str) -> String {
         .replace("&lt;", "<")
         .replace("&gt;", ">")
         .replace("&quot;", "\"")
+}
+
+/// Check if an element has a specific CSS class.
+#[must_use]
+pub fn has_class(html: &Html, node_id: NodeId, class: &str) -> bool {
+    let Some(node_ref) = html.tree.get(node_id) else {
+        return false;
+    };
+    let Node::Element(el) = node_ref.value() else {
+        return false;
+    };
+    el.attr("class")
+        .is_some_and(|c| c.split_whitespace().any(|cls| cls == class))
 }
 
 /// Get the parent element's node ID.

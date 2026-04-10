@@ -376,10 +376,9 @@ fn is_inside_pre_or_code(html: &Html, node_id: NodeId) -> bool {
 
 fn truncate(s: &str, max_len: usize) -> String {
     let trimmed = s.split_whitespace().collect::<Vec<_>>().join(" ");
-    if trimmed.len() <= max_len {
-        trimmed
-    } else {
-        format!("{}...", &trimmed[..max_len])
+    match trimmed.char_indices().nth(max_len) {
+        Some((i, _)) => format!("{}...", &trimmed[..i]),
+        None => trimmed,
     }
 }
 

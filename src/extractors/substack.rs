@@ -214,9 +214,18 @@ fn has_image_grid_child(html: &Html, parent_id: ego_tree::NodeId) -> bool {
 
 fn combine_content(prose_html: &str, og_image: Option<&str>, has_image_grid: bool) -> String {
     if let (true, Some(img_url)) = (has_image_grid, og_image) {
-        return format!("{prose_html}<img src=\"{img_url}\">");
+        let escaped = html_attr_escape(img_url);
+        return format!("{prose_html}<img src=\"{escaped}\">");
     }
     prose_html.to_string()
+}
+
+/// Escape a string for safe use inside an HTML attribute value.
+fn html_attr_escape(s: &str) -> String {
+    s.replace('&', "&amp;")
+        .replace('"', "&quot;")
+        .replace('<', "&lt;")
+        .replace('>', "&gt;")
 }
 
 /// Extract author name from the note's author link.

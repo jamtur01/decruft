@@ -79,12 +79,17 @@ fn has_pr_markers(html: &Html) -> bool {
 }
 
 fn extract_repo_info(url: Option<&str>) -> (String, String) {
+    use std::sync::LazyLock;
+    static REPO_RE: LazyLock<regex::Regex> = LazyLock::new(|| {
+        regex::Regex::new(r"github\.com/([^/]+)/([^/]+)").expect("github repo regex is valid")
+    });
+
     let Some(u) = url else {
         return (String::new(), String::new());
     };
-    let re = regex::Regex::new(r"github\.com/([^/]+)/([^/]+)").ok();
-    re.and_then(|r| {
-        r.captures(u).map(|caps| {
+    REPO_RE
+        .captures(u)
+        .map(|caps| {
             (
                 caps.get(1)
                     .map_or(String::new(), |m| m.as_str().to_string()),
@@ -92,8 +97,7 @@ fn extract_repo_info(url: Option<&str>) -> (String, String) {
                     .map_or(String::new(), |m| m.as_str().to_string()),
             )
         })
-    })
-    .unwrap_or_default()
+        .unwrap_or_default()
 }
 
 // --- Issue extraction ---
