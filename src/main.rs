@@ -61,9 +61,9 @@ struct Cli {
     #[arg(long)]
     markdown: bool,
 
-    /// Include replies/comments in extracted content (default: true).
-    #[arg(long, default_value_t = true, action = clap::ArgAction::Set)]
-    include_replies: bool,
+    /// Exclude replies/comments from extracted content.
+    #[arg(long = "no-replies")]
+    no_replies: bool,
 
     /// Fetch URL and process (requires url argument).
     #[arg(short = 'F', long)]
@@ -116,7 +116,7 @@ fn main() {
     options.remove_content_patterns = !cli.no_patterns;
     options.content_selector = cli.selector;
     options.markdown = cli.markdown || matches!(cli.format, OutputFormat::Markdown);
-    options.include_replies = cli.include_replies;
+    options.include_replies = !cli.no_replies;
 
     let result = decruft::parse(&html, &options);
 

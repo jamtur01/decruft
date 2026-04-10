@@ -53,25 +53,39 @@ pub fn parse(html_str: &str, options: &DecruftOptions) -> DecruftResult {
         return result;
     }
 
-    // ATTEMPT 1: Default settings
+    // ── Retry strategy ─────────────────────────────────────────
+    // Each stage relaxes cleanup constraints progressively when the
+    // extracted content is too short, measured by word count:
+    //
+    //   Stage 0 (default):  full cleanup pipeline
+    //   Stage 1 (<200 wc):  drop partial-selector removal
+    //   Stage 2 (<50 wc):   drop hidden-element removal; also try
+    //                        targeting the largest hidden subtree
+    //   Stage 3 (<30 wc):   drop scoring and content patterns;
+    //                        try body as fallback content root
+    //   Stage 4 (always):   if schema.org text has 1.5x more words,
+    //                        locate the DOM element or use raw text
+    // ──────────────────────────────────────────────────────────
+
+    // Stage 0: default pipeline
     let mut result = parse_internal(html_str, options);
 
-    // RETRY 1: If word_count < 200, retry without partial selectors
+    // Stage 1: relax partial selectors
     if result.word_count < 200 {
         result = retry_without_partials(html_str, options, &result);
     }
 
-    // RETRY 2: If word_count < 50, retry without hidden element removal
+    // Stage 2: relax hidden-element removal
     if result.word_count < 50 {
         result = retry_without_hidden(html_str, options, result);
     }
 
-    // RETRY 3: If still very sparse, retry fully relaxed
+    // Stage 3: fully relaxed (no scoring, no patterns)
     if result.word_count < 30 {
         result = retry_fully_relaxed(html_str, options, result);
     }
 
-    // RETRY 4: Schema.org content fallback
+    // Stage 4: schema.org articleBody fallback
     result = retry_schema_fallback(html_str, options, schema_data.as_ref(), result);
 
     let elapsed = start.elapsed();
@@ -251,6 +265,8 @@ fn retry_schema_fallback(
     } else {
         result.content = standardize::sanitize_html_string(&schema_text);
         result.word_count = schema_wc;
+        result.content_selector_path = "schema.org/articleBody".to_string();
+        result.removals.clear();
     }
     result
 }
@@ -258,29 +274,24 @@ fn retry_schema_fallback(
 /// Find the CSS selector for the largest hidden element with
 /// substantial content (>= 30 words).
 ///
-/// Checks elements with `[hidden]`, `[aria-hidden="true"]`,
-/// `.hidden`, and `.invisible` attributes/classes.
+/// Uses the centralized `is_hidden_element` check, which covers
+/// inline styles, `[hidden]`, `[aria-hidden="true"]`, `[inert]`,
+/// `.hidden`, `:hidden`, and `.invisible`.
 fn find_largest_hidden_content_selector(html_str: &str) -> Option<String> {
     let html = Html::parse_document(html_str);
-    let hidden_selectors = [
-        "[hidden]",
-        "[aria-hidden=\"true\"]",
-        "[inert]",
-        ".hidden",
-        ".invisible",
-    ];
 
     let mut best_selector: Option<String> = None;
     let mut best_word_count: usize = 0;
 
-    for sel_str in &hidden_selectors {
-        for id in dom::select_ids(&html, sel_str) {
-            let text = dom::text_content(&html, id);
-            let wc = dom::count_words(&text);
-            if wc >= 30 && wc > best_word_count {
-                best_word_count = wc;
-                best_selector = Some(build_unique_selector(&html, id));
-            }
+    for id in dom::select_ids(&html, "*") {
+        if !cleanup::is_hidden_element(&html, id) {
+            continue;
+        }
+        let text = dom::text_content(&html, id);
+        let wc = dom::count_words(&text);
+        if wc >= 30 && wc > best_word_count {
+            best_word_count = wc;
+            best_selector = Some(build_unique_selector(&html, id));
         }
     }
 
@@ -644,7 +655,11 @@ fn build_extractor_result(
     meta_tags: &[crate::types::MetaTag],
     word_count: usize,
 ) -> DecruftResult {
-    let content_markdown = convert_to_markdown(&raw_html);
+    let content_markdown = if options.markdown || options.separate_markdown {
+        convert_to_markdown(&raw_html)
+    } else {
+        None
+    };
     let content = if options.markdown {
         content_markdown.clone().unwrap_or_else(|| raw_html.clone())
     } else {

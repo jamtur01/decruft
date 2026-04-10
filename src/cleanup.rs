@@ -134,66 +134,95 @@ fn remove_hidden_with_elements(
         if dom::is_ancestor(html, main_content, node_id) {
             continue;
         }
-
-        let Some(node_ref) = html.tree.get(node_id) else {
+        if !is_hidden_element(html, node_id) {
             continue;
-        };
-        let Node::Element(el) = node_ref.value() else {
-            continue;
-        };
-
-        let is_hidden = if let Some(style) = el.attr("style") {
-            let s = style.to_lowercase();
-            s.contains("display:none")
-                || s.contains("display: none")
-                || s.contains("visibility:hidden")
-                || s.contains("visibility: hidden")
-                || s.contains("opacity:0")
-                || s.contains("opacity: 0")
-        } else {
-            false
-        };
-
-        let has_inert = el.attr("inert").is_some();
-
-        let has_hidden_class = if let Some(class) = el.attr("class") {
-            let classes: Vec<&str> = class.split_whitespace().collect();
-            let has_responsive = classes.iter().any(|c| {
-                c.contains("sm:block")
-                    || c.contains("md:block")
-                    || c.contains("lg:block")
-                    || c.contains("xl:block")
-                    || c.contains("sm:flex")
-                    || c.contains("md:flex")
-                    || c.contains("lg:flex")
-                    || c.contains("xl:flex")
-            });
-            if has_responsive {
-                false
-            } else {
-                classes.iter().any(|c| *c == "hidden" || *c == ":hidden")
-            }
-        } else {
-            false
-        };
-
-        if is_hidden || has_hidden_class || has_inert {
-            if debug {
-                let text = dom::text_content(html, node_id);
-                removals.push(Removal {
-                    step: "removeHiddenElements".into(),
-                    selector: None,
-                    reason: Some("hidden element".into()),
-                    text: truncate(&text, 80),
-                });
-            }
-            to_remove.push(node_id);
         }
+        if debug {
+            let text = dom::text_content(html, node_id);
+            removals.push(Removal {
+                step: "removeHiddenElements".into(),
+                selector: None,
+                reason: Some("hidden element".into()),
+                text: truncate(&text, 80),
+            });
+        }
+        to_remove.push(node_id);
     }
 
     for id in to_remove {
         dom::remove_node(html, id);
     }
+}
+
+/// Check whether an element is hidden via inline styles, HTML
+/// attributes, or CSS classes. Covers:
+/// - inline `display:none`, `visibility:hidden`, `opacity:0`
+/// - `hidden` boolean attribute
+/// - `aria-hidden="true"` attribute
+/// - `inert` attribute
+/// - `.hidden`, `:hidden`, `.invisible` classes (with responsive
+///   class exclusion for Tailwind breakpoints)
+#[must_use]
+pub fn is_hidden_element(html: &Html, node_id: NodeId) -> bool {
+    let Some(node_ref) = html.tree.get(node_id) else {
+        return false;
+    };
+    let Node::Element(el) = node_ref.value() else {
+        return false;
+    };
+
+    // Inline style checks
+    if let Some(style) = el.attr("style") {
+        let s = style.to_lowercase();
+        if s.contains("display:none")
+            || s.contains("display: none")
+            || s.contains("visibility:hidden")
+            || s.contains("visibility: hidden")
+            || s.contains("opacity:0")
+            || s.contains("opacity: 0")
+        {
+            return true;
+        }
+    }
+
+    // HTML boolean `hidden` attribute
+    if el.attr("hidden").is_some() {
+        return true;
+    }
+
+    // aria-hidden="true"
+    if el.attr("aria-hidden").is_some_and(|v| v == "true") {
+        return true;
+    }
+
+    // inert attribute
+    if el.attr("inert").is_some() {
+        return true;
+    }
+
+    // Class-based hidden checks (skip if responsive override present)
+    if let Some(class) = el.attr("class") {
+        let classes: Vec<&str> = class.split_whitespace().collect();
+        let has_responsive = classes.iter().any(|c| {
+            c.contains("sm:block")
+                || c.contains("md:block")
+                || c.contains("lg:block")
+                || c.contains("xl:block")
+                || c.contains("sm:flex")
+                || c.contains("md:flex")
+                || c.contains("lg:flex")
+                || c.contains("xl:flex")
+        });
+        if !has_responsive
+            && classes
+                .iter()
+                .any(|c| *c == "hidden" || *c == ":hidden" || *c == "invisible")
+        {
+            return true;
+        }
+    }
+
+    false
 }
 
 fn score_and_remove_with_elements(
@@ -538,11 +567,16 @@ pub fn collect_meta_tags(html: &Html) -> Vec<crate::types::MetaTag> {
     tags
 }
 
-/// Deduplicate images with same alt text, keeping highest resolution.
+/// Deduplicate images with same alt text, keeping highest quality.
+///
+/// When duplicates are found, compares width/height attributes,
+/// srcset presence, and src URL length to pick the better image.
 pub fn deduplicate_images(html: &mut Html, main_content: NodeId) {
+    use std::collections::HashMap;
+
     let img_ids = dom::descendant_elements_by_tag(html, main_content, "img");
 
-    let mut seen_alts: HashSet<String> = HashSet::new();
+    let mut seen_alts: HashMap<String, NodeId> = HashMap::new();
     let mut to_remove = Vec::new();
 
     for img_id in img_ids {
@@ -550,14 +584,53 @@ pub fn deduplicate_images(html: &mut Html, main_content: NodeId) {
         if alt.is_empty() {
             continue;
         }
-        if seen_alts.contains(&alt) {
-            to_remove.push(img_id);
+        if let Some(&existing_id) = seen_alts.get(&alt) {
+            let (keep, discard) = pick_better_image(html, existing_id, img_id);
+            to_remove.push(discard);
+            seen_alts.insert(alt, keep);
         } else {
-            seen_alts.insert(alt);
+            seen_alts.insert(alt, img_id);
         }
     }
 
     for id in to_remove {
         dom::remove_node(html, id);
     }
+}
+
+/// Compare two images and return (keep, discard) based on quality
+/// signals: dimensions, srcset, and URL length.
+fn pick_better_image(html: &Html, a: NodeId, b: NodeId) -> (NodeId, NodeId) {
+    let score_a = image_quality_score(html, a);
+    let score_b = image_quality_score(html, b);
+    if score_b > score_a { (b, a) } else { (a, b) }
+}
+
+/// Compute a simple quality score for an image based on:
+/// - width * height (if attributes present)
+/// - srcset bonus (indicates responsive/multiple resolutions)
+/// - src URL length (longer URLs often have quality params)
+fn image_quality_score(html: &Html, node_id: NodeId) -> u64 {
+    let width = dom::get_attr(html, node_id, "width")
+        .and_then(|w| w.parse::<u64>().ok())
+        .unwrap_or(0);
+    let height = dom::get_attr(html, node_id, "height")
+        .and_then(|h| h.parse::<u64>().ok())
+        .unwrap_or(0);
+
+    let dimension_score = if width > 0 && height > 0 {
+        width * height
+    } else {
+        width + height
+    };
+
+    let srcset_bonus: u64 = if dom::get_attr(html, node_id, "srcset").is_some() {
+        10_000
+    } else {
+        0
+    };
+
+    let url_len: u64 = dom::get_attr(html, node_id, "src").map_or(0, |s| s.len() as u64);
+
+    dimension_score + srcset_bonus + url_len
 }
