@@ -230,7 +230,7 @@ print(f"    html:  {len(dc_html)//1024}K / {len(df_html)//1024}K  ({dc_html_wc} 
 print(f"    md:    {len(dc_md)//1024}K / {len(df_md)//1024}K  ({dc_md_wc} / {df_md_wc} words)")
 print(f"    text:  {len(dc_text)//1024}K  ({dc_text_wc} words)")
 
-sys.exit(1 if 'EMPTY' in ' '.join(issues) else 0)
+sys.exit(1 if issues else 0)
 PYEOF
 
     result=$?
