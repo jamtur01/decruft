@@ -55,6 +55,26 @@ static TIMEZONE_RE: LazyLock<Regex> =
 static PINNED_RE: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"(?i)^\s*pinned\s*$").expect("valid regex"));
 
+/// Check if text starting with "author" looks like an actual author
+/// list or label (e.g. "Authors: Name1, Name2" or "Authors:")
+/// rather than a navigation widget (e.g. "Author bio").
+fn looks_like_author_list(lower: &str) -> bool {
+    // Standalone label "Authors:" or "Author:" - likely a descriptor
+    // for adjacent content, not a widget
+    if lower.trim_end() == "authors:" || lower.trim_end() == "author:" {
+        return true;
+    }
+    // "Authors: Name1, Name2" or "Author: Name"
+    if lower.starts_with("authors:") || lower.starts_with("author:") {
+        return true;
+    }
+    // "Authors Name1, Name2" - plural with comma-separated names
+    if lower.starts_with("authors") && lower.contains(',') {
+        return true;
+    }
+    false
+}
+
 /// Remove content patterns: bylines, read time, boilerplate, related posts.
 pub fn remove_content_patterns(
     html: &mut Html,
@@ -840,12 +860,19 @@ fn remove_author_share_widgets(
 
             let trimmed = text.trim();
             let lower = trimmed.to_lowercase();
-            let is_widget = lower.starts_with("author")
-                || lower.starts_with("share")
+            let is_share_widget = lower.starts_with("share") || lower.starts_with("share this");
+            let is_author_widget = lower.starts_with("author")
                 || lower.starts_with("written by")
-                || lower.starts_with("posted by")
-                || lower.starts_with("share this");
+                || lower.starts_with("posted by");
 
+            // Author-prefixed elements that contain actual names
+            // (e.g. "Authors: Name1, Name2") are article metadata,
+            // not share/navigation widgets.
+            if is_author_widget && looks_like_author_list(&lower) {
+                continue;
+            }
+
+            let is_widget = is_share_widget || is_author_widget;
             if is_widget && word_count <= 12 {
                 record_removal(removals, debug, "author/share widget", &text);
                 to_remove.push(node_id);

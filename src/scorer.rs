@@ -92,6 +92,23 @@ static AUTHOR_RE: LazyLock<Regex> = LazyLock::new(|| {
         .unwrap_or_else(|_| Regex::new("a]^").expect("infallible fallback"))
 });
 
+/// Labels that indicate article metadata (author lists, citation info,
+/// submission dates, subject classifications, DOIs).
+static METADATA_LABEL_RE: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(concat!(
+        r"(?i)^[\s\n]*(Authors?:?|By |Subjects?:|Keywords?:|",
+        r"Cite as:?|DOI:?|Published:?|Submitted:?|Date:?|",
+        r"Citation:?|Abstract:)"
+    ))
+    .unwrap_or_else(|_| Regex::new("a]^").expect("infallible fallback"))
+});
+
+/// Class/ID patterns that indicate article metadata elements.
+static METADATA_CLASS_RE: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r"(?i)(authors|citation|subjects|keywords|doi|submission)")
+        .unwrap_or_else(|_| Regex::new("a]^").expect("infallible fallback"))
+});
+
 static SENTENCE_PUNCT_RE: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(r"[.!?]").unwrap_or_else(|_| Regex::new("a]^").expect("infallible fallback"))
 });
@@ -298,6 +315,11 @@ pub fn is_likely_content(html: &Html, node_id: NodeId) -> bool {
         return true;
     }
 
+    // Protect article metadata inside <main>/<article> from removal
+    if is_article_metadata(html, node_id) && is_inside_main_or_article(html, node_id) {
+        return true;
+    }
+
     if has_structural_content(html, node_id) {
         return true;
     }
@@ -345,6 +367,40 @@ pub fn is_likely_content(html: &Html, node_id: NodeId) -> bool {
     }
 
     false
+}
+
+/// Check if an element looks like article metadata (author lists,
+/// citation info, submission dates, subject classifications).
+///
+/// Returns true if the element's text starts with a metadata label
+/// pattern OR its class/id contains metadata keywords.
+pub fn is_article_metadata(html: &Html, node_id: NodeId) -> bool {
+    let class_id = class_and_id(html, node_id);
+    if METADATA_CLASS_RE.is_match(&class_id) {
+        return true;
+    }
+    let text = dom::text_content(html, node_id);
+    METADATA_LABEL_RE.is_match(&text)
+}
+
+/// Check if an element is inside a `<main>` or `<article>` ancestor.
+fn is_inside_main_or_article(html: &Html, node_id: NodeId) -> bool {
+    let mut current = node_id;
+    loop {
+        let Some(node_ref) = html.tree.get(current) else {
+            return false;
+        };
+        let Some(parent) = node_ref.parent() else {
+            return false;
+        };
+        if let Node::Element(el) = parent.value() {
+            let tag = el.name.local.as_ref();
+            if tag == "main" || tag == "article" {
+                return true;
+            }
+        }
+        current = parent.id();
+    }
 }
 
 /// Check if element contains a heading with navigation-like text.
@@ -490,6 +546,15 @@ pub fn score_non_content(html: &Html, node_id: NodeId) -> f64 {
     }
 
     score += score_social_and_card_penalties(html, node_id, word_count);
+
+    // Counteract penalties for elements that look like article metadata
+    // inside <main>/<article> (author lists, citation info, dates).
+    if word_count < 50
+        && is_inside_main_or_article(html, node_id)
+        && is_article_metadata(html, node_id)
+    {
+        score += 20.0;
+    }
 
     score
 }

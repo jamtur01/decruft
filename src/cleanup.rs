@@ -95,6 +95,14 @@ fn remove_partial_selectors_with_elements(
         }
 
         if matched {
+            // Protect article metadata (authors, citations, dates,
+            // subjects) inside the content root from partial removal.
+            if scorer::is_article_metadata(html, node_id)
+                && dom::is_ancestor(html, node_id, main_content)
+            {
+                continue;
+            }
+
             if debug {
                 let text = dom::text_content(html, node_id);
                 removals.push(Removal {
@@ -234,6 +242,14 @@ fn score_and_remove_with_elements(
         }
 
         if scorer::is_likely_content(html, node_id) {
+            continue;
+        }
+
+        // Protect metadata elements (authors, dates, citations) that
+        // are close to the content root (direct child or grandchild).
+        if scorer::is_article_metadata(html, node_id)
+            && is_near_content_root(html, node_id, main_content)
+        {
             continue;
         }
 
@@ -424,6 +440,21 @@ fn collect_elements_recursive(html: &Html, node_id: NodeId, result: &mut Vec<Nod
         }
         collect_elements_recursive(html, child.id(), result);
     }
+}
+
+/// Check if `node_id` is a direct child or grandchild of
+/// `content_root` (within 2 levels of nesting).
+fn is_near_content_root(html: &Html, node_id: NodeId, content_root: NodeId) -> bool {
+    let Some(parent) = dom::parent_element(html, node_id) else {
+        return false;
+    };
+    if parent == content_root {
+        return true;
+    }
+    let Some(grandparent) = dom::parent_element(html, parent) else {
+        return false;
+    };
+    grandparent == content_root
 }
 
 fn is_inside_pre_or_code(html: &Html, node_id: NodeId) -> bool {
