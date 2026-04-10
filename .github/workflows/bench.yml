@@ -9,6 +9,7 @@ on:
 permissions:
   contents: write
   pull-requests: write
+  deployments: write
 
 jobs:
   benchmark:
@@ -31,10 +32,11 @@ jobs:
           tool: cargo
           output-file-path: output.txt
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          # Comment on PR if performance regresses by >10%
           alert-threshold: "110%"
           comment-on-alert: true
           fail-on-alert: false
-          # Store results in gh-pages branch
-          auto-push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+          # Store in gh-pages under /bench/ path to avoid conflicts
+          # with the docs site (which uses GitHub Actions deployment)
+          gh-pages-branch: gh-pages
           benchmark-data-dir-path: bench
+          auto-push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
