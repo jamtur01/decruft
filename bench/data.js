@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1775854537777,
+  "lastUpdate": 1775854704849,
   "repoUrl": "https://github.com/jamtur01/decruft",
   "entries": {
     "decruft benchmarks": [
@@ -119,6 +119,66 @@ window.BENCHMARK_DATA = {
             "name": "large_page_no_scoring (1.1MB)",
             "value": 240637450,
             "range": "± 1884481",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "james@lovedthanlost.net",
+            "name": "James Turnbull",
+            "username": "jamtur01"
+          },
+          "committer": {
+            "email": "james@lovedthanlost.net",
+            "name": "James Turnbull",
+            "username": "jamtur01"
+          },
+          "distinct": true,
+          "id": "df8aaf278afda0ba09d857329c633a9485c9d4ed",
+          "message": "Update actions/checkout to v5 (Node.js 24 support)",
+          "timestamp": "2026-04-10T16:56:00-04:00",
+          "tree_id": "c7a3807bf26094820c877647f46c70eb8f98f533",
+          "url": "https://github.com/jamtur01/decruft/commit/df8aaf278afda0ba09d857329c633a9485c9d4ed"
+        },
+        "date": 1775854704497,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "small_page (12KB blog)",
+            "value": 2584233,
+            "range": "± 60661",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "medium_page (317KB stephango)",
+            "value": 3587363,
+            "range": "± 22252",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "large_page (1.1MB wikipedia)",
+            "value": 386959637,
+            "range": "± 8622479",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "github_issue (267KB)",
+            "value": 3946416,
+            "range": "± 30394",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "markdown_output (12KB blog)",
+            "value": 2769021,
+            "range": "± 17130",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "large_page_no_scoring (1.1MB)",
+            "value": 241070821,
+            "range": "± 1748229",
             "unit": "ns/iter"
           }
         ]
