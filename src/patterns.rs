@@ -2,7 +2,7 @@ use std::sync::LazyLock;
 
 use ego_tree::NodeId;
 use regex::Regex;
-use scraper::Html;
+use scraper::{Html, Node};
 
 use crate::dom;
 use crate::types::Removal;
@@ -434,6 +434,8 @@ fn remove_promotional_banners(
 
 /// Rule 4: Article metadata header blocks - div with date, <= 10 words,
 /// near start of content.
+/// Rule 4: Article metadata header -- short date-containing divs
+/// immediately before or after the first h1 heading.
 fn remove_article_metadata_header(
     html: &mut Html,
     main_content: NodeId,
@@ -441,18 +443,26 @@ fn remove_article_metadata_header(
     debug: bool,
 ) {
     let children = dom::child_elements(html, main_content);
-    let mut to_remove = Vec::new();
+    let h1_idx = children
+        .iter()
+        .position(|&id| dom::tag_name(html, id).as_deref() == Some("h1"));
+    let Some(h1_pos) = h1_idx else {
+        return;
+    };
 
-    let check_count = children.len().min(5);
-    for &child_id in &children[..check_count] {
+    let mut to_remove = Vec::new();
+    // Check children immediately before h1 (up to 2) and after (up to 2)
+    let start = h1_pos.saturating_sub(2);
+    let end = (h1_pos + 3).min(children.len());
+
+    for &child_id in &children[start..end] {
         let tag = dom::tag_name(html, child_id);
         if tag.as_deref() != Some("div") {
             continue;
         }
-
         let text = dom::text_content(html, child_id);
         let word_count = dom::count_words(&text);
-        if word_count <= 10 && DATE_RE.is_match(&text) {
+        if word_count <= 10 && is_date_metadata_block(&text) {
             record_removal(removals, debug, "article metadata header", &text);
             to_remove.push(child_id);
         }
@@ -505,8 +515,8 @@ fn remove_author_date_bylines(
     }
 }
 
-/// Rule 6: Standalone date elements - near start, <= 5 words, matching
-/// date patterns.
+/// Rule 6: Standalone date elements -- short date-only blocks near
+/// the start that have metadata-like classes or are `<time>` elements.
 fn remove_standalone_dates(
     html: &mut Html,
     main_content: NodeId,
@@ -525,7 +535,14 @@ fn remove_standalone_dates(
 
         let text = dom::text_content(html, child_id);
         let word_count = dom::count_words(&text);
-        if word_count <= 5 && DATE_RE.is_match(&text) {
+        if word_count > 5 || !is_date_metadata_block(&text) {
+            continue;
+        }
+
+        // Only remove <time> elements unconditionally; others must
+        // have a metadata-like class or be inside a header/byline.
+        let is_time_tag = tag.as_deref() == Some("time");
+        if is_time_tag || has_metadata_class(html, child_id) {
             record_removal(removals, debug, "standalone date", &text);
             to_remove.push(child_id);
         }
@@ -534,6 +551,37 @@ fn remove_standalone_dates(
     for id in to_remove {
         dom::remove_node(html, id);
     }
+}
+
+/// Check whether a node (or its parent) has a class name suggesting
+/// it is metadata (date, time, published, meta, byline, etc.).
+fn has_metadata_class(html: &Html, node_id: NodeId) -> bool {
+    if has_metadata_class_on(html, node_id) {
+        return true;
+    }
+    if let Some(parent) = dom::parent_element(html, node_id) {
+        return has_metadata_class_on(html, parent);
+    }
+    false
+}
+
+fn has_metadata_class_on(html: &Html, node_id: NodeId) -> bool {
+    let Some(node_ref) = html.tree.get(node_id) else {
+        return false;
+    };
+    let Node::Element(el) = node_ref.value() else {
+        return false;
+    };
+    let Some(cls) = el.attr("class") else {
+        return false;
+    };
+    let lower = cls.to_lowercase();
+    lower.contains("date")
+        || lower.contains("time")
+        || lower.contains("publish")
+        || lower.contains("meta")
+        || lower.contains("byline")
+        || lower.contains("posted")
 }
 
 /// Rule 7: Blog metadata lists - short ul/ol/dl at boundaries, all
@@ -1058,6 +1106,17 @@ fn remove_timezone_widgets(
     for id in to_remove {
         dom::remove_node(html, id);
     }
+}
+
+// ── Shared date-metadata detection ────────────────────────────────
+
+/// Check whether text looks like a date-containing metadata block.
+///
+/// Shared by `patterns.rs` (article header and standalone date
+/// removal) and `metadata_block.rs` (sibling-of-h1 removal).
+#[must_use]
+pub fn is_date_metadata_block(text: &str) -> bool {
+    DATE_RE.is_match(text)
 }
 
 // ── Helpers ──────────────────────────────────────────────────────

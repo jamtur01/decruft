@@ -564,6 +564,20 @@ fn find_main(html: &Html) -> NodeId {
     content::find_main_content(html)
 }
 
+/// Sanitize extractor-produced HTML through the same pipeline as
+/// the general extraction path: strip unsafe elements, resolve
+/// relative URLs, and clean non-allowed attributes.
+fn sanitize_extractor_content(html_str: &str, url: Option<&str>) -> String {
+    let mut html = Html::parse_fragment(html_str);
+    standardize::strip_unsafe_elements(&mut html);
+    let root = html.tree.root().id();
+    if let Some(base) = url {
+        standardize::resolve_urls(&mut html, root, base);
+    }
+    standardize::clean_attributes_on(&mut html, root);
+    dom::inner_html(&html, root)
+}
+
 /// Try specialized extractors (`BBCode`, Substack) before the general
 /// pipeline. Returns `Some` with the result if an extractor matched.
 fn try_extractors(
@@ -603,7 +617,7 @@ fn try_bbcode(
         return None;
     }
     let mut result = build_extractor_result(
-        bbcode.html,
+        &bbcode.html,
         "div[data-partnereventstore]",
         start,
         options,
@@ -631,7 +645,7 @@ fn try_substack(
         return None;
     }
     let mut result = build_extractor_result(
-        substack.html,
+        &substack.html,
         "feedCommentBody",
         start,
         options,
@@ -646,7 +660,7 @@ fn try_substack(
 
 #[expect(clippy::too_many_arguments)]
 fn build_extractor_result(
-    raw_html: String,
+    raw_html: &str,
     selector_label: &str,
     start: &Instant,
     options: &DecruftOptions,
@@ -655,15 +669,18 @@ fn build_extractor_result(
     meta_tags: &[crate::types::MetaTag],
     word_count: usize,
 ) -> DecruftResult {
+    let sanitized = sanitize_extractor_content(raw_html, options.url.as_deref());
     let content_markdown = if options.markdown || options.separate_markdown {
-        convert_to_markdown(&raw_html)
+        convert_to_markdown(&sanitized)
     } else {
         None
     };
     let content = if options.markdown {
-        content_markdown.clone().unwrap_or_else(|| raw_html.clone())
+        content_markdown
+            .clone()
+            .unwrap_or_else(|| sanitized.clone())
     } else {
-        raw_html
+        sanitized
     };
     let elapsed = start.elapsed();
     #[expect(clippy::cast_possible_truncation)]
@@ -693,23 +710,13 @@ fn try_site_extractors(
 ) -> Option<DecruftResult> {
     let (extracted, extractor_name) =
         extractors::try_extract(html, options.url.as_deref(), options.include_replies)?;
-    if let Some(t) = &extracted.title {
-        meta.title.clone_from(t);
-    }
-    if let Some(a) = &extracted.author {
-        meta.author.clone_from(a);
-    }
-    if let Some(s) = &extracted.site
-        && meta.site_name.is_empty()
-    {
-        meta.site_name.clone_from(s);
-    }
+    apply_extractor_metadata(&extracted, meta);
     let word_count = dom::count_words_html(&extracted.content);
     if word_count == 0 {
         return None;
     }
     let mut result = build_extractor_result(
-        extracted.content,
+        &extracted.content,
         "site-extractor",
         start,
         options,
@@ -720,6 +727,46 @@ fn try_site_extractors(
     );
     result.extractor_type = Some(extractor_name.to_string());
     Some(result)
+}
+
+/// Merge extractor metadata into the pipeline metadata, preferring
+/// the metadata pipeline's values when they are already good.
+fn apply_extractor_metadata(
+    extracted: &extractors::ExtractorResult,
+    meta: &mut crate::types::Metadata,
+) {
+    if let Some(t) = &extracted.title {
+        let cleaned = metadata::clean_title(t, "", None, None);
+        if meta.title.is_empty() || (!cleaned.is_empty() && cleaned.len() < meta.title.len()) {
+            meta.title = cleaned;
+        }
+    }
+    // Extractor author is always preferred -- site-specific
+    // extractors identify the post author more reliably than the
+    // generic metadata pipeline (which may pick up commenter names).
+    if let Some(a) = &extracted.author {
+        meta.author.clone_from(a);
+    }
+    if let Some(s) = &extracted.site
+        && meta.site_name.is_empty()
+    {
+        meta.site_name.clone_from(s);
+    }
+    if let Some(p) = &extracted.published
+        && meta.published.is_empty()
+    {
+        meta.published.clone_from(p);
+    }
+    if let Some(img) = &extracted.image
+        && meta.image.is_empty()
+    {
+        meta.image.clone_from(img);
+    }
+    if let Some(d) = &extracted.description
+        && meta.description.is_empty()
+    {
+        meta.description.clone_from(d);
+    }
 }
 
 /// Apply Substack-extracted metadata to the result metadata.

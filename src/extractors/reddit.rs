@@ -99,6 +99,9 @@ fn extract_old_reddit(
             Some(author)
         },
         site: Some(format!("r/{subreddit}")),
+        published: None,
+        image: None,
+        description: None,
     })
 }
 
@@ -250,6 +253,9 @@ fn extract_new_reddit(
             Some(author)
         },
         site: Some(format!("r/{subreddit}")),
+        published: None,
+        image: None,
+        description: None,
     })
 }
 

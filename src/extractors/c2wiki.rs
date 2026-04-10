@@ -46,6 +46,9 @@ pub fn extract_c2wiki(html: &Html, url: Option<&str>) -> Option<ExtractorResult>
         title: Some(title),
         author: None,
         site: Some("C2 Wiki".to_string()),
+        published: None,
+        image: None,
+        description: None,
     })
 }
 

@@ -59,6 +59,9 @@ pub fn extract_x_article(html: &Html, url: Option<&str>) -> Option<ExtractorResu
             Some(author)
         },
         site: Some("X (Twitter)".to_string()),
+        published: None,
+        image: None,
+        description: None,
     })
 }
 

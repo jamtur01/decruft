@@ -16,6 +16,9 @@ pub struct ExtractorResult {
     pub title: Option<String>,
     pub author: Option<String>,
     pub site: Option<String>,
+    pub published: Option<String>,
+    pub image: Option<String>,
+    pub description: Option<String>,
 }
 
 /// Try each site-specific extractor in order.

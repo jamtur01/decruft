@@ -123,7 +123,8 @@ const TITLE_SEPARATORS: &[&str] = &[" | ", " - ", " -- ", " / ", " · "];
 /// to detect additional breadcrumb segments to strip.
 ///
 /// When no site name is known, returns the title unchanged.
-fn clean_title(
+#[must_use]
+pub fn clean_title(
     title: &str,
     site_name: &str,
     meta_title: Option<&str>,
@@ -480,23 +481,37 @@ fn abbr_date_published(html: &Html) -> Option<String> {
     Some(trimmed.to_string())
 }
 
+/// Find a publication-related `<time>` element near the start of the
+/// document. Prefers elements with a `datetime` attribute (more
+/// likely article dates vs. comment timestamps) and only inspects
+/// the first 5 `<time>` elements to avoid picking up comment dates.
 fn first_time_element(html: &Html) -> Option<String> {
     let Ok(sel) = Selector::parse("time") else {
         return None;
     };
-    let el = html.select(&sel).next()?;
-    if let Some(dt) = el.value().attr("datetime") {
-        let trimmed = dt.trim();
+
+    let candidates: Vec<_> = html.select(&sel).take(5).collect();
+
+    // First pass: prefer <time datetime="...">
+    for el in &candidates {
+        if let Some(dt) = el.value().attr("datetime") {
+            let trimmed = dt.trim();
+            if !trimmed.is_empty() {
+                return Some(trimmed.to_string());
+            }
+        }
+    }
+
+    // Second pass: fall back to text content
+    for el in &candidates {
+        let text = dom::text_content(html, el.id());
+        let trimmed = text.trim();
         if !trimmed.is_empty() {
             return Some(trimmed.to_string());
         }
     }
-    let text = dom::text_content(html, el.id());
-    let trimmed = text.trim();
-    if trimmed.is_empty() {
-        return None;
-    }
-    Some(trimmed.to_string())
+
+    None
 }
 
 // ------------------------------------------------------------------
@@ -628,13 +643,13 @@ fn html_lang(html: &Html) -> Option<String> {
 
 fn extract_favicon(html: &Html, url: Option<&str>) -> String {
     get_meta_content(html, "property", "og:image:favicon")
-        .or_else(|| link_icon(html, "icon"))
-        .or_else(|| link_icon(html, "shortcut icon"))
+        .or_else(|| link_icon(html, "icon", url))
+        .or_else(|| link_icon(html, "shortcut icon", url))
         .or_else(|| favicon_fallback(url))
         .unwrap_or_default()
 }
 
-fn link_icon(html: &Html, rel: &str) -> Option<String> {
+fn link_icon(html: &Html, rel: &str, base_url: Option<&str>) -> Option<String> {
     let selector_str = format!("link[rel=\"{rel}\"]");
     let Ok(sel) = Selector::parse(&selector_str) else {
         return None;
@@ -644,7 +659,22 @@ fn link_icon(html: &Html, rel: &str) -> Option<String> {
     if href.is_empty() {
         return None;
     }
-    Some(href.to_string())
+    Some(resolve_favicon_url(href, base_url))
+}
+
+/// Resolve a favicon href against a base URL. Returns the href
+/// unchanged when it is already absolute or resolution fails.
+fn resolve_favicon_url(href: &str, base_url: Option<&str>) -> String {
+    if href.starts_with("http://") || href.starts_with("https://") {
+        return href.to_string();
+    }
+    if let Some(base) = base_url
+        && let Ok(base_parsed) = url::Url::parse(base)
+        && let Ok(resolved) = base_parsed.join(href)
+    {
+        return resolved.to_string();
+    }
+    href.to_string()
 }
 
 fn favicon_fallback(url: Option<&str>) -> Option<String> {

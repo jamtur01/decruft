@@ -4,36 +4,11 @@
 //! siblings immediately after the main heading. This complements the
 //! inline metadata-div removal in `patterns.rs`.
 
-use std::sync::LazyLock;
-
 use ego_tree::NodeId;
-use regex::Regex;
 use scraper::{Html, Node};
 
 use crate::dom;
-
-/// Date patterns: "March 24, 2026", "24th March 2026", "2026-04-07",
-/// "04/07/2026".
-static DATE_RE: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(
-        r"(?ix)
-        \b(?:
-            (?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|
-             Jul(?:y)?|Aug(?:ust)?|Sep(?:t(?:ember)?)?|Oct(?:ober)?|
-             Nov(?:ember)?|Dec(?:ember)?)
-            \s+\d{1,2}[\s,]+\d{4}
-          |
-            \d{1,2}(?:st|nd|rd|th)?\s+
-            (?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|
-             Jul(?:y)?|Aug(?:ust)?|Sep(?:t(?:ember)?)?|Oct(?:ober)?|
-             Nov(?:ember)?|Dec(?:ember)?)
-            \s+\d{4}
-          |
-            \d{4}[-/]\d{1,2}[-/]\d{1,2}
-        )\b",
-    )
-    .expect("date regex is valid")
-});
+use crate::patterns;
 
 /// Remove a date-containing metadata block that is a direct sibling
 /// of the first h1 in the content.
@@ -78,14 +53,14 @@ fn find_metadata_sibling(html: &Html, h1_id: NodeId) -> Option<NodeId> {
 /// Check whether the element or its `<p>`/`<time>` children contain a
 /// date.
 fn has_date(html: &Html, node_id: NodeId, text: &str) -> bool {
-    if DATE_RE.is_match(text) {
+    if patterns::is_date_metadata_block(text) {
         return true;
     }
     for sel in &["p", "time"] {
         let child_ids = dom::select_within(html, node_id, sel);
         for &cid in &child_ids {
             let child_text = dom::text_content(html, cid);
-            if DATE_RE.is_match(child_text.trim()) {
+            if patterns::is_date_metadata_block(child_text.trim()) {
                 return true;
             }
         }

@@ -43,6 +43,9 @@ pub fn extract_conversation(html: &Html, url: Option<&str>) -> Option<ExtractorR
         title: Some(title),
         author: None,
         site: Some(site_name.to_string()),
+        published: None,
+        image: None,
+        description: None,
     })
 }
 

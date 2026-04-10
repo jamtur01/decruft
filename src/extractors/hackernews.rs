@@ -63,7 +63,6 @@ fn extract_story_page(
 
     let title = extract_story_title(html, fatitem);
     let author = extract_author(html, fatitem);
-    let _published = extract_date(html, fatitem);
     let post_content = extract_story_content(html, fatitem);
     let comments = if include_replies {
         extract_comments(html)
@@ -71,6 +70,8 @@ fn extract_story_page(
         String::new()
     };
     let content = build_content_html("hackernews", &post_content, &comments);
+
+    let published = extract_date(html, fatitem);
 
     Some(ExtractorResult {
         content,
@@ -81,6 +82,13 @@ fn extract_story_page(
             Some(author)
         },
         site: Some("Hacker News".to_string()),
+        published: if published.is_empty() {
+            None
+        } else {
+            Some(published)
+        },
+        image: None,
+        description: None,
     })
 }
 
@@ -166,6 +174,9 @@ fn extract_comment_page(
             Some(author)
         },
         site: Some("Hacker News".to_string()),
+        published: None,
+        image: None,
+        description: None,
     })
 }
 

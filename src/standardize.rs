@@ -105,6 +105,12 @@ fn remove_wbr_elements(html: &mut Html, main_content: NodeId) {
     }
 }
 
+/// Remove non-allowed attributes from all elements under the given
+/// root. Public alias for use by the extractor sanitization path.
+pub fn clean_attributes_on(html: &mut Html, main_content: NodeId) {
+    clean_attributes(html, main_content);
+}
+
 /// Remove non-allowed attributes from all elements.
 fn clean_attributes(html: &mut Html, main_content: NodeId) {
     let descendants = dom::all_descendant_elements(html, main_content);

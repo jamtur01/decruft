@@ -128,6 +128,9 @@ fn extract_issue(html: &Html, url: Option<&str>, include_replies: bool) -> Extra
             Some(author)
         },
         site: Some(format!("GitHub - {owner}/{repo}")),
+        published: None,
+        image: None,
+        description: None,
     }
 }
 
@@ -269,6 +272,9 @@ fn extract_pr(html: &Html, url: Option<&str>, include_replies: bool) -> Extracto
             Some(author)
         },
         site: Some(format!("GitHub - {owner}/{repo}")),
+        published: None,
+        image: None,
+        description: None,
     }
 }
 
