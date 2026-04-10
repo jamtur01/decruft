@@ -361,3 +361,108 @@ fn complex_blog_all_formats() {
         "markdown should have code fences"
     );
 }
+
+// ── Public API coverage ──────────────────────────────────────────
+
+#[test]
+fn parse_with_defaults_works() {
+    let result = decruft::parse_with_defaults(SAMPLE_HTML);
+    assert!(result.word_count > 20);
+    assert!(result.content.contains("first paragraph"));
+}
+
+#[test]
+fn parse_time_ms_is_set() {
+    let result = parse(SAMPLE_HTML, &default_opts());
+    assert!(result.parse_time_ms > 0, "parse_time_ms should be non-zero");
+}
+
+#[test]
+fn favicon_extracted_from_link_icon() {
+    let html = r#"<html><head>
+        <link rel="icon" href="/favicon.ico">
+    </head><body><article><p>Content.</p></article></body></html>"#;
+    let mut opts = DecruftOptions::default();
+    opts.url = Some("https://example.com/page".into());
+    let result = parse(html, &opts);
+    assert_eq!(result.favicon, "https://example.com/favicon.ico");
+}
+
+#[test]
+fn extractor_type_set_for_github() {
+    let Ok(html) = std::fs::read_to_string(format!(
+        "{}/tests/fixtures/defuddle/general--github.com-issue-56.html",
+        env!("CARGO_MANIFEST_DIR")
+    )) else {
+        return;
+    };
+    let mut opts = DecruftOptions::default();
+    opts.url = Some("https://github.com/kepano/defuddle/issues/56".into());
+    let result = parse(&html, &opts);
+    assert_eq!(
+        result.extractor_type.as_deref(),
+        Some("github"),
+        "should report github extractor"
+    );
+}
+
+#[test]
+fn include_replies_false_reduces_content() {
+    let Ok(html) = std::fs::read_to_string(format!(
+        "{}/tests/fixtures/defuddle/general--github.com-issue-56.html",
+        env!("CARGO_MANIFEST_DIR")
+    )) else {
+        return;
+    };
+    let mut with_replies = DecruftOptions::default();
+    with_replies.url = Some("https://github.com/kepano/defuddle/issues/56".into());
+    with_replies.include_replies = true;
+    let result_with = parse(&html, &with_replies);
+
+    let mut without_replies = DecruftOptions::default();
+    without_replies.url = Some("https://github.com/kepano/defuddle/issues/56".into());
+    without_replies.include_replies = false;
+    let result_without = parse(&html, &without_replies);
+
+    assert!(
+        result_without.word_count <= result_with.word_count,
+        "no-replies ({}) should have <= words than with-replies ({})",
+        result_without.word_count,
+        result_with.word_count
+    );
+}
+
+#[test]
+fn remove_images_strips_all_img_tags() {
+    let html = r#"<html><body><article>
+        <p>Text before image.</p>
+        <img src="photo.jpg" alt="A photo">
+        <p>Text after image.</p>
+    </article></body></html>"#;
+    let mut opts = DecruftOptions::default();
+    opts.remove_images = true;
+    let result = parse(html, &opts);
+    assert!(
+        !result.content.contains("<img"),
+        "should not contain any img tags"
+    );
+    assert!(result.content.contains("Text before image"));
+}
+
+#[test]
+fn strip_html_tags_decodes_entities() {
+    let text = decruft::strip_html_tags("<p>AT&amp;T &lt;rocks&gt;</p>");
+    assert!(text.contains("AT&T"), "should decode &amp; -> &: {text}");
+    assert!(text.contains("<rocks>"), "should decode &lt;&gt;: {text}");
+}
+
+#[test]
+fn content_markdown_populated_with_separate_markdown() {
+    let mut opts = default_opts();
+    opts.separate_markdown = true;
+    let result = parse(SAMPLE_HTML, &opts);
+    assert!(result.content.contains("<p>"), "content should be HTML");
+    let md = result.content_markdown.expect("should have markdown");
+    assert!(!md.is_empty());
+    assert!(!md.contains("<p>"), "markdown should not have HTML tags");
+}
