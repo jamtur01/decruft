@@ -174,9 +174,9 @@ pub const EXACT_SELECTORS: &[&str] = &[
     "table.navbox",
     ".navbox",
     ".navbox-container",
-    ".reflist",
-    ".references",
-    ".mw-references-wrap",
+    // .reflist, .references, .mw-references-wrap are NOT here —
+    // they're in FOOTNOTE_LIST_SELECTORS for standardization, not removal.
+    // Wikipedia references are useful content (citations, DOIs, etc.).
     "[data-optimizely=\"related-articles-section\" i]",
     "[data-orientation=\"vertical\"]",
     // GitHub sticky headers

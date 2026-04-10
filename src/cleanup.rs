@@ -229,6 +229,10 @@ fn score_and_remove_with_elements(
         if is_inside_pre_or_code(html, node_id) {
             continue;
         }
+        // Skip elements inside footnote-protected containers (references, citations)
+        if is_inside_footnote_container(html, node_id) {
+            continue;
+        }
 
         let Some(node_ref) = html.tree.get(node_id) else {
             continue;
@@ -455,6 +459,36 @@ fn is_near_content_root(html: &Html, node_id: NodeId, content_root: NodeId) -> b
         return false;
     };
     grandparent == content_root
+}
+
+/// Check if an element is inside a footnote/reference container.
+/// Checks both data-decruft-footnote (pre-standardization protection)
+/// and canonical footnote IDs (post-standardization).
+fn is_inside_footnote_container(html: &Html, node_id: NodeId) -> bool {
+    let mut current = node_id;
+    loop {
+        // Check data-decruft-footnote attribute (set during protection pass)
+        if dom::get_attr(html, current, "data-decruft-footnote").is_some() {
+            return true;
+        }
+        // Check canonical footnote structure (set during standardization)
+        if let Some(id) = dom::get_attr(html, current, "id")
+            && (id == "footnotes" || id.starts_with("fn:"))
+        {
+            return true;
+        }
+        if let Some(class) = dom::get_attr(html, current, "class")
+            && (class.contains("footnote")
+                || class.contains("reflist")
+                || class.contains("references"))
+        {
+            return true;
+        }
+        let Some(parent_id) = dom::parent_element(html, current) else {
+            return false;
+        };
+        current = parent_id;
+    }
 }
 
 fn is_inside_pre_or_code(html: &Html, node_id: NodeId) -> bool {
