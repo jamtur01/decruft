@@ -64,8 +64,8 @@ pub fn parse(html_str: &str, options: &DecruftOptions) -> DecruftResult {
         result = retry_without_hidden(html_str, options, result);
     }
 
-    // RETRY 3: If still < 50, retry without scoring/partials/patterns
-    if result.word_count < 50 {
+    // RETRY 3: If still very sparse, retry fully relaxed
+    if result.word_count < 30 {
         result = retry_fully_relaxed(html_str, options, result);
     }
 
@@ -131,7 +131,9 @@ fn parse_internal(html_str: &str, options: &DecruftOptions) -> ParseResult {
 }
 
 /// RETRY 1: If result has < 200 words, retry without partial selectors.
-/// Only use the retry if it yields 2x+ improvement.
+/// Only use the retry if it yields a significant improvement. For
+/// short pages (< 50 words), require 5x improvement to avoid
+/// overriding correct cleanup with junk content.
 fn retry_without_partials(
     html_str: &str,
     options: &DecruftOptions,
@@ -140,7 +142,12 @@ fn retry_without_partials(
     let mut opts = options.clone();
     opts.remove_partial_selectors = false;
     let retry = parse_internal(html_str, &opts);
-    if retry.word_count > current.word_count * 2 {
+    let threshold = if current.word_count < 50 {
+        current.word_count * 5
+    } else {
+        current.word_count * 2
+    };
+    if retry.word_count > threshold {
         retry
     } else {
         // Re-parse with original options to get owned result

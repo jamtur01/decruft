@@ -71,7 +71,7 @@ pub const CONTENT_ELEMENT_SELECTOR: &str = concat!(
     "code, pre, table, img, blockquote, figure"
 );
 
-const SOCIAL_DOMAINS: &[&str] = &["twitter.com", "github.com", "linkedin.com", "facebook.com"];
+const SOCIAL_DOMAINS: &[&str] = &["twitter.com", "linkedin.com", "facebook.com"];
 
 const FOOTNOTE_REF_SELECTOR: &str = "a[href^=\"#fn\"], sup.reference";
 
