@@ -982,6 +982,38 @@ mod tests {
         assert!(m.domain.is_empty());
     }
 
+    // ── clean_title ─────────────────────────────────────────────────
+
+    #[test]
+    fn clean_title_strips_trailing_site_name_pipe() {
+        let result = clean_title("Article Title | Site Name", "Site Name", None, None);
+        assert_eq!(result, "Article Title");
+    }
+
+    #[test]
+    fn clean_title_strips_trailing_site_name_dash() {
+        let result = clean_title("Article Title - Site Name", "Site Name", None, None);
+        assert_eq!(result, "Article Title");
+    }
+
+    #[test]
+    fn clean_title_strips_leading_site_name() {
+        let result = clean_title("Site Name | Article Title", "Site Name", None, None);
+        assert_eq!(result, "Article Title");
+    }
+
+    #[test]
+    fn clean_title_unchanged_without_separator() {
+        let result = clean_title("Title With No Separator", "Site Name", None, None);
+        assert_eq!(result, "Title With No Separator");
+    }
+
+    #[test]
+    fn clean_title_keeps_longer_part() {
+        let result = clean_title("Short | Very Long Article Title Here", "Short", None, None);
+        assert_eq!(result, "Very Long Article Title Here");
+    }
+
     #[test]
     fn schema_str_from_array() {
         let schema: serde_json::Value = serde_json::json!([

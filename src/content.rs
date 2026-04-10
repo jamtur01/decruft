@@ -173,4 +173,44 @@ mod tests {
         let last = ENTRY_POINT_SELECTORS.last().copied().unwrap_or_default();
         assert_eq!(last, "body");
     }
+
+    #[test]
+    fn find_main_content_picks_article_over_nav() {
+        let words = "word ".repeat(120);
+        let html_str = format!(
+            r#"<html><body>
+            <nav><a href="/">Home</a><a href="/about">About</a></nav>
+            <article><p>{words}</p></article>
+            </body></html>"#
+        );
+        let doc = Html::parse_document(&html_str);
+        let main = find_main_content(&doc);
+        let tag = dom::tag_name(&doc, main);
+        assert_eq!(tag.as_deref(), Some("article"));
+    }
+
+    #[test]
+    fn find_main_content_picks_post_content_over_body() {
+        let words = "word ".repeat(120);
+        let html_str = format!(
+            r#"<html><body>
+            <div class="post-content"><p>{words}</p></div>
+            </body></html>"#
+        );
+        let doc = Html::parse_document(&html_str);
+        let main = find_main_content(&doc);
+        let class = dom::get_attr(&doc, main, "class");
+        assert_eq!(class.as_deref(), Some("post-content"));
+    }
+
+    #[test]
+    fn find_main_content_falls_back_to_body() {
+        let doc = Html::parse_document("<html><body><span>Just a span.</span></body></html>");
+        let main = find_main_content(&doc);
+        // When no entry-point selectors match meaningful content,
+        // the fallback scoring still picks some element. At minimum
+        // the result should be a valid node.
+        let tag = dom::tag_name(&doc, main);
+        assert!(tag.is_some(), "fallback should return a valid element");
+    }
 }

@@ -323,6 +323,23 @@ mod tests {
     }
 
     #[test]
+    fn is_reddit_true_for_old_reddit_url() {
+        let doc = Html::parse_document("<html><body></body></html>");
+        assert!(is_reddit(
+            &doc,
+            Some("https://old.reddit.com/r/test/comments/abc")
+        ));
+    }
+
+    #[test]
+    fn is_reddit_true_for_thing_link_class() {
+        let doc = Html::parse_document(
+            r#"<html><body><div class="thing link" data-fullname="t3_abc"></div></body></html>"#,
+        );
+        assert!(is_reddit(&doc, None));
+    }
+
+    #[test]
     fn extract_old_reddit_post_and_comments() {
         let html_str =
             load_fixture("comments--old.reddit.com-r-test-comments-abc123-test_post.html");

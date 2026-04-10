@@ -552,4 +552,88 @@ mod tests {
         assert!(output.contains("https://cdn.example.com/abs.jpg 1x"));
         assert!(output.contains("https://example.com/relative.jpg 2x"));
     }
+
+    // ── strip_unsafe_elements ───────────────────────────────────────
+
+    #[test]
+    fn strip_removes_frame_and_frameset() {
+        let mut doc = Html::parse_document(
+            "<html><body><frame src=\"x.html\"><frameset><frame src=\"y.html\"></frameset><p>keep</p></body></html>",
+        );
+        strip_unsafe_elements(&mut doc);
+        let out = dom::outer_html(&doc, doc.tree.root().id());
+        assert!(!out.contains("<frame"));
+        assert!(!out.contains("<frameset"));
+        assert!(out.contains("keep"));
+    }
+
+    #[test]
+    fn strip_removes_event_handler_attributes() {
+        let mut doc = Html::parse_document(
+            r#"<html><body><div onclick="evil()" onerror="bad()">text</div></body></html>"#,
+        );
+        strip_unsafe_elements(&mut doc);
+        let out = dom::outer_html(&doc, doc.tree.root().id());
+        assert!(!out.contains("onclick"));
+        assert!(!out.contains("onerror"));
+        assert!(out.contains("text"));
+    }
+
+    #[test]
+    fn strip_removes_javascript_uri_from_href() {
+        let mut doc = Html::parse_document(
+            r#"<html><body><a href="javascript:alert(1)">link</a></body></html>"#,
+        );
+        strip_unsafe_elements(&mut doc);
+        let out = dom::outer_html(&doc, doc.tree.root().id());
+        assert!(!out.contains("javascript:"));
+    }
+
+    #[test]
+    fn strip_removes_data_text_html_from_src() {
+        let mut doc = Html::parse_document(
+            r#"<html><body><img src="data:text/html,<script>alert(1)</script>"></body></html>"#,
+        );
+        strip_unsafe_elements(&mut doc);
+        let out = dom::outer_html(&doc, doc.tree.root().id());
+        assert!(!out.contains("data:text/html"));
+    }
+
+    #[test]
+    fn strip_removes_srcdoc_from_iframes() {
+        let mut doc = Html::parse_document(
+            r#"<html><body><iframe srcdoc="<script>x</script>"></iframe></body></html>"#,
+        );
+        strip_unsafe_elements(&mut doc);
+        let out = dom::outer_html(&doc, doc.tree.root().id());
+        assert!(!out.contains("srcdoc"));
+    }
+
+    #[test]
+    fn strip_preserves_style_inside_svg() {
+        let mut doc = Html::parse_document(
+            r"<html><body><svg><style>.cls{fill:red}</style><rect/></svg></body></html>",
+        );
+        strip_unsafe_elements(&mut doc);
+        let out = dom::outer_html(&doc, doc.tree.root().id());
+        assert!(out.contains("<style>"));
+    }
+
+    #[test]
+    fn strip_removes_object_embed_applet() {
+        let mut doc = Html::parse_document(
+            r#"<html><body>
+            <object data="x.swf"></object>
+            <embed src="y.swf">
+            <applet code="z.class"></applet>
+            <p>safe</p>
+            </body></html>"#,
+        );
+        strip_unsafe_elements(&mut doc);
+        let out = dom::outer_html(&doc, doc.tree.root().id());
+        assert!(!out.contains("<object"));
+        assert!(!out.contains("<embed"));
+        assert!(!out.contains("<applet"));
+        assert!(out.contains("safe"));
+    }
 }

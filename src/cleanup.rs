@@ -630,3 +630,102 @@ fn image_quality_score(html: &Html, node_id: NodeId) -> u64 {
 
     dimension_score + srcset_bonus + url_len
 }
+
+#[cfg(test)]
+#[expect(clippy::unwrap_used)]
+mod tests {
+    use super::*;
+    use scraper::Selector;
+
+    fn first_match(html: &Html, sel: &str) -> NodeId {
+        let selector = Selector::parse(sel).unwrap();
+        html.select(&selector).next().unwrap().id()
+    }
+
+    // ── is_hidden_element ───────────────────────────────────────────
+
+    #[test]
+    fn hidden_display_none() {
+        let doc = Html::parse_document(
+            r#"<html><body><div id="t" style="display:none">x</div></body></html>"#,
+        );
+        assert!(is_hidden_element(&doc, first_match(&doc, "#t")));
+    }
+
+    #[test]
+    fn hidden_attribute() {
+        let doc = Html::parse_document(r#"<html><body><div id="t" hidden>x</div></body></html>"#);
+        assert!(is_hidden_element(&doc, first_match(&doc, "#t")));
+    }
+
+    #[test]
+    fn hidden_aria_hidden_true() {
+        let doc = Html::parse_document(
+            r#"<html><body><div id="t" aria-hidden="true">x</div></body></html>"#,
+        );
+        assert!(is_hidden_element(&doc, first_match(&doc, "#t")));
+    }
+
+    #[test]
+    fn hidden_class_invisible() {
+        let doc = Html::parse_document(
+            r#"<html><body><div id="t" class="invisible">x</div></body></html>"#,
+        );
+        assert!(is_hidden_element(&doc, first_match(&doc, "#t")));
+    }
+
+    #[test]
+    fn hidden_inert() {
+        let doc = Html::parse_document(r#"<html><body><div id="t" inert>x</div></body></html>"#);
+        assert!(is_hidden_element(&doc, first_match(&doc, "#t")));
+    }
+
+    #[test]
+    fn hidden_responsive_not_hidden() {
+        let doc = Html::parse_document(
+            r#"<html><body><div id="t" class="hidden sm:block">x</div></body></html>"#,
+        );
+        assert!(!is_hidden_element(&doc, first_match(&doc, "#t")));
+    }
+
+    #[test]
+    fn hidden_normal_p_not_hidden() {
+        let doc =
+            Html::parse_document(r#"<html><body><p id="t">Normal paragraph.</p></body></html>"#);
+        assert!(!is_hidden_element(&doc, first_match(&doc, "#t")));
+    }
+
+    // ── remove_header_elements ──────────────────────────────────────
+
+    #[test]
+    fn remove_header_nav_links() {
+        let mut doc = Html::parse_document(
+            r#"<html><body>
+            <header><nav><a href="/">Home</a><a href="/about">About</a></nav></header>
+            <article id="content"><p>Main content here.</p></article>
+            </body></html>"#,
+        );
+        let main = first_match(&doc, "#content");
+        let mut removals = Vec::new();
+        remove_header_elements(&mut doc, main, &mut removals, false);
+        let out = dom::outer_html(&doc, doc.tree.root().id());
+        assert!(!out.contains("<header>"));
+        assert!(out.contains("Main content here"));
+    }
+
+    #[test]
+    fn preserve_header_with_consecutive_paragraphs() {
+        let mut doc = Html::parse_document(
+            r#"<html><body>
+            <header id="hdr"><p>First paragraph.</p><p>Second paragraph.</p></header>
+            <article id="content"><p>Main content.</p></article>
+            </body></html>"#,
+        );
+        let main = first_match(&doc, "#content");
+        let mut removals = Vec::new();
+        remove_header_elements(&mut doc, main, &mut removals, false);
+        let out = dom::outer_html(&doc, doc.tree.root().id());
+        assert!(out.contains("<header"));
+        assert!(out.contains("First paragraph"));
+    }
+}

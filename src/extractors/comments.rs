@@ -109,3 +109,44 @@ pub fn build_comment(comment: &CommentData) -> String {
 fn html_escape(s: &str) -> String {
     crate::dom::html_escape(s)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn build_comment_tree_nested_blockquotes() {
+        let comments = vec![
+            CommentData {
+                author: "alice".into(),
+                date: "2025-01-01".into(),
+                content: "<p>Top level</p>".into(),
+                depth: 0,
+                score: None,
+                url: None,
+            },
+            CommentData {
+                author: "bob".into(),
+                date: "2025-01-02".into(),
+                content: "<p>Reply to alice</p>".into(),
+                depth: 1,
+                score: None,
+                url: None,
+            },
+        ];
+        let tree = build_comment_tree(&comments);
+        // Should contain nested blockquotes
+        assert!(tree.contains("<blockquote>"));
+        assert!(tree.contains("</blockquote>"));
+        assert!(tree.contains("alice"));
+        assert!(tree.contains("bob"));
+        assert!(tree.contains("Reply to alice"));
+        // The reply should be inside a nested blockquote
+        let inner_start = tree.find("Reply to alice").unwrap_or(0);
+        let blockquote_count = tree[..inner_start].matches("<blockquote>").count();
+        assert!(
+            blockquote_count >= 2,
+            "reply should be nested in at least 2 blockquotes, found {blockquote_count}"
+        );
+    }
+}

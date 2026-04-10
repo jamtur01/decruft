@@ -152,4 +152,28 @@ mod tests {
         let result = bbcode_to_html(input);
         assert!(result.contains("youtube.com/embed/dQw4w9WgXcQ"));
     }
+
+    #[test]
+    fn detect_bbcode_by_data_attribute() {
+        let doc = Html::parse_document(
+            r#"<html><body>
+            <div data-partnereventstore='[{"event_name":"Test Event","announcement_body":{"body":"[p]Hello[/p]"}}]'></div>
+            </body></html>"#,
+        );
+        let result = extract_bbcode_content(&doc);
+        assert!(result.is_some());
+    }
+
+    #[test]
+    fn extract_bbcode_parses_json_and_converts() {
+        let doc = Html::parse_document(
+            r#"<html><body>
+            <div data-partnereventstore='[{"event_name":"Launch Day","announcement_body":{"body":"[b]Welcome[/b] to the event"}}]'></div>
+            </body></html>"#,
+        );
+        let result = extract_bbcode_content(&doc).expect("should extract bbcode");
+        assert_eq!(result.title.as_deref(), Some("Launch Day"));
+        assert!(result.html.contains("<strong>Welcome</strong>"));
+        assert!(result.html.contains("to the event"));
+    }
 }

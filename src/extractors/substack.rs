@@ -242,3 +242,37 @@ fn get_meta(html: &Html, attr: &str, value: &str) -> Option<String> {
     let el = html.select(&sel).next()?;
     el.value().attr("content").map(String::from)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn is_substack_true_for_og_site_name() {
+        let doc = Html::parse_document(
+            r#"<html><head>
+            <meta property="og:site_name" content="Substack">
+            </head><body></body></html>"#,
+        );
+        assert!(is_substack(&doc, None));
+    }
+
+    #[test]
+    fn is_substack_true_for_substack_url() {
+        let doc = Html::parse_document("<html><body></body></html>");
+        assert!(is_substack(
+            &doc,
+            Some("https://example.substack.com/p/my-post")
+        ));
+    }
+
+    #[test]
+    fn is_substack_false_for_unrelated_page() {
+        let doc = Html::parse_document(
+            r#"<html><head>
+            <meta property="og:site_name" content="My Blog">
+            </head><body></body></html>"#,
+        );
+        assert!(!is_substack(&doc, Some("https://example.com/post")));
+    }
+}

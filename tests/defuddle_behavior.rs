@@ -301,6 +301,10 @@ fn content_selector_with_specific_element_narrows_content() {
     });
 
     assert!(
+        !narrow_result.content.is_empty(),
+        "narrow content should be non-empty"
+    );
+    assert!(
         narrow_result.word_count > 50,
         "narrow should have substantial content ({})",
         narrow_result.word_count

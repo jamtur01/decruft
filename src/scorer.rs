@@ -555,3 +555,179 @@ fn apply_link_heavy_penalty(html: &Html, node_id: NodeId, text: &str, mut score:
     }
     score
 }
+
+#[cfg(test)]
+#[expect(clippy::unwrap_used)]
+mod tests {
+    use super::*;
+    use scraper::Selector;
+
+    /// Helper: parse a document and return the first element matching
+    /// the given CSS selector.
+    fn first_match(html: &Html, sel: &str) -> NodeId {
+        let selector = Selector::parse(sel).unwrap();
+        html.select(&selector).next().unwrap().id()
+    }
+
+    // ── score_element ───────────────────────────────────────────────
+
+    #[test]
+    fn score_element_high_for_paragraph_rich_div() {
+        let doc = Html::parse_document(
+            r#"<html><body><div id="target">
+            <p>First paragraph with enough words to count as real prose content here.</p>
+            <p>Second paragraph also containing substantial text for scoring purposes.</p>
+            <p>Third paragraph providing additional content weight to this element.</p>
+            <p>Fourth paragraph ensuring the word count is well above the threshold needed.</p>
+            <p>Fifth paragraph, the final one, driving the total score even higher now.</p>
+            </div></body></html>"#,
+        );
+        let node = first_match(&doc, "#target");
+        let score = score_element(&doc, node);
+        assert!(
+            score > 50.0,
+            "div with 5 paragraphs of text should score > 50, got {score}"
+        );
+    }
+
+    #[test]
+    fn score_element_low_for_nav_with_links() {
+        let doc = Html::parse_document(
+            r#"<html><body><nav id="target">
+            <a href="/a">Link A</a>
+            <a href="/b">Link B</a>
+            <a href="/c">Link C</a>
+            </nav></body></html>"#,
+        );
+        let node = first_match(&doc, "#target");
+        let score = score_element(&doc, node);
+        assert!(
+            score < 30.0,
+            "nav with only links should score low, got {score}"
+        );
+    }
+
+    // ── is_likely_content ───────────────────────────────────────────
+
+    #[test]
+    fn is_likely_content_article_with_text() {
+        let words = "word ".repeat(150);
+        let html_str =
+            format!(r#"<html><body><article id="target"><p>{words}</p></article></body></html>"#);
+        let doc = Html::parse_document(&html_str);
+        let node = first_match(&doc, "#target");
+        assert!(is_likely_content(&doc, node));
+    }
+
+    #[test]
+    fn is_likely_content_nav_with_links_is_false() {
+        let doc = Html::parse_document(
+            r#"<html><body><nav id="target">
+            <a href="/a">Link</a><a href="/b">Link</a><a href="/c">Link</a>
+            </nav></body></html>"#,
+        );
+        let node = first_match(&doc, "#target");
+        assert!(!is_likely_content(&doc, node));
+    }
+
+    #[test]
+    fn is_likely_content_div_with_content_class() {
+        let doc = Html::parse_document(
+            r#"<html><body>
+            <div id="target" class="content">
+                <p>Some paragraph text here with enough words to matter for scoring.</p>
+            </div>
+            </body></html>"#,
+        );
+        let node = first_match(&doc, "#target");
+        assert!(is_likely_content(&doc, node));
+    }
+
+    #[test]
+    fn is_likely_content_card_grid_is_false() {
+        let doc = Html::parse_document(
+            r#"<html><body><div id="target">
+            <h2>Card One</h2><img src="a.jpg"><span>brief</span>
+            <h3>Card Two</h3><img src="b.jpg"><span>brief</span>
+            <h4>Card Three</h4><img src="c.jpg"><span>brief</span>
+            </div></body></html>"#,
+        );
+        let node = first_match(&doc, "#target");
+        assert!(!is_likely_content(&doc, node));
+    }
+
+    // ── score_non_content ───────────────────────────────────────────
+
+    #[test]
+    fn score_non_content_negative_for_high_link_density() {
+        let mut links = String::new();
+        for i in 0..20 {
+            std::fmt::Write::write_fmt(
+                &mut links,
+                format_args!(r#"<a href="/p{i}">Link number {i} text</a> "#),
+            )
+            .expect("write to String is infallible");
+        }
+        let html_str =
+            format!(r#"<html><body><div id="target"><p>{links}</p></div></body></html>"#);
+        let doc = Html::parse_document(&html_str);
+        let node = first_match(&doc, "#target");
+        let score = score_non_content(&doc, node);
+        assert!(
+            score < 0.0,
+            "high link density should produce negative score, got {score}"
+        );
+    }
+
+    #[test]
+    fn score_non_content_negative_for_copyright_text() {
+        let doc = Html::parse_document(
+            r#"<html><body><div id="target">
+            <p>All rights reserved. Copyright 2025 Example Inc.</p>
+            </div></body></html>"#,
+        );
+        let node = first_match(&doc, "#target");
+        let score = score_non_content(&doc, node);
+        assert!(
+            score < 0.0,
+            "div with 'all rights reserved' should score negative, got {score}"
+        );
+    }
+
+    #[test]
+    fn score_non_content_non_negative_for_regular_text() {
+        let doc = Html::parse_document(
+            r#"<html><body><div id="target">
+            <p>This is a regular paragraph with normal prose content, discussing
+            topics of interest. It contains commas, sentences, and reasonable text
+            that should not be penalized by the scoring algorithm.</p>
+            </div></body></html>"#,
+        );
+        let node = first_match(&doc, "#target");
+        let score = score_non_content(&doc, node);
+        assert!(
+            score >= 0.0,
+            "regular paragraph text should have non-negative score, got {score}"
+        );
+    }
+
+    // ── is_article_metadata ─────────────────────────────────────────
+
+    #[test]
+    fn is_article_metadata_with_authors_label() {
+        let doc = Html::parse_document(
+            r#"<html><body><div id="target">Authors: Name1, Name2</div></body></html>"#,
+        );
+        let node = first_match(&doc, "#target");
+        assert!(is_article_metadata(&doc, node));
+    }
+
+    #[test]
+    fn is_article_metadata_false_for_subscribe_text() {
+        let doc = Html::parse_document(
+            r#"<html><body><div id="target">Click here to subscribe</div></body></html>"#,
+        );
+        let node = first_match(&doc, "#target");
+        assert!(!is_article_metadata(&doc, node));
+    }
+}
