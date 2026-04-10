@@ -13,6 +13,7 @@ const ALLOWED_ATTRIBUTES: &[&str] = &[
     "allowfullscreen",
     "aria-label",
     "checked",
+    "class",
     "colspan",
     "columnalign",
     "columnlines",
@@ -38,6 +39,7 @@ const ALLOWED_ATTRIBUTES: &[&str] = &[
     "headers",
     "height",
     "href",
+    "id",
     "kind",
     "label",
     "lang",
@@ -86,9 +88,9 @@ const URL_ATTRS: &[&str] = &["href", "src", "action", "formaction"];
 
 /// Standardize content: clean attributes, remove empty elements,
 /// fix headings, unwrap wrapper divs, and strip `<wbr>` tags.
-pub fn standardize_content(html: &mut Html, main_content: NodeId, debug: bool) {
+pub fn standardize_content(html: &mut Html, main_content: NodeId) {
     remove_wbr_elements(html, main_content);
-    clean_attributes(html, main_content, debug);
+    clean_attributes(html, main_content);
     remove_empty_elements(html, main_content);
     normalize_headings(html, main_content);
     unwrap_wrapper_divs(html, main_content);
@@ -104,7 +106,7 @@ fn remove_wbr_elements(html: &mut Html, main_content: NodeId) {
 }
 
 /// Remove non-allowed attributes from all elements.
-fn clean_attributes(html: &mut Html, main_content: NodeId, debug: bool) {
+fn clean_attributes(html: &mut Html, main_content: NodeId) {
     let descendants = dom::all_descendant_elements(html, main_content);
     for node_id in descendants {
         let Some(node_ref) = html.tree.get(node_id) else {
@@ -159,13 +161,8 @@ fn clean_attributes(html: &mut Html, main_content: NodeId, debug: bool) {
         let Node::Element(el) = node_mut.value() else {
             continue;
         };
-        el.attrs.retain(|(name, _)| {
-            let n = name.local.as_ref();
-            if debug && (n == "class" || n == "id") {
-                return true;
-            }
-            ALLOWED_ATTRIBUTES.contains(&n)
-        });
+        el.attrs
+            .retain(|(name, _)| ALLOWED_ATTRIBUTES.contains(&name.local.as_ref()));
     }
 }
 
@@ -277,6 +274,12 @@ fn unwrap_wrapper_divs(html: &mut Html, main_content: NodeId) {
             continue;
         };
         if tag != "div" {
+            continue;
+        }
+
+        // Preserve canonical footnote structure
+        let el_id = dom::get_attr(html, node_id, "id").unwrap_or_default();
+        if el_id == "footnotes" || el_id.starts_with("fn:") {
             continue;
         }
 

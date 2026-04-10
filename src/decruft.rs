@@ -443,7 +443,7 @@ fn run_cleanup_pipeline(
     }
     if options.standardize {
         code_blocks::standardize_code_blocks(html, main_content);
-        standardize::standardize_content(html, main_content, options.debug);
+        standardize::standardize_content(html, main_content);
     }
     if let Some(ref url) = options.url {
         standardize::resolve_urls(html, main_content, url);
@@ -678,7 +678,7 @@ fn apply_substack_meta(
 }
 
 /// Convert HTML to Markdown with custom handlers for math
-/// (`data-latex`) elements.
+/// (`data-latex`), footnotes, and embedded media.
 fn convert_to_markdown(html: &str) -> Option<String> {
     use htmd::HtmlToMarkdownBuilder;
     use htmd::element_handler::HandlerResult;
@@ -701,32 +701,103 @@ fn convert_to_markdown(html: &str) -> Option<String> {
                 Some(HandlerResult::from(format!("\n![]({url})")))
             },
         )
-        .add_handler(
-            vec!["span", "div"],
-            |handlers: &dyn Handlers, element: htmd::Element| {
-                let latex = element
-                    .attrs
-                    .iter()
-                    .find(|a| a.name.local.as_ref() == "data-latex")
-                    .map(|a| a.value.to_string());
-                match latex {
-                    Some(l) if !l.is_empty() => {
-                        let is_block = element.tag == "div";
-                        let md = if is_block {
-                            format!("\n$$\n{l}\n$$\n")
-                        } else {
-                            format!("${l}$")
-                        };
-                        Some(HandlerResult::from(md))
-                    }
-                    _ => handlers.fallback(element),
-                }
-            },
-        )
+        .add_handler(vec!["sup"], handle_sup_element)
+        .add_handler(vec!["span", "div"], handle_span_div_element)
+        .add_handler(vec!["a"], handle_anchor_element)
         .build()
         .convert(html)
         .ok()
         .map(|s| fix_bang_image_collision(s.as_str()))
+}
+
+/// Handle `<sup>` elements: convert canonical footnote refs to `[^N]`.
+#[allow(clippy::needless_pass_by_value, clippy::unnecessary_wraps)]
+fn handle_sup_element(
+    handlers: &dyn htmd::element_handler::Handlers,
+    element: htmd::Element,
+) -> Option<htmd::element_handler::HandlerResult> {
+    let attrs = collect_attrs(&element);
+    if let Some(num) = footnotes::is_canonical_footnote_ref(&attrs) {
+        // Strip any sub-ref suffix (e.g. "1-2" -> "1")
+        let base = num.split('-').next().unwrap_or(&num);
+        return Some(htmd::element_handler::HandlerResult::from(format!(
+            "[^{base}]"
+        )));
+    }
+    // For non-footnote sups, render as <sub>-style or just inline
+    Some(handlers.walk_children(element.node))
+}
+
+/// Handle `<span>` and `<div>` elements: data-latex math or
+/// canonical footnotes container.
+#[allow(clippy::needless_pass_by_value)]
+fn handle_span_div_element(
+    handlers: &dyn htmd::element_handler::Handlers,
+    element: htmd::Element,
+) -> Option<htmd::element_handler::HandlerResult> {
+    // Check for data-latex math
+    let latex = element
+        .attrs
+        .iter()
+        .find(|a| a.name.local.as_ref() == "data-latex")
+        .map(|a| a.value.to_string());
+    if let Some(l) = latex
+        && !l.is_empty()
+    {
+        let is_block = element.tag == "div";
+        let md = if is_block {
+            format!("\n$$\n{l}\n$$\n")
+        } else {
+            format!("${l}$")
+        };
+        return Some(htmd::element_handler::HandlerResult::from(md));
+    }
+
+    // Check for canonical footnotes div
+    if element.tag == "div" {
+        let attrs = collect_attrs(&element);
+
+        // Footnote item: div#fn:N.footnote -> [^N]: content
+        if let Some(num) = footnotes::is_canonical_footnote_item(&attrs) {
+            let base = num.split('-').next().unwrap_or(&num);
+            let content = handlers.walk_children(element.node).content;
+            let trimmed = content.trim();
+            return Some(htmd::element_handler::HandlerResult::from(format!(
+                "\n[^{base}]: {trimmed}\n"
+            )));
+        }
+
+        // Footnote container: div#footnotes -> walk children
+        if footnotes::is_canonical_footnotes_div(&attrs) {
+            let content = handlers.walk_children(element.node).content;
+            return Some(htmd::element_handler::HandlerResult::from(content));
+        }
+    }
+
+    handlers.fallback(element)
+}
+
+/// Handle `<a>` elements: suppress footnote backref links.
+#[allow(clippy::needless_pass_by_value)]
+fn handle_anchor_element(
+    handlers: &dyn htmd::element_handler::Handlers,
+    element: htmd::Element,
+) -> Option<htmd::element_handler::HandlerResult> {
+    let attrs = collect_attrs(&element);
+    if footnotes::is_footnote_backref(&attrs) {
+        return Some(htmd::element_handler::HandlerResult::from(String::new()));
+    }
+    // Fall through to default anchor handling
+    handlers.fallback(element)
+}
+
+/// Collect attributes from an htmd Element into (name, value) pairs.
+fn collect_attrs(element: &htmd::Element) -> Vec<(String, String)> {
+    element
+        .attrs
+        .iter()
+        .map(|a| (a.name.local.as_ref().to_string(), a.value.to_string()))
+        .collect()
 }
 
 /// Prevent `!` at the end of a word from merging with markdown image

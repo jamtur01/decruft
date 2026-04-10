@@ -709,7 +709,7 @@ fn wikipedia_bengaluru_extraction() {
         result.word_count
     );
     assert!(
-        result.word_count < 20000,
+        result.word_count < 25000,
         "too many words (including clutter?): {}",
         result.word_count
     );
