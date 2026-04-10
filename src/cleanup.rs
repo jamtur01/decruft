@@ -357,10 +357,10 @@ pub fn remove_all_images(html: &mut Html, main_content: NodeId) {
 
 /// Remove `<header>` elements that don't wrap article content.
 ///
-/// Defuddle uses `header:not(:has(p + p))` to keep headers that
-/// contain consecutive paragraphs (content wrappers). Since scraper
-/// doesn't support `:has()`, we check manually: skip removal if the
-/// header contains two or more consecutive `<p>` siblings.
+/// The ideal selector is `header:not(:has(p + p))`, but scraper
+/// doesn't support `:has()`. Instead we check manually: skip
+/// removal if the header contains two or more consecutive `<p>`
+/// siblings.
 pub fn remove_header_elements(
     html: &mut Html,
     main_content: NodeId,
@@ -491,15 +491,11 @@ fn is_near_content_root(html: &Html, node_id: NodeId, content_root: NodeId) -> b
 }
 
 /// Check if an element is inside a footnote/reference container.
-/// Checks both data-decruft-footnote (pre-standardization protection)
-/// and canonical footnote IDs (post-standardization).
+/// Recognizes canonical footnote IDs set during standardization
+/// and class-based footnote/reference containers.
 fn is_inside_footnote_container(html: &Html, node_id: NodeId) -> bool {
     let mut current = node_id;
     loop {
-        // Check data-decruft-footnote attribute (set during protection pass)
-        if dom::get_attr(html, current, "data-decruft-footnote").is_some() {
-            return true;
-        }
         // Check canonical footnote structure (set during standardization)
         if let Some(id) = dom::get_attr(html, current, "id")
             && (id == "footnotes" || id.starts_with("fn:"))

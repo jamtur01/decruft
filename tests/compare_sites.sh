@@ -39,8 +39,10 @@ URLS=(
     # ── Classic blogs ──
     "https://martinfowler.com/articles/microservices.html"
     "https://www.joelonsoftware.com/2000/08/09/the-joel-test-12-steps-to-better-code/"
-    # Note: C2 Wiki, Steam (BBCode), X/Twitter, and new GitHub PRs
-    # are JS-rendered — static curl fetch returns empty shells.
+    # ── C2 Wiki (API fetch) ──
+    "https://wiki.c2.com/?ExtremeProgramming"
+    # Note: Steam (BBCode), X/Twitter, and new GitHub PRs are
+    # JS-rendered — static curl fetch returns empty shells.
     # These are tested via HTML fixtures instead (tests/fixtures/defuddle/).
 )
 

@@ -35,9 +35,9 @@ pub const EXACT_SELECTORS: &[&str] = &[
     // Custom elements
     "ads-breadcrumbs",
     // Header / banner / nav
-    // Note: defuddle uses `header:not(:has(p + p))` but scraper does
-    // not support `:has()`. Content-wrapping headers are handled
-    // separately in cleanup::remove_header_elements.
+    // scraper does not support `:has()`, so we can't use
+    // `header:not(:has(p + p))`. Content-wrapping headers are
+    // handled separately in cleanup::remove_header_elements.
     ".header:not(.banner)",
     "#header",
     "#Header",

@@ -37,9 +37,10 @@ curl -sL https://example.com/article | decruft --url https://example.com/article
 # From file
 decruft page.html --url https://example.com/page
 
-# Output formats: json (default), html, text
+# Output formats: json (default), html, text, markdown
 decruft page.html -f html
 decruft page.html -f text
+decruft page.html -f markdown
 
 # Fetch and extract
 decruft -F --url https://example.com/article
@@ -59,9 +60,10 @@ Arguments:
 Options:
   -u, --url <URL>             URL (for resolving relative URLs and metadata)
   -s, --selector <SELECTOR>   CSS selector to override content root detection
-  -f, --format <FORMAT>       Output format: json, html, or text [default: json]
+  -f, --format <FORMAT>       Output format: json, html, text, or markdown [default: json]
   -d, --debug                 Include removal details in output
   -F, --fetch                 Fetch the URL with curl before processing
+      --markdown              Convert output to Markdown
       --no-images             Strip all images
       --no-exact-selectors    Disable exact CSS selector removal
       --no-partial-selectors  Disable partial class/id pattern removal
@@ -69,6 +71,7 @@ Options:
       --no-scoring            Disable content scoring removal
       --no-patterns           Disable content pattern removal
       --no-standardize        Disable content standardization
+      --no-replies            Exclude replies/comments from extracted content
   -h, --help                  Print help
   -V, --version               Print version
 ```
@@ -122,13 +125,15 @@ assert!(!result.content.contains("Copyright"));
 
 1. Parse HTML and extract schema.org JSON-LD
 2. Extract metadata (title, author, date, etc.) via priority chains across meta tags, schema.org, and DOM
-3. Find main content element using scored entry-point selectors
-4. Remove ads, navigation, sidebars, and other clutter via CSS selectors
-5. Remove elements matching ~80 partial class/id patterns
-6. Score and remove non-content blocks (link-dense, nav indicators)
-7. Remove content patterns (bylines, read time, boilerplate, related posts)
-8. Standardize output (clean attributes, normalize headings, resolve URLs)
-9. Retry with relaxed filters if too little content was extracted
+3. Try site-specific extractors (GitHub, Reddit, Hacker News, X/Twitter, Substack, C2 Wiki, BBCode, AI chat conversations)
+4. Find main content element using scored entry-point selectors
+5. Standardize math, footnotes, callouts, and code blocks into canonical formats
+6. Remove ads, navigation, sidebars, and other clutter via CSS selectors
+7. Remove elements matching ~500 partial class/id patterns
+8. Score and remove non-content blocks (link-dense, nav indicators)
+9. Remove content patterns (bylines, read time, boilerplate, related posts)
+10. Standardize output (clean attributes, normalize headings, resolve URLs, deduplicate images)
+11. Retry with progressively relaxed filters if too little content was extracted
 
 ## Metadata priority chains
 

@@ -3,8 +3,8 @@ use scraper::{Html, Selector};
 use crate::dom;
 use crate::types::Metadata;
 
-/// Extract metadata from an HTML document following defuddle's
-/// priority chains. Schema.org data, when present, participates
+/// Extract metadata from an HTML document using priority-based
+/// fallback chains. Schema.org data, when present, participates
 /// in several chains.
 #[must_use]
 pub fn extract_metadata(

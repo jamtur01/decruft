@@ -30,7 +30,7 @@ fn footnote_section_re() -> &'static Regex {
 /// references from various formats, then emit canonical HTML.
 ///
 /// Canonical inline ref:  `<sup id="fnref:N"><a href="#fn:N">N</a></sup>`
-/// Canonical list:        `<div id="footnotes"><ol><li id="fn:N">...</li></ol></div>`
+/// Canonical list:        `<div id="footnotes"><div id="fn:N" class="footnote">...</div>...</div>`
 ///
 /// Runs BEFORE selector-based removal.
 pub fn standardize_footnotes(html: &mut Html, main_content: NodeId) {
@@ -1550,8 +1550,8 @@ pub fn is_canonical_footnotes_div(attrs: &[(String, String)]) -> bool {
     attrs.iter().any(|(k, v)| k == "id" && v == "footnotes")
 }
 
-/// Check if this is a canonical footnote list item
-/// (`<li id="fn:N" class="footnote">`).
+/// Check if this is a canonical footnote item
+/// (`<div id="fn:N" class="footnote">`).
 #[must_use]
 pub fn is_canonical_footnote_item(attrs: &[(String, String)]) -> Option<String> {
     let id = attrs.iter().find(|(k, _)| k == "id")?;

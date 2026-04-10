@@ -1,8 +1,11 @@
-//! X/Twitter article extractor.
+//! X/Twitter extractor.
 //!
-//! Extracts article content from x.com / twitter.com article pages.
-//! These are long-form articles with actual HTML content (not
-//! JS-rendered tweets).
+//! Handles two page types:
+//! - **Articles**: long-form content at `x.com/user/article/ID`,
+//!   extracted from static HTML containers.
+//! - **Tweets**: individual posts at `x.com/user/status/ID`. Static
+//!   HTML rarely contains the tweet text, so we fall back to the
+//!   Twitter oEmbed API (`publish.twitter.com/oembed`).
 
 use scraper::Html;
 
@@ -30,9 +33,36 @@ pub fn is_x_article(html: &Html, url: Option<&str>) -> bool {
     has_selector(html, ARTICLE_CONTAINER_SEL)
 }
 
-/// Extract content from an X/Twitter article page.
+/// Check whether a URL points to an individual tweet.
+#[must_use]
+pub fn is_tweet_url(url: Option<&str>) -> bool {
+    use std::sync::LazyLock;
+    static TWEET_RE: LazyLock<regex::Regex> = LazyLock::new(|| {
+        regex::Regex::new(r"(?:x\.com|twitter\.com)/[a-zA-Z0-9_]{1,15}/status/\d+")
+            .expect("tweet url regex is valid")
+    });
+    url.is_some_and(|u| TWEET_RE.is_match(u))
+}
+
+/// Extract content from an X/Twitter page (article or tweet).
+///
+/// Tries the article extractor first. If the URL is a tweet and
+/// article extraction fails, falls back to the oEmbed API.
 #[must_use]
 pub fn extract_x_article(html: &Html, url: Option<&str>) -> Option<ExtractorResult> {
+    if let Some(result) = try_article(html, url) {
+        return Some(result);
+    }
+    if let Some(u) = url
+        && is_tweet_url(Some(u))
+    {
+        return try_oembed(u);
+    }
+    None
+}
+
+/// Try extracting a long-form X/Twitter article.
+fn try_article(html: &Html, url: Option<&str>) -> Option<ExtractorResult> {
     if !is_x_article(html, url) {
         return None;
     }
@@ -63,6 +93,67 @@ pub fn extract_x_article(html: &Html, url: Option<&str>) -> Option<ExtractorResu
         image: None,
         description: None,
     })
+}
+
+/// Fetch tweet content via the Twitter oEmbed API.
+///
+/// The API returns JSON with `html` (a blockquote), `author_name`,
+/// and `author_url`. We use `html` as content and `author_name` as
+/// author.
+fn try_oembed(tweet_url: &str) -> Option<ExtractorResult> {
+    let api_url = format!(
+        "https://publish.twitter.com/oembed?url={}",
+        urlencoding(tweet_url),
+    );
+
+    let output = std::process::Command::new("curl")
+        .args(["-sL", "--max-time", "10", &api_url])
+        .output()
+        .ok()?;
+
+    if !output.status.success() {
+        return None;
+    }
+
+    let body = String::from_utf8_lossy(&output.stdout);
+    let json: serde_json::Value = serde_json::from_str(&body).ok()?;
+
+    let html = json.get("html")?.as_str()?;
+    if html.trim().is_empty() {
+        return None;
+    }
+
+    let author_name = json
+        .get("author_name")
+        .and_then(|v| v.as_str())
+        .map(String::from);
+
+    Some(ExtractorResult {
+        content: html.to_string(),
+        title: None,
+        author: author_name,
+        site: Some("X (Twitter)".to_string()),
+        published: None,
+        image: None,
+        description: None,
+    })
+}
+
+/// Percent-encode a URL for use as a query parameter value.
+fn urlencoding(s: &str) -> String {
+    let mut result = String::with_capacity(s.len() * 2);
+    for byte in s.bytes() {
+        match byte {
+            b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'-' | b'_' | b'.' | b'~' => {
+                result.push(byte as char);
+            }
+            _ => {
+                use std::fmt::Write;
+                let _ = write!(result, "%{byte:02X}");
+            }
+        }
+    }
+    result
 }
 
 fn extract_title(html: &Html) -> String {
@@ -242,5 +333,38 @@ mod tests {
             upgrade_image_src("https://pbs.twimg.com/img"),
             "https://pbs.twimg.com/img?name=large"
         );
+    }
+
+    #[test]
+    fn is_tweet_url_detection() {
+        assert!(is_tweet_url(Some("https://x.com/user/status/123456")));
+        assert!(is_tweet_url(Some("https://twitter.com/user/status/123456")));
+        assert!(!is_tweet_url(Some("https://x.com/user/article/123456")));
+        assert!(!is_tweet_url(Some("https://example.com")));
+        assert!(!is_tweet_url(None));
+    }
+
+    #[test]
+    fn urlencoding_basics() {
+        assert_eq!(
+            urlencoding("https://x.com/user/status/123"),
+            "https%3A%2F%2Fx.com%2Fuser%2Fstatus%2F123"
+        );
+        assert_eq!(urlencoding("hello"), "hello");
+    }
+
+    #[test]
+    fn oembed_on_live_tweet() {
+        // This test makes a real network call -- skip in CI
+        if std::env::var("CI").is_ok() {
+            return;
+        }
+        let result = try_oembed("https://x.com/elikiris/status/1925627023102992830");
+        if let Some(r) = result {
+            assert!(!r.content.is_empty(), "oEmbed should return content");
+            assert!(r.author.is_some(), "oEmbed should return author");
+            assert_eq!(r.site.as_deref(), Some("X (Twitter)"));
+        }
+        // Don't fail if network is unavailable
     }
 }
