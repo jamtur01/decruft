@@ -3,9 +3,13 @@ use std::time::Instant;
 use ego_tree::NodeId;
 use scraper::{Html, Node};
 
+use crate::callouts;
 use crate::cleanup;
+use crate::code_blocks;
 use crate::content;
 use crate::dom;
+use crate::footnotes;
+use crate::math;
 use crate::metadata;
 use crate::noscript;
 use crate::patterns;
@@ -56,8 +60,21 @@ pub fn parse(html_str: &str, options: &DecruftOptions) -> DecruftResult {
     #[allow(clippy::cast_possible_truncation)]
     let parse_time_ms = elapsed.as_millis() as u64;
 
+    let content_markdown = if options.markdown || options.separate_markdown {
+        htmd::convert(&result.content).ok()
+    } else {
+        None
+    };
+
+    let content = if options.markdown {
+        content_markdown.clone().unwrap_or(result.content)
+    } else {
+        result.content
+    };
+
     build_result(
-        result.content,
+        content,
+        content_markdown,
         result.word_count,
         parse_time_ms,
         meta,
@@ -334,6 +351,17 @@ fn run_cleanup_pipeline(
     removals: &mut Vec<Removal>,
     options: &DecruftOptions,
 ) {
+    // Standardize math elements early, before selectors might remove
+    // them (e.g. MathJax classes matching partial removal patterns).
+    if options.standardize {
+        math::standardize_math(html, main_content);
+    }
+
+    // Mark footnotes and callouts before cleanup so they survive
+    // exact/partial selector removal.
+    footnotes::standardize_footnotes(html, main_content);
+    callouts::standardize_callouts(html, main_content);
+
     if options.remove_images {
         cleanup::remove_all_images(html, main_content);
     }
@@ -356,6 +384,7 @@ fn run_cleanup_pipeline(
         patterns::remove_content_patterns(html, main_content, removals, options.debug);
     }
     if options.standardize {
+        code_blocks::standardize_code_blocks(html, main_content);
         standardize::standardize_content(html, main_content, options.debug);
     }
     if let Some(ref url) = options.url {
@@ -367,6 +396,7 @@ fn run_cleanup_pipeline(
 #[allow(clippy::too_many_arguments)]
 fn build_result(
     content: String,
+    content_markdown: Option<String>,
     word_count: usize,
     parse_time_ms: u64,
     meta: crate::types::Metadata,
@@ -378,6 +408,7 @@ fn build_result(
 ) -> DecruftResult {
     DecruftResult {
         content,
+        content_markdown,
         title: meta.title,
         description: meta.description,
         domain: meta.domain,

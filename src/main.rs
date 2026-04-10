@@ -21,7 +21,7 @@ struct Cli {
     #[arg(short = 's', long)]
     selector: Option<String>,
 
-    /// Output format: html, json, or text.
+    /// Output format: html, json, text, or markdown.
     #[arg(short, long, default_value = "json")]
     format: OutputFormat,
 
@@ -57,6 +57,10 @@ struct Cli {
     #[arg(long)]
     no_standardize: bool,
 
+    /// Convert output to Markdown.
+    #[arg(long)]
+    markdown: bool,
+
     /// Fetch URL and process (requires url argument).
     #[arg(short = 'F', long)]
     fetch: bool,
@@ -67,6 +71,7 @@ enum OutputFormat {
     Html,
     Json,
     Text,
+    Markdown,
 }
 
 fn main() {
@@ -107,6 +112,8 @@ fn main() {
         standardize: !cli.no_standardize,
         remove_content_patterns: !cli.no_patterns,
         content_selector: cli.selector,
+        markdown: cli.markdown || matches!(cli.format, OutputFormat::Markdown),
+        separate_markdown: false,
     };
 
     let result = decruft::parse(&html, &options);
@@ -123,6 +130,13 @@ fn main() {
         },
         OutputFormat::Html => {
             write_stdout(&result.content);
+        }
+        OutputFormat::Markdown => {
+            let md = result
+                .content_markdown
+                .as_deref()
+                .unwrap_or(&result.content);
+            write_stdout(md);
         }
         OutputFormat::Text => {
             let text = strip_tags_simple(&result.content);

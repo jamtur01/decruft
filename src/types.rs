@@ -26,6 +26,10 @@ pub struct DecruftOptions {
     pub remove_content_patterns: bool,
     /// CSS selector override for content root.
     pub content_selector: Option<String>,
+    /// Convert output to Markdown.
+    pub markdown: bool,
+    /// Include Markdown alongside HTML content.
+    pub separate_markdown: bool,
 }
 
 impl Default for DecruftOptions {
@@ -42,6 +46,8 @@ impl Default for DecruftOptions {
             standardize: true,
             remove_content_patterns: true,
             content_selector: None,
+            markdown: false,
+            separate_markdown: false,
         }
     }
 }
@@ -71,6 +77,9 @@ pub struct DecruftResult {
     pub author: String,
     /// Site name.
     pub site: String,
+    /// Markdown version of content (when `markdown` or `separate_markdown` is enabled).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub content_markdown: Option<String>,
     /// Word count of extracted content.
     pub word_count: usize,
     /// Schema.org data if found.

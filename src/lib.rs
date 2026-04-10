@@ -24,10 +24,14 @@
 //! assert!(!result.content.contains("Copyright"));
 //! ```
 
+pub mod callouts;
 pub mod cleanup;
+pub mod code_blocks;
 pub mod content;
 mod decruft;
 pub mod dom;
+pub mod footnotes;
+pub mod math;
 pub mod metadata;
 pub mod noscript;
 pub mod patterns;

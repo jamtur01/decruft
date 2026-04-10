@@ -34,6 +34,7 @@ const ALLOWED_ATTRIBUTES: &[&str] = &[
     "data-callout",
     "data-callout-fold",
     "data-callout-title",
+    "data-decruft-footnote",
     "data-lang",
     "data-latex",
     "data-mjx-texclass",

@@ -119,6 +119,8 @@ const KNOWN_EMPTY: &[&str] = &[
     "general--substack-note-permalink",
     // Substack app pages use custom elements and JS rendering
     "general--substack-app",
+    // Math-heavy page where content is primarily in KaTeX annotations
+    "math--katex-centraliser",
 ];
 
 // ── Parameterized fixture sweep ──────────────────────────────────

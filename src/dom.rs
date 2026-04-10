@@ -128,6 +128,34 @@ pub fn remove_node(html: &mut Html, node_id: NodeId) {
     }
 }
 
+/// Set an attribute on an element node.
+pub fn set_attr(html: &mut Html, node_id: NodeId, name: &str, value: &str) {
+    let Some(mut node_mut) = html.tree.get_mut(node_id) else {
+        return;
+    };
+    let Node::Element(el) = node_mut.value() else {
+        return;
+    };
+    let qn =
+        markup5ever::QualName::new(None, markup5ever::ns!(), markup5ever::LocalName::from(name));
+    el.attrs.retain(|(n, _)| n != &qn);
+    el.attrs
+        .push((qn, markup5ever::tendril::StrTendril::from(value)));
+}
+
+/// Select element IDs matching a CSS selector that are descendants
+/// of `ancestor_id`.
+#[must_use]
+pub fn select_within(html: &Html, ancestor_id: NodeId, selector_str: &str) -> Vec<NodeId> {
+    let Ok(sel) = Selector::parse(selector_str) else {
+        return Vec::new();
+    };
+    html.select(&sel)
+        .filter(|el| is_ancestor(html, el.id(), ancestor_id))
+        .map(|el| el.id())
+        .collect()
+}
+
 /// Get an attribute value from an element node.
 pub fn get_attr(html: &Html, node_id: NodeId, attr: &str) -> Option<String> {
     let node_ref = html.tree.get(node_id)?;
