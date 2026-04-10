@@ -4,7 +4,9 @@ pub mod comments;
 pub mod conversations;
 pub mod github;
 pub mod hackernews;
+pub mod lobsters;
 pub mod reddit;
+pub mod stackoverflow;
 pub mod substack;
 pub mod twitter;
 
@@ -42,6 +44,12 @@ pub fn try_extract(
     }
     if let Some(result) = hackernews::extract_hackernews(html, url, include_replies) {
         return Some((result, "hackernews"));
+    }
+    if let Some(result) = stackoverflow::extract_stackoverflow(html, url, include_replies) {
+        return Some((result, "stackoverflow"));
+    }
+    if let Some(result) = lobsters::extract_lobsters(html, url, include_replies) {
+        return Some((result, "lobsters"));
     }
     if let Some(result) = twitter::extract_x_article(html, url) {
         return Some((result, "twitter"));
