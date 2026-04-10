@@ -5,27 +5,50 @@ use std::io::Read;
 use clap::Parser;
 
 /// Extract clean, readable content from web pages.
+///
+/// Input can be a file path, URL, or - for stdin (default).
+/// When given a URL, the page is fetched automatically.
+///
+/// Examples:
+///   decruft page.html
+///   decruft <https://example.com/article>
+///   curl -sL <https://example.com> | decruft --url <https://example.com>
+///   decruft page.html -f markdown
+///   decruft page.html -f text
 #[derive(Parser, Debug)]
-#[command(name = "decruft", version, about)]
+#[command(
+    name = "decruft",
+    version,
+    about,
+    after_help = "Advanced options:\n  \
+    --no-exact-selectors    Disable exact CSS selector removal\n  \
+    --no-partial-selectors  Disable partial class/id pattern removal\n  \
+    --no-hidden             Disable hidden element removal\n  \
+    --no-scoring            Disable content scoring removal\n  \
+    --no-patterns           Disable content pattern removal\n  \
+    --no-standardize        Disable content standardization"
+)]
 #[expect(clippy::struct_excessive_bools)]
 struct Cli {
-    /// URL of the page (used for resolving relative URLs and metadata).
-    #[arg(short, long)]
-    url: Option<String>,
-
-    /// Path to an HTML file to process. Use - for stdin.
+    /// File path, URL, or - for stdin.
+    /// URLs (starting with http:// or https://) are fetched automatically.
     #[arg(default_value = "-")]
     input: String,
 
-    /// CSS selector to use as the content root.
-    #[arg(short = 's', long)]
-    selector: Option<String>,
+    /// URL of the page (for resolving relative URLs and metadata).
+    /// Inferred automatically when input is a URL.
+    #[arg(short, long)]
+    url: Option<String>,
 
-    /// Output format: html, json, text, or markdown.
+    /// Output format.
     #[arg(short, long, default_value = "json")]
     format: OutputFormat,
 
-    /// Enable debug mode (include removal details).
+    /// CSS selector to override content root detection.
+    #[arg(short = 's', long)]
+    selector: Option<String>,
+
+    /// Enable debug mode (include removal details in JSON output).
     #[arg(short, long)]
     debug: bool,
 
@@ -33,41 +56,23 @@ struct Cli {
     #[arg(long)]
     no_images: bool,
 
-    /// Disable exact selector removal.
-    #[arg(long)]
-    no_exact_selectors: bool,
-
-    /// Disable partial selector removal.
-    #[arg(long)]
-    no_partial_selectors: bool,
-
-    /// Disable hidden element removal.
-    #[arg(long)]
-    no_hidden: bool,
-
-    /// Disable content scoring removal.
-    #[arg(long)]
-    no_scoring: bool,
-
-    /// Disable content pattern removal.
-    #[arg(long)]
-    no_patterns: bool,
-
-    /// Disable content standardization.
-    #[arg(long)]
-    no_standardize: bool,
-
-    /// Convert output to Markdown.
-    #[arg(long)]
-    markdown: bool,
-
-    /// Exclude replies/comments from extracted content.
+    /// Exclude replies/comments from extractor output.
     #[arg(long = "no-replies")]
     no_replies: bool,
 
-    /// Fetch URL and process (requires url argument).
-    #[arg(short = 'F', long)]
-    fetch: bool,
+    // ── Advanced: disable pipeline stages ──
+    #[arg(long, hide = true)]
+    no_exact_selectors: bool,
+    #[arg(long, hide = true)]
+    no_partial_selectors: bool,
+    #[arg(long, hide = true)]
+    no_hidden: bool,
+    #[arg(long, hide = true)]
+    no_scoring: bool,
+    #[arg(long, hide = true)]
+    no_patterns: bool,
+    #[arg(long, hide = true)]
+    no_standardize: bool,
 }
 
 #[derive(Debug, Clone, clap::ValueEnum)]
@@ -81,22 +86,22 @@ enum OutputFormat {
 fn main() {
     let cli = Cli::parse();
 
-    let html = if cli.fetch {
-        let Some(ref url) = cli.url else {
-            eprintln!("Error: --fetch requires --url");
-            std::process::exit(1);
-        };
-        fetch_url(url)
+    let is_url = cli.input.starts_with("http://") || cli.input.starts_with("https://");
+
+    let (html, effective_url) = if is_url {
+        let url = cli.input.clone();
+        let content = fetch_url(&url);
+        (content, Some(url))
     } else if cli.input == "-" {
         let mut buf = String::new();
         if let Err(e) = std::io::stdin().read_to_string(&mut buf) {
             eprintln!("Error reading stdin: {e}");
             std::process::exit(1);
         }
-        buf
+        (buf, cli.url.clone())
     } else {
         match std::fs::read_to_string(&cli.input) {
-            Ok(s) => s,
+            Ok(s) => (s, cli.url.clone()),
             Err(e) => {
                 eprintln!("Error reading {}: {e}", cli.input);
                 std::process::exit(1);
@@ -105,7 +110,7 @@ fn main() {
     };
 
     let mut options = decruft::DecruftOptions::default();
-    options.url = cli.url;
+    options.url = effective_url;
     options.debug = cli.debug;
     options.remove_exact_selectors = !cli.no_exact_selectors;
     options.remove_partial_selectors = !cli.no_partial_selectors;
@@ -115,24 +120,21 @@ fn main() {
     options.standardize = !cli.no_standardize;
     options.remove_content_patterns = !cli.no_patterns;
     options.content_selector = cli.selector;
-    options.markdown = cli.markdown || matches!(cli.format, OutputFormat::Markdown);
+    options.markdown = matches!(cli.format, OutputFormat::Markdown);
+    options.separate_markdown = matches!(cli.format, OutputFormat::Markdown);
     options.include_replies = !cli.no_replies;
 
     let result = decruft::parse(&html, &options);
 
     match cli.format {
         OutputFormat::Json => match serde_json::to_string_pretty(&result) {
-            Ok(json) => {
-                write_stdout(&json);
-            }
+            Ok(json) => write_stdout(&json),
             Err(e) => {
                 eprintln!("Error serializing result: {e}");
                 std::process::exit(1);
             }
         },
-        OutputFormat::Html => {
-            write_stdout(&result.content);
-        }
+        OutputFormat::Html => write_stdout(&result.content),
         OutputFormat::Markdown => {
             let md = result
                 .content_markdown
@@ -161,19 +163,24 @@ fn write_stdout(s: &str) {
 }
 
 fn fetch_url(url: &str) -> String {
-    // Minimal HTTP fetch using std - no extra dependencies
-    // For production use, users would pipe curl output
-    eprintln!("Tip: For fetching, pipe curl output: curl -sL '{url}' | decruft --url '{url}'");
-    eprintln!("Attempting basic fetch...");
-
     let output = std::process::Command::new("curl")
-        .args(["-sL", "--max-time", "30", url])
+        .args([
+            "-sL",
+            "--max-time",
+            "30",
+            "-A",
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
+            url,
+        ])
         .output();
 
     match output {
         Ok(out) if out.status.success() => String::from_utf8_lossy(&out.stdout).into_owned(),
         Ok(out) => {
-            eprintln!("curl failed: {}", String::from_utf8_lossy(&out.stderr));
+            eprintln!(
+                "Error fetching {url}: {}",
+                String::from_utf8_lossy(&out.stderr)
+            );
             std::process::exit(1);
         }
         Err(e) => {
