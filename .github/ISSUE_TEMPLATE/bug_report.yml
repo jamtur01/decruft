@@ -1,0 +1,41 @@
+name: Bug report
+description: Report a content extraction issue
+labels: [bug]
+body:
+  - type: input
+    id: url
+    attributes:
+      label: URL or page
+      description: The URL that produces wrong output (or attach the HTML file)
+      placeholder: https://example.com/article
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What content should be extracted?
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: What does decruft output instead?
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Output of `decruft --version`
+      placeholder: decruft 0.1.0
+  - type: dropdown
+    id: format
+    attributes:
+      label: Output format
+      options:
+        - json
+        - html
+        - markdown
+        - text

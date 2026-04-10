@@ -49,6 +49,44 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          # Get previous tag
+          PREV_TAG=$(git tag --sort=-version:refname | head -2 | tail -1)
+          TAG=${GITHUB_REF#refs/tags/}
+
+          # Generate changelog from commits since last tag
+          echo "## ${TAG}" > /tmp/changelog_entry.md
+          echo "" >> /tmp/changelog_entry.md
+          if [ -n "$PREV_TAG" ]; then
+            git log --pretty=format:"- %s" "${PREV_TAG}..HEAD" >> /tmp/changelog_entry.md
+          else
+            git log --pretty=format:"- %s" >> /tmp/changelog_entry.md
+          fi
+          echo "" >> /tmp/changelog_entry.md
+
+          # Prepend to CHANGELOG.md
+          if [ -f CHANGELOG.md ]; then
+            cat /tmp/changelog_entry.md CHANGELOG.md > /tmp/changelog_full.md
+          else
+            echo "# Changelog" > /tmp/changelog_full.md
+            echo "" >> /tmp/changelog_full.md
+            cat /tmp/changelog_entry.md >> /tmp/changelog_full.md
+          fi
+          mv /tmp/changelog_full.md CHANGELOG.md
+
+          # Commit changelog
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add CHANGELOG.md
+          git commit -m "Update CHANGELOG for ${TAG}" || true
+          git push origin HEAD:main || true
+
       - uses: actions/download-artifact@v4
         with:
           merge-multiple: true
