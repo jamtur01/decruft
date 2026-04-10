@@ -16,6 +16,7 @@ use crate::noscript;
 use crate::patterns;
 use crate::schema_org;
 use crate::standardize;
+use crate::streaming_ssr;
 use crate::types::{DebugInfo, DecruftOptions, DecruftResult, Removal};
 
 /// Result of a single parse-internal pass.
@@ -30,42 +31,24 @@ struct ParseResult {
 #[must_use]
 pub fn parse(html_str: &str, options: &DecruftOptions) -> DecruftResult {
     let start = Instant::now();
+    let sanitized = sanitize_html_comments(html_str);
+    let html_str = sanitized.as_str();
 
     let html = Html::parse_document(html_str);
     let schema_data = schema_org::extract_schema_org(&html);
     let meta_tags = cleanup::collect_meta_tags(&html);
     let mut meta = metadata::extract_metadata(&html, options.url.as_deref(), schema_data.as_ref());
 
-    // Check for BBCode content in data attributes before normal pipeline
-    if let Some(bbcode) = extractors::bbcode::extract_bbcode_content(&html) {
-        if let Some(t) = &bbcode.title
-            && meta.title.is_empty()
-        {
-            meta.title.clone_from(t);
-        }
-        if let Some(a) = &bbcode.author
-            && meta.author.is_empty()
-        {
-            meta.author.clone_from(a);
-        }
-        let word_count = dom::count_words_html(&bbcode.html);
-        if word_count > 0 {
-            let elapsed = start.elapsed();
-            #[allow(clippy::cast_possible_truncation)]
-            let parse_time_ms = elapsed.as_millis() as u64;
-            return build_result(
-                bbcode.html,
-                None,
-                word_count,
-                parse_time_ms,
-                meta,
-                schema_data,
-                meta_tags,
-                "div[data-partnereventstore]".to_string(),
-                Vec::new(),
-                options.debug,
-            );
-        }
+    // Try specialized extractors before the general pipeline
+    if let Some(result) = try_extractors(
+        &html,
+        &start,
+        options,
+        &mut meta,
+        schema_data.as_ref(),
+        &meta_tags,
+    ) {
+        return result;
     }
 
     // ATTEMPT 1: Default settings
@@ -94,7 +77,7 @@ pub fn parse(html_str: &str, options: &DecruftOptions) -> DecruftResult {
     let parse_time_ms = elapsed.as_millis() as u64;
 
     let content_markdown = if options.markdown || options.separate_markdown {
-        htmd::convert(&result.content).ok()
+        convert_to_markdown(&result.content)
     } else {
         None
     };
@@ -128,6 +111,8 @@ fn parse_internal(html_str: &str, options: &DecruftOptions) -> ParseResult {
 
     // Pre-processing
     noscript::resolve_noscript_images(&mut html);
+    streaming_ssr::resolve_streaming_ssr(&mut html);
+    standardize::strip_unsafe_elements(&mut html);
 
     let main_content = resolve_content_root(&html, options);
     let content_selector_path = dom::selector_path(&html, main_content);
@@ -255,7 +240,7 @@ fn retry_schema_fallback(
         opts.content_selector = Some(selector);
         result = parse_internal(html_str, &opts);
     } else {
-        result.content = schema_text;
+        result.content = standardize::sanitize_html_string(&schema_text);
         result.word_count = schema_wc;
     }
     result
@@ -379,6 +364,38 @@ fn strip_tags_simple(html: &str) -> String {
     result
 }
 
+/// Strip HTML-like tags from inside comments to prevent html5ever
+/// from mis-parsing the DOM tree. Comments containing `<p>`, `<br>`,
+/// etc. can break sibling element detection.
+fn sanitize_html_comments(html: &str) -> String {
+    let mut result = String::with_capacity(html.len());
+    let mut remaining = html;
+
+    while let Some(start) = remaining.find("<!--") {
+        result.push_str(&remaining[..start]);
+        let after_open = &remaining[start + 4..];
+        if let Some(end) = after_open.find("-->") {
+            result.push_str("<!--");
+            let comment_body = &after_open[..end];
+            // Replace < and > inside the comment with safe chars
+            for ch in comment_body.chars() {
+                match ch {
+                    '<' | '>' => result.push('\u{FFFD}'),
+                    _ => result.push(ch),
+                }
+            }
+            result.push_str("-->");
+            remaining = &after_open[end + 3..];
+        } else {
+            // Unclosed comment: push rest as-is
+            result.push_str(&remaining[start..]);
+            remaining = "";
+        }
+    }
+    result.push_str(remaining);
+    result
+}
+
 fn resolve_content_root(html: &Html, options: &DecruftOptions) -> NodeId {
     if let Some(ref sel) = options.content_selector {
         dom::select_ids(html, sel)
@@ -418,6 +435,7 @@ fn run_cleanup_pipeline(
     }
     if options.remove_exact_selectors {
         cleanup::remove_exact_selectors(html, main_content, removals, options.debug);
+        cleanup::remove_header_elements(html, main_content, removals, options.debug);
     }
     if options.remove_partial_selectors {
         cleanup::remove_partial_selectors(html, main_content, removals, options.debug);
@@ -480,4 +498,257 @@ fn build_result(
 
 fn find_main(html: &Html) -> NodeId {
     content::find_main_content(html)
+}
+
+/// Try specialized extractors (`BBCode`, Substack) before the general
+/// pipeline. Returns `Some` with the result if an extractor matched.
+#[allow(clippy::too_many_arguments)]
+fn try_extractors(
+    html: &Html,
+    start: &Instant,
+    options: &DecruftOptions,
+    meta: &mut crate::types::Metadata,
+    schema_data: Option<&serde_json::Value>,
+    meta_tags: &[crate::types::MetaTag],
+) -> Option<DecruftResult> {
+    if let Some(result) = try_bbcode(html, start, options, meta, schema_data, meta_tags) {
+        return Some(result);
+    }
+    if let Some(result) = try_substack(html, start, options, meta, schema_data, meta_tags) {
+        return Some(result);
+    }
+    try_site_extractors(html, start, options, meta, schema_data, meta_tags)
+}
+
+#[allow(clippy::too_many_arguments)]
+fn try_bbcode(
+    html: &Html,
+    start: &Instant,
+    options: &DecruftOptions,
+    meta: &mut crate::types::Metadata,
+    schema_data: Option<&serde_json::Value>,
+    meta_tags: &[crate::types::MetaTag],
+) -> Option<DecruftResult> {
+    let bbcode = extractors::bbcode::extract_bbcode_content(html)?;
+    if let Some(t) = &bbcode.title {
+        meta.title.clone_from(t);
+    }
+    if let Some(a) = &bbcode.author {
+        meta.author.clone_from(a);
+    }
+    let word_count = dom::count_words_html(&bbcode.html);
+    if word_count == 0 {
+        return None;
+    }
+    Some(build_extractor_result(
+        bbcode.html,
+        "div[data-partnereventstore]",
+        start,
+        options,
+        meta,
+        schema_data,
+        meta_tags,
+        word_count,
+    ))
+}
+
+#[allow(clippy::too_many_arguments)]
+fn try_substack(
+    html: &Html,
+    start: &Instant,
+    options: &DecruftOptions,
+    meta: &mut crate::types::Metadata,
+    schema_data: Option<&serde_json::Value>,
+    meta_tags: &[crate::types::MetaTag],
+) -> Option<DecruftResult> {
+    let substack = extractors::substack::extract_substack_content(html, options.url.as_deref())?;
+    apply_substack_meta(&substack, meta);
+    let word_count = dom::count_words_html(&substack.html);
+    if word_count == 0 {
+        return None;
+    }
+    Some(build_extractor_result(
+        substack.html,
+        "feedCommentBody",
+        start,
+        options,
+        meta,
+        schema_data,
+        meta_tags,
+        word_count,
+    ))
+}
+
+#[allow(clippy::too_many_arguments)]
+fn build_extractor_result(
+    raw_html: String,
+    selector_label: &str,
+    start: &Instant,
+    options: &DecruftOptions,
+    meta: &crate::types::Metadata,
+    schema_data: Option<&serde_json::Value>,
+    meta_tags: &[crate::types::MetaTag],
+    word_count: usize,
+) -> DecruftResult {
+    let content_markdown = convert_to_markdown(&raw_html);
+    let content = if options.markdown {
+        content_markdown.clone().unwrap_or_else(|| raw_html.clone())
+    } else {
+        raw_html
+    };
+    let elapsed = start.elapsed();
+    #[allow(clippy::cast_possible_truncation)]
+    let parse_time_ms = elapsed.as_millis() as u64;
+    build_result(
+        content,
+        content_markdown,
+        word_count,
+        parse_time_ms,
+        meta.clone(),
+        schema_data.cloned(),
+        meta_tags.to_vec(),
+        selector_label.to_string(),
+        Vec::new(),
+        options.debug,
+    )
+}
+
+/// Try site-specific extractors (GitHub, Reddit, Hacker News, etc.).
+#[allow(clippy::too_many_arguments)]
+fn try_site_extractors(
+    html: &Html,
+    start: &Instant,
+    options: &DecruftOptions,
+    meta: &mut crate::types::Metadata,
+    schema_data: Option<&serde_json::Value>,
+    meta_tags: &[crate::types::MetaTag],
+) -> Option<DecruftResult> {
+    let extracted = extractors::try_extract(html, options.url.as_deref())?;
+    if let Some(t) = &extracted.title
+        && meta.title.is_empty()
+    {
+        meta.title.clone_from(t);
+    }
+    if let Some(a) = &extracted.author
+        && meta.author.is_empty()
+    {
+        meta.author.clone_from(a);
+    }
+    if let Some(s) = &extracted.site
+        && meta.site_name.is_empty()
+    {
+        meta.site_name.clone_from(s);
+    }
+    let word_count = dom::count_words_html(&extracted.content);
+    if word_count == 0 {
+        return None;
+    }
+    Some(build_extractor_result(
+        extracted.content,
+        "site-extractor",
+        start,
+        options,
+        meta,
+        schema_data,
+        meta_tags,
+        word_count,
+    ))
+}
+
+/// Apply Substack-extracted metadata to the result metadata.
+fn apply_substack_meta(
+    substack: &extractors::substack::SubstackContent,
+    meta: &mut crate::types::Metadata,
+) {
+    if let Some(t) = &substack.title
+        && meta.title.is_empty()
+    {
+        meta.title.clone_from(t);
+    }
+    if let Some(a) = &substack.author
+        && meta.author.is_empty()
+    {
+        meta.author.clone_from(a);
+    }
+    if let Some(s) = &substack.site
+        && meta.site_name.is_empty()
+    {
+        meta.site_name.clone_from(s);
+    }
+    if let Some(img) = &substack.image
+        && meta.image.is_empty()
+    {
+        meta.image.clone_from(img);
+    }
+}
+
+/// Convert HTML to Markdown with custom handlers for math
+/// (`data-latex`) elements.
+fn convert_to_markdown(html: &str) -> Option<String> {
+    use htmd::HtmlToMarkdownBuilder;
+    use htmd::element_handler::HandlerResult;
+    use htmd::element_handler::Handlers;
+
+    HtmlToMarkdownBuilder::new()
+        .add_handler(
+            vec!["iframe"],
+            |_handlers: &dyn Handlers, element: htmd::Element| {
+                let src = element
+                    .attrs
+                    .iter()
+                    .find(|a| a.name.local.as_ref() == "src")
+                    .map(|a| a.value.to_string())?;
+                let url = if src.contains("youtube.com/embed/") {
+                    src.replace("/embed/", "/watch?v=")
+                } else {
+                    src
+                };
+                Some(HandlerResult::from(format!("\n![]({url})")))
+            },
+        )
+        .add_handler(
+            vec!["span", "div"],
+            |handlers: &dyn Handlers, element: htmd::Element| {
+                let latex = element
+                    .attrs
+                    .iter()
+                    .find(|a| a.name.local.as_ref() == "data-latex")
+                    .map(|a| a.value.to_string());
+                match latex {
+                    Some(l) if !l.is_empty() => {
+                        let is_block = element.tag == "div";
+                        let md = if is_block {
+                            format!("\n$$\n{l}\n$$\n")
+                        } else {
+                            format!("${l}$")
+                        };
+                        Some(HandlerResult::from(md))
+                    }
+                    _ => handlers.fallback(element),
+                }
+            },
+        )
+        .build()
+        .convert(html)
+        .ok()
+        .map(|s| fix_bang_image_collision(s.as_str()))
+}
+
+/// Prevent `!` at the end of a word from merging with markdown image
+/// syntax `![`. For example, `Yey!![IMG](url)` becomes
+/// `Yey! ![IMG](url)`.
+fn fix_bang_image_collision(md: &str) -> String {
+    use regex::Regex;
+    // Insert a space when text ending with `!` (preceded by a word
+    // char) runs into markdown image `![` or linked image `[![`.
+    // `Yey!![IMG](url)` -> `Yey! ![IMG](url)`
+    // `Hello![![photo](url)](url)` -> `Hello! [![photo](url)](url)`
+    let re = Regex::new(r"(\w!)\[?!\[").expect("fix_bang_image_collision regex is valid");
+    re.replace_all(md, |caps: &regex::Captures| {
+        let prefix = &caps[1];
+        let matched = &caps[0];
+        let rest = &matched[prefix.len()..];
+        format!("{prefix} {rest}")
+    })
+    .into_owned()
 }

@@ -40,6 +40,7 @@ pub mod schema_org;
 pub mod scorer;
 pub mod selectors;
 pub mod standardize;
+pub mod streaming_ssr;
 pub mod types;
 
 pub use decruft::parse;

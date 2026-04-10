@@ -98,12 +98,22 @@ const UNSAFE_ELEMENTS: &[&str] = &["frame", "frameset", "object", "embed", "appl
 const URL_ATTRS: &[&str] = &["href", "src", "action", "formaction"];
 
 /// Standardize content: clean attributes, remove empty elements,
-/// fix headings, unwrap wrapper divs.
+/// fix headings, unwrap wrapper divs, and strip `<wbr>` tags.
 pub fn standardize_content(html: &mut Html, main_content: NodeId, debug: bool) {
+    remove_wbr_elements(html, main_content);
     clean_attributes(html, main_content, debug);
     remove_empty_elements(html, main_content);
     normalize_headings(html, main_content);
     unwrap_wrapper_divs(html, main_content);
+}
+
+/// Remove all `<wbr>` elements (word-break hints) without inserting
+/// any whitespace.
+fn remove_wbr_elements(html: &mut Html, main_content: NodeId) {
+    let wbrs = dom::descendant_elements_by_tag(html, main_content, "wbr");
+    for id in wbrs {
+        dom::remove_node(html, id);
+    }
 }
 
 /// Remove non-allowed attributes from all elements.
@@ -134,7 +144,23 @@ fn clean_attributes(html: &mut Html, main_content: NodeId, debug: bool) {
                 | "ellipse"
                 | "stop"
                 | "pattern"
-        );
+                | "text"
+                | "tspan"
+                | "clippath"
+                | "lineargradient"
+                | "radialgradient"
+                | "filter"
+                | "fegaussianblur"
+                | "feoffset"
+                | "feblend"
+                | "marker"
+                | "symbol"
+                | "image"
+                | "foreignobject"
+                | "desc"
+                | "metadata"
+                | "style"
+        ) || is_inside_svg(html, node_id);
 
         if is_svg_related {
             continue;
@@ -157,6 +183,8 @@ fn clean_attributes(html: &mut Html, main_content: NodeId, debug: bool) {
 }
 
 /// Remove empty elements (no text, no children, not in allowed list).
+/// Also removes `<p>` elements whose only children are `<br>` tags
+/// (visual spacers with no content).
 fn remove_empty_elements(html: &mut Html, main_content: NodeId) {
     let mut to_remove = Vec::new();
     let descendants = dom::all_descendant_elements(html, main_content);
@@ -177,12 +205,36 @@ fn remove_empty_elements(html: &mut Html, main_content: NodeId) {
         let text = dom::text_content(html, node_id);
         if text.trim().is_empty() && !node_ref.has_children() {
             to_remove.push(node_id);
+            continue;
+        }
+
+        // <p> with only <br> children (visual spacers)
+        let only_brs = has_only_br_children(html, node_id);
+        if tag == "p" && text.trim().is_empty() && only_brs {
+            to_remove.push(node_id);
         }
     }
 
     for id in to_remove {
         dom::remove_node(html, id);
     }
+}
+
+/// Check if a node's only element children are `<br>` tags.
+fn has_only_br_children(html: &Html, node_id: NodeId) -> bool {
+    let Some(node_ref) = html.tree.get(node_id) else {
+        return false;
+    };
+    let mut has_element_child = false;
+    for child in node_ref.children() {
+        if let Node::Element(el) = child.value() {
+            if el.name.local.as_ref() != "br" {
+                return false;
+            }
+            has_element_child = true;
+        }
+    }
+    has_element_child
 }
 
 /// Normalize heading levels: ensure exactly one h1, demote extras.
@@ -465,4 +517,14 @@ fn resolve_srcset(html: &mut Html, node_id: NodeId, base: &url::Url) {
         return;
     };
     set_attr(el, "srcset", &new_val);
+}
+
+/// Parse an HTML string, strip unsafe elements and attributes, then
+/// serialize back. Used to sanitize content that bypasses the normal
+/// DOM pipeline (e.g. schema.org fallback text).
+#[must_use]
+pub fn sanitize_html_string(html_str: &str) -> String {
+    let mut html = Html::parse_fragment(html_str);
+    strip_unsafe_elements(&mut html);
+    dom::inner_html(&html, html.tree.root().id())
 }

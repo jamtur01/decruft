@@ -14,6 +14,7 @@ const ENTRY_POINT_SELECTORS: &[&str] = &[
     ".instapaper_body",
     ".post",
     ".markdown-body",
+    ".markdown-preview-sizer",
     "article, [role=\"article\"]",
     "main, [role=\"main\"]",
     ".article-body",

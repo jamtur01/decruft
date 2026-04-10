@@ -24,7 +24,6 @@ pub const EXACT_SELECTORS: &[&str] = &[
     ".promo",
     ".Promo",
     "#barrier-page",
-    ".alert",
     // Comments
     "[id=\"comments\" i]",
     "[id=\"comment\" i]",
@@ -35,8 +34,8 @@ pub const EXACT_SELECTORS: &[&str] = &[
     "ads-breadcrumbs",
     // Header / banner / nav
     // Note: defuddle uses `header:not(:has(p + p))` but scraper does
-    // not support `:has()`. Using plain `header` as a close substitute.
-    "header",
+    // not support `:has()`. Content-wrapping headers are handled
+    // separately in cleanup::remove_header_elements.
     ".header:not(.banner)",
     "#header",
     "#Header",

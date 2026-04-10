@@ -271,6 +271,72 @@ pub fn remove_all_images(html: &mut Html, main_content: NodeId) {
     }
 }
 
+/// Remove `<header>` elements that don't wrap article content.
+///
+/// Defuddle uses `header:not(:has(p + p))` to keep headers that
+/// contain consecutive paragraphs (content wrappers). Since scraper
+/// doesn't support `:has()`, we check manually: skip removal if the
+/// header contains two or more consecutive `<p>` siblings.
+pub fn remove_header_elements(
+    html: &mut Html,
+    main_content: NodeId,
+    removals: &mut Vec<Removal>,
+    debug: bool,
+) {
+    let ids = dom::select_ids(html, "header");
+    for id in ids {
+        if dom::is_ancestor(html, main_content, id) {
+            continue;
+        }
+        if has_consecutive_paragraphs(html, id) {
+            continue;
+        }
+        if debug {
+            let text = dom::text_content(html, id);
+            let preview = truncate(&text, 80);
+            removals.push(Removal {
+                step: "removeBySelector".into(),
+                selector: Some("header".into()),
+                reason: Some("header without content paragraphs".into()),
+                text: preview,
+            });
+        }
+        dom::remove_node(html, id);
+    }
+}
+
+/// Check if a node contains two or more consecutive `<p>` children
+/// at any depth (searches all descendant containers).
+fn has_consecutive_paragraphs(html: &Html, node_id: NodeId) -> bool {
+    let Some(node_ref) = html.tree.get(node_id) else {
+        return false;
+    };
+
+    // Check direct element children for consecutive <p> elements,
+    // skipping whitespace text nodes between them.
+    let mut prev_was_p = false;
+    for child in node_ref.children() {
+        let Node::Element(el) = child.value() else {
+            continue;
+        };
+        let is_p = el.name.local.as_ref() == "p";
+        if is_p && prev_was_p {
+            return true;
+        }
+        prev_was_p = is_p;
+    }
+
+    // Recurse into child elements
+    for child in node_ref.children() {
+        if matches!(child.value(), Node::Element(_)) && has_consecutive_paragraphs(html, child.id())
+        {
+            return true;
+        }
+    }
+
+    false
+}
+
 fn collect_all_elements(html: &Html) -> Vec<NodeId> {
     let mut result = Vec::new();
     collect_elements_recursive(html, html.tree.root().id(), &mut result);
