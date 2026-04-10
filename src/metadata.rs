@@ -18,7 +18,7 @@ pub fn extract_metadata(
     let site_name = extract_site_name(html, schema);
     let description = extract_description(html, schema);
     let image = extract_image(html, schema);
-    let language = extract_language(html);
+    let language = extract_language(html, schema);
     let domain = extract_domain(url);
     let favicon = extract_favicon(html, url);
 
@@ -74,6 +74,7 @@ fn extract_title(html: &Html, schema: Option<&serde_json::Value>) -> String {
         .or_else(|| get_meta_content(html, "property", "twitter:title"))
         .or_else(|| schema_str(schema, "headline"))
         .or_else(|| get_meta_content(html, "name", "title"))
+        .or_else(|| get_meta_content(html, "name", "sailthru.title"))
         .or_else(|| title_element_text(html));
 
     let Some(title) = raw else {
@@ -124,7 +125,29 @@ fn extract_author(html: &Html, schema: Option<&serde_json::Value>) -> String {
         return v;
     }
 
+    if let Some(v) = get_meta_content(html, "name", "sailthru.author") {
+        return v;
+    }
+
     if let Some(v) = schema_author(schema) {
+        return v;
+    }
+
+    if let Some(v) = get_meta_content(html, "name", "byl") {
+        return v;
+    }
+
+    if let Some(v) = get_meta_content(html, "name", "authorList") {
+        return v;
+    }
+
+    if let Some(v) =
+        get_meta_content(html, "name", "citation_author").map(|s| reverse_citation_author(&s))
+    {
+        return v;
+    }
+
+    if let Some(v) = get_meta_content(html, "name", "dc.creator") {
         return v;
     }
 
@@ -136,7 +159,71 @@ fn extract_author(html: &Html, schema: Option<&serde_json::Value>) -> String {
         return v;
     }
 
+    if let Some(v) = author_href_elements(html) {
+        return v;
+    }
+
+    if let Some(v) = authors_link_elements(html) {
+        return v;
+    }
+
     String::new()
+}
+
+/// Reverse "Last, First" to "First Last" for `citation_author` meta.
+fn reverse_citation_author(name: &str) -> String {
+    if let Some((last, first)) = name.split_once(',') {
+        let first = first.trim();
+        let last = last.trim();
+        if !first.is_empty() && !last.is_empty() {
+            return format!("{first} {last}");
+        }
+    }
+    name.to_string()
+}
+
+/// Extract author names from `[href*="/author/"]` elements (max 3).
+fn author_href_elements(html: &Html) -> Option<String> {
+    let Ok(sel) = Selector::parse("[href*=\"/author/\"]") else {
+        return None;
+    };
+    let mut names = Vec::new();
+    for el in html.select(&sel) {
+        let text = dom::text_content(html, el.id());
+        let trimmed = text.trim().to_string();
+        if !trimmed.is_empty() {
+            names.push(trimmed);
+        }
+        if names.len() >= 3 {
+            break;
+        }
+    }
+    if names.is_empty() {
+        return None;
+    }
+    Some(names.join(", "))
+}
+
+/// Extract author names from `.authors a` elements (max 3).
+fn authors_link_elements(html: &Html) -> Option<String> {
+    let Ok(sel) = Selector::parse(".authors a") else {
+        return None;
+    };
+    let mut names = Vec::new();
+    for el in html.select(&sel) {
+        let text = dom::text_content(html, el.id());
+        let trimmed = text.trim().to_string();
+        if !trimmed.is_empty() {
+            names.push(trimmed);
+        }
+        if names.len() >= 3 {
+            break;
+        }
+    }
+    if names.is_empty() {
+        return None;
+    }
+    Some(names.join(", "))
 }
 
 fn schema_author(schema: Option<&serde_json::Value>) -> Option<String> {
@@ -198,8 +285,31 @@ fn extract_published(html: &Html, schema: Option<&serde_json::Value>) -> String 
     schema_str(schema, "datePublished")
         .or_else(|| get_meta_content(html, "name", "publishDate"))
         .or_else(|| get_meta_content(html, "property", "article:published_time"))
+        .or_else(|| abbr_date_published(html))
+        .or_else(|| get_meta_content(html, "name", "sailthru.date"))
         .or_else(|| first_time_element(html))
         .unwrap_or_default()
+}
+
+/// Extract date from `abbr[itemprop="datePublished"]` -- check
+/// `datetime` attr first, then text content.
+fn abbr_date_published(html: &Html) -> Option<String> {
+    let Ok(sel) = Selector::parse("abbr[itemprop=\"datePublished\"]") else {
+        return None;
+    };
+    let el = html.select(&sel).next()?;
+    if let Some(dt) = el.value().attr("datetime") {
+        let trimmed = dt.trim();
+        if !trimmed.is_empty() {
+            return Some(trimmed.to_string());
+        }
+    }
+    let text = dom::text_content(html, el.id());
+    let trimmed = text.trim();
+    if trimmed.is_empty() {
+        return None;
+    }
+    Some(trimmed.to_string())
 }
 
 fn first_time_element(html: &Html) -> Option<String> {
@@ -228,8 +338,40 @@ fn first_time_element(html: &Html) -> Option<String> {
 fn extract_site_name(html: &Html, schema: Option<&serde_json::Value>) -> String {
     schema_str(schema, "publisher.name")
         .or_else(|| get_meta_content(html, "property", "og:site_name"))
+        .or_else(|| schema_graph_website_name(schema))
+        .or_else(|| schema_str(schema, "sourceOrganization.name"))
+        .or_else(|| get_meta_content(html, "name", "copyright"))
+        .or_else(|| schema_str(schema, "copyrightHolder.name"))
+        .or_else(|| schema_str(schema, "isPartOf.name"))
         .or_else(|| get_meta_content(html, "name", "application-name"))
+        .and_then(|name| {
+            if name.split_whitespace().count() > 6 {
+                None
+            } else {
+                Some(name)
+            }
+        })
         .unwrap_or_default()
+}
+
+/// Search Schema.org `@graph` for `@type: "WebSite"` and return its
+/// `name`.
+fn schema_graph_website_name(schema: Option<&serde_json::Value>) -> Option<String> {
+    let graph = schema?.get("@graph")?.as_array()?;
+    for item in graph {
+        let type_val = item.get("@type")?;
+        let is_website = type_val.as_str() == Some("WebSite")
+            || type_val
+                .as_array()
+                .is_some_and(|a| a.iter().any(|v| v.as_str() == Some("WebSite")));
+        if is_website {
+            let name = item.get("name")?.as_str()?.trim();
+            if !name.is_empty() {
+                return Some(name.to_string());
+            }
+        }
+    }
+    None
 }
 
 // ------------------------------------------------------------------
@@ -241,6 +383,7 @@ fn extract_description(html: &Html, schema: Option<&serde_json::Value>) -> Strin
         .or_else(|| get_meta_content(html, "property", "og:description"))
         .or_else(|| get_meta_content(html, "property", "twitter:description"))
         .or_else(|| get_meta_content(html, "name", "twitter:description"))
+        .or_else(|| get_meta_content(html, "name", "sailthru.description"))
         .or_else(|| schema_str(schema, "description"))
         .unwrap_or_default()
 }
@@ -278,12 +421,19 @@ fn schema_image(schema: Option<&serde_json::Value>) -> Option<String> {
 // Language
 // ------------------------------------------------------------------
 
-fn extract_language(html: &Html) -> String {
+fn extract_language(html: &Html, schema: Option<&serde_json::Value>) -> String {
     html_lang(html)
         .or_else(|| get_meta_content(html, "name", "content-language"))
         .or_else(|| get_meta_content(html, "http-equiv", "content-language"))
         .or_else(|| get_meta_content(html, "property", "og:locale"))
+        .or_else(|| schema_str(schema, "inLanguage"))
+        .map(|s| normalize_bcp47(&s))
         .unwrap_or_default()
+}
+
+/// Normalize BCP 47 language tags: replace `_` with `-`.
+fn normalize_bcp47(lang: &str) -> String {
+    lang.replace('_', "-")
 }
 
 fn html_lang(html: &Html) -> Option<String> {
@@ -303,7 +453,8 @@ fn html_lang(html: &Html) -> Option<String> {
 // ------------------------------------------------------------------
 
 fn extract_favicon(html: &Html, url: Option<&str>) -> String {
-    link_icon(html, "icon")
+    get_meta_content(html, "property", "og:image:favicon")
+        .or_else(|| link_icon(html, "icon"))
         .or_else(|| link_icon(html, "shortcut icon"))
         .or_else(|| favicon_fallback(url))
         .unwrap_or_default()

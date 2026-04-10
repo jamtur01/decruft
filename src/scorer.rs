@@ -226,7 +226,7 @@ pub fn find_best_element(html: &Html, elements: &[NodeId], min_score: f64) -> Op
 /// Check if an element is likely content (should be preserved).
 pub fn is_likely_content(html: &Html, node_id: NodeId) -> bool {
     if let Some(role) = dom::get_attr(html, node_id, "role")
-        && (role == "article" || role == "main")
+        && (role == "article" || role == "main" || role == "contentinfo")
     {
         return true;
     }
@@ -378,6 +378,13 @@ pub fn score_non_content(html: &Html, node_id: NodeId) -> f64 {
     score -= pattern_matches as f64 * 8.0;
 
     if word_count < 15 && BYLINE_RE.is_match(&text) && DATE_RE.is_match(&text) {
+        score -= 10.0;
+    }
+
+    let lists = dom::descendant_elements_by_tag(html, node_id, "ul").len()
+        + dom::descendant_elements_by_tag(html, node_id, "ol").len();
+    let links = dom::descendant_elements_by_tag(html, node_id, "a").len();
+    if lists > 0 && links > lists * 3 {
         score -= 10.0;
     }
 

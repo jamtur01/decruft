@@ -117,6 +117,8 @@ const KNOWN_EMPTY: &[&str] = &[
     // selectors strip; requires site-specific extraction logic
     "general--substack-note",
     "general--substack-note-permalink",
+    // Substack app pages use custom elements and JS rendering
+    "general--substack-app",
 ];
 
 // ── Parameterized fixture sweep ──────────────────────────────────
