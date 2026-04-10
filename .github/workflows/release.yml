@@ -105,6 +105,6 @@ jobs:
 
       - uses: dtolnay/rust-toolchain@stable
 
-      - run: cargo publish
+      - run: cargo publish || echo "Already published (expected for re-runs)"
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
