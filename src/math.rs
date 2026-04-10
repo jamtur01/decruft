@@ -248,9 +248,16 @@ fn find_svg_latex(html: &Html, node_id: NodeId) -> Option<String> {
 /// Creates a new orphan `<math>` node, inserts it before the target,
 /// then removes the target.
 fn replace_with_math_element(html: &mut Html, node_id: NodeId, latex: &str, is_block: bool) {
-    let display = if is_block { "block" } else { "inline" };
-    let math_el = create_math_element(latex, display);
+    let tag = if is_block { "div" } else { "span" };
+    let math_el = create_math_element(latex, tag);
     let new_id = html.tree.orphan(Node::Element(math_el)).id();
+
+    // Add LaTeX as text content so word counting works
+    let text_node = Node::Text(scraper::node::Text { text: latex.into() });
+    let text_id = html.tree.orphan(text_node).id();
+    if let Some(mut el_mut) = html.tree.get_mut(new_id) {
+        el_mut.append_id(text_id);
+    }
 
     // Insert replacement before the original, then remove original
     let Some(mut node_mut) = html.tree.get_mut(node_id) else {
@@ -260,24 +267,13 @@ fn replace_with_math_element(html: &mut Html, node_id: NodeId, latex: &str, is_b
     node_mut.detach();
 }
 
-/// Build a scraper `Element` for `<math xmlns="..." display="..."
-/// data-latex="...">`.
-fn create_math_element(latex: &str, display: &str) -> scraper::node::Element {
-    let name = QualName::new(None, ns!(), markup5ever::LocalName::from("math"));
-    let attrs = vec![
-        Attribute {
-            name: QualName::new(None, ns!(), markup5ever::LocalName::from("xmlns")),
-            value: "http://www.w3.org/1998/Math/MathML".into(),
-        },
-        Attribute {
-            name: QualName::new(None, ns!(), markup5ever::LocalName::from("display")),
-            value: display.into(),
-        },
-        Attribute {
-            name: QualName::new(None, ns!(), markup5ever::LocalName::from("data-latex")),
-            value: latex.into(),
-        },
-    ];
+/// Build a `<span data-latex="...">` or `<div data-latex="...">` element.
+fn create_math_element(latex: &str, tag: &str) -> scraper::node::Element {
+    let name = QualName::new(None, ns!(), markup5ever::LocalName::from(tag));
+    let attrs = vec![Attribute {
+        name: QualName::new(None, ns!(), markup5ever::LocalName::from("data-latex")),
+        value: latex.into(),
+    }];
     scraper::node::Element::new(name, attrs)
 }
 
@@ -377,7 +373,7 @@ mod tests {
         </span></body></html>"#;
         let output = parse_and_standardize(input);
         assert!(output.contains(r#"data-latex="x^2""#));
-        assert!(output.contains(r#"display="inline""#));
+        assert!(output.contains("<span"), "inline math uses <span>");
         assert!(!output.contains("katex-html"));
     }
 
@@ -391,7 +387,7 @@ mod tests {
         </span></span></body></html>"#;
         let output = parse_and_standardize(input);
         assert!(output.contains(r#"data-latex="\sum_{i=0}^n""#));
-        assert!(output.contains(r#"display="block""#));
+        assert!(output.contains("<div"), "display math uses <div>");
     }
 
     #[test]
@@ -403,7 +399,10 @@ mod tests {
         </body></html>"#;
         let output = parse_and_standardize(input);
         assert!(output.contains(r#"data-latex="E=mc^2""#));
-        assert!(output.contains("<math"));
+        assert!(
+            output.contains("<div") || output.contains("<span"),
+            "math replaced with span/div"
+        );
     }
 
     #[test]

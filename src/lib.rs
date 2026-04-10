@@ -30,6 +30,7 @@ pub mod code_blocks;
 pub mod content;
 mod decruft;
 pub mod dom;
+pub mod extractors;
 pub mod footnotes;
 pub mod math;
 pub mod metadata;

@@ -125,6 +125,8 @@ pub fn remove_hidden_elements(
             false
         };
 
+        let has_inert = el.attr("inert").is_some();
+
         let has_hidden_class = if let Some(class) = el.attr("class") {
             let classes: Vec<&str> = class.split_whitespace().collect();
             let has_responsive = classes.iter().any(|c| {
@@ -146,7 +148,7 @@ pub fn remove_hidden_elements(
             false
         };
 
-        if is_hidden || has_hidden_class {
+        if is_hidden || has_hidden_class || has_inert {
             if debug {
                 let text = dom::text_content(html, node_id);
                 removals.push(Removal {

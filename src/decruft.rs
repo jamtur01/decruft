@@ -8,6 +8,7 @@ use crate::cleanup;
 use crate::code_blocks;
 use crate::content;
 use crate::dom;
+use crate::extractors;
 use crate::footnotes;
 use crate::math;
 use crate::metadata;
@@ -33,7 +34,39 @@ pub fn parse(html_str: &str, options: &DecruftOptions) -> DecruftResult {
     let html = Html::parse_document(html_str);
     let schema_data = schema_org::extract_schema_org(&html);
     let meta_tags = cleanup::collect_meta_tags(&html);
-    let meta = metadata::extract_metadata(&html, options.url.as_deref(), schema_data.as_ref());
+    let mut meta = metadata::extract_metadata(&html, options.url.as_deref(), schema_data.as_ref());
+
+    // Check for BBCode content in data attributes before normal pipeline
+    if let Some(bbcode) = extractors::bbcode::extract_bbcode_content(&html) {
+        if let Some(t) = &bbcode.title
+            && meta.title.is_empty()
+        {
+            meta.title.clone_from(t);
+        }
+        if let Some(a) = &bbcode.author
+            && meta.author.is_empty()
+        {
+            meta.author.clone_from(a);
+        }
+        let word_count = dom::count_words_html(&bbcode.html);
+        if word_count > 0 {
+            let elapsed = start.elapsed();
+            #[allow(clippy::cast_possible_truncation)]
+            let parse_time_ms = elapsed.as_millis() as u64;
+            return build_result(
+                bbcode.html,
+                None,
+                word_count,
+                parse_time_ms,
+                meta,
+                schema_data,
+                meta_tags,
+                "div[data-partnereventstore]".to_string(),
+                Vec::new(),
+                options.debug,
+            );
+        }
+    }
 
     // ATTEMPT 1: Default settings
     let mut result = parse_internal(html_str, options);
@@ -170,6 +203,7 @@ fn should_prefer_hidden_retry(retry: &ParseResult, current: &ParseResult) -> boo
 }
 
 /// RETRY 3: Disable scoring, partials, and content patterns.
+/// Also try body as explicit content selector if still low.
 fn retry_fully_relaxed(
     html_str: &str,
     options: &DecruftOptions,
@@ -180,12 +214,22 @@ fn retry_fully_relaxed(
     opts.remove_partial_selectors = false;
     opts.remove_content_patterns = false;
     opts.remove_hidden_elements = false;
-    let retry = parse_internal(html_str, &opts);
-    if retry.word_count > result.word_count {
-        retry
-    } else {
-        result
+    let mut best = parse_internal(html_str, &opts);
+    if best.word_count <= result.word_count {
+        best = result;
     }
+
+    // If still low, try body as explicit content selector
+    if best.word_count < 50 {
+        let mut body_opts = opts;
+        body_opts.content_selector = Some("body".to_string());
+        let body_retry = parse_internal(html_str, &body_opts);
+        if body_retry.word_count > best.word_count {
+            return body_retry;
+        }
+    }
+
+    best
 }
 
 /// RETRY 4: Use schema.org text as fallback content.
@@ -227,6 +271,7 @@ fn find_largest_hidden_content_selector(html_str: &str) -> Option<String> {
     let hidden_selectors = [
         "[hidden]",
         "[aria-hidden=\"true\"]",
+        "[inert]",
         ".hidden",
         ".invisible",
     ];

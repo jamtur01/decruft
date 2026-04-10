@@ -110,18 +110,7 @@ fn stem(filename: &str) -> &str {
 
 /// Fixtures where empty content is expected (content lives in data
 /// attributes or requires JS rendering, not in the HTML body).
-const KNOWN_EMPTY: &[&str] = &[
-    // Content is in a data attribute with BBCode, not in HTML body
-    "extractor--bbcode-data",
-    // Substack notes use deeply nested div structures that our
-    // selectors strip; requires site-specific extraction logic
-    "general--substack-note",
-    "general--substack-note-permalink",
-    // Substack app pages use custom elements and JS rendering
-    "general--substack-app",
-    // Math-heavy page where content is primarily in KaTeX annotations
-    "math--katex-centraliser",
-];
+const KNOWN_EMPTY: &[&str] = &[];
 
 // ── Parameterized fixture sweep ──────────────────────────────────
 
