@@ -101,7 +101,7 @@ pub fn parse(html_str: &str, options: &DecruftOptions) -> DecruftResult {
 
         // Stage 1: relax partial selectors
         if result.word_count < 200 {
-            result = retry_without_partials(html_str, options, &result);
+            result = retry_without_partials(html_str, options, result);
         }
 
         // Stage 2: relax hidden-element removal
@@ -183,7 +183,7 @@ fn parse_internal(html_str: &str, options: &DecruftOptions) -> ParseResult {
 fn retry_without_partials(
     html_str: &str,
     options: &DecruftOptions,
-    current: &ParseResult,
+    current: ParseResult,
 ) -> ParseResult {
     let mut opts = options.clone();
     opts.remove_partial_selectors = false;
@@ -196,8 +196,7 @@ fn retry_without_partials(
     if retry.word_count > threshold {
         retry
     } else {
-        // Re-parse with original options to get owned result
-        parse_internal(html_str, options)
+        current
     }
 }
 
