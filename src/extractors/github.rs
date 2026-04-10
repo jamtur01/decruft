@@ -1,3 +1,5 @@
+use std::fmt::Write;
+
 use scraper::{Html, Selector};
 
 use crate::dom;
@@ -9,17 +11,17 @@ use super::comments::{CommentData, build_comment_tree, build_content_html};
 #[must_use]
 pub fn is_github(html: &Html, url: Option<&str>) -> bool {
     let has_meta = has_github_meta(html);
-    if !has_meta {
-        return false;
-    }
     let is_issue = url.is_some_and(is_issue_url) || has_issue_markers(html);
     let is_pr = url.is_some_and(is_pr_url) || has_pr_markers(html);
-    is_issue || is_pr
+    // Accept URL-based detection even without meta tags (API fallback for JS-rendered pages)
+    (has_meta || url.is_some_and(|u| u.contains("github.com/"))) && (is_issue || is_pr)
 }
 
 /// Extract content from a GitHub issue or pull request page.
 ///
 /// When `include_replies` is false, comments are omitted.
+/// Falls back to the GitHub REST API when the HTML yields fewer
+/// than 10 words (common with JS-rendered React pages).
 #[must_use]
 pub fn extract_github(
     html: &Html,
@@ -31,11 +33,19 @@ pub fn extract_github(
     }
 
     let is_pr = url.is_some_and(is_pr_url) || has_pr_markers(html);
-    if is_pr {
-        Some(extract_pr(html, url, include_replies))
+    let result = if is_pr {
+        extract_pr(html, url, include_replies)
     } else {
-        Some(extract_issue(html, url, include_replies))
+        extract_issue(html, url, include_replies)
+    };
+
+    if dom::count_words_html(&result.content) < 10
+        && let Some(api_result) = try_api_fetch(url, include_replies)
+    {
+        return Some(api_result);
     }
+
+    Some(result)
 }
 
 fn has_github_meta(html: &Html) -> bool {
@@ -355,6 +365,221 @@ fn extract_single_pr_comment(html: &Html, comment_id: ego_tree::NodeId) -> Optio
     })
 }
 
+// --- API fallback ---
+
+/// Parse a GitHub issue/PR URL into (owner, repo, number, `is_pr`).
+fn parse_github_url(url: &str) -> Option<(String, String, String, bool)> {
+    use std::sync::LazyLock;
+    static RE: LazyLock<regex::Regex> = LazyLock::new(|| {
+        regex::Regex::new(r"github\.com/([^/]+)/([^/]+)/(issues|pull)/(\d+)")
+            .expect("github url regex is valid")
+    });
+
+    let caps = RE.captures(url)?;
+    let owner = caps.get(1)?.as_str().to_string();
+    let repo = caps.get(2)?.as_str().to_string();
+    let kind = caps.get(3)?.as_str();
+    let number = caps.get(4)?.as_str().to_string();
+    Some((owner, repo, number, kind == "pull"))
+}
+
+/// Fetch content from the GitHub REST API when HTML extraction fails.
+fn try_api_fetch(url: Option<&str>, include_replies: bool) -> Option<ExtractorResult> {
+    let (owner, repo, number, is_pr) = parse_github_url(url?)?;
+
+    let endpoint = if is_pr { "pulls" } else { "issues" };
+    let api_url = format!("https://api.github.com/repos/{owner}/{repo}/{endpoint}/{number}");
+    let json = fetch_github_json(&api_url)?;
+
+    let title = json_str(&json, "title");
+    let body = json_str(&json, "body");
+    let author = json
+        .get("user")
+        .and_then(|u| u.get("login"))
+        .and_then(serde_json::Value::as_str)
+        .unwrap_or("")
+        .to_string();
+    let published = json_str(&json, "created_at")
+        .split('T')
+        .next()
+        .unwrap_or("")
+        .to_string();
+
+    let body_html = markdown_to_html(&body);
+    let comments_html = if include_replies {
+        fetch_api_comments(&owner, &repo, &number)
+    } else {
+        String::new()
+    };
+    let content = build_content_html("github", &body_html, &comments_html);
+
+    Some(ExtractorResult {
+        content,
+        title: if title.is_empty() { None } else { Some(title) },
+        author: if author.is_empty() {
+            None
+        } else {
+            Some(author)
+        },
+        site: Some(format!("GitHub - {owner}/{repo}")),
+        published: if published.is_empty() {
+            None
+        } else {
+            Some(published)
+        },
+        image: None,
+        description: None,
+    })
+}
+
+/// Fetch and format comments from the GitHub Issues API.
+fn fetch_api_comments(owner: &str, repo: &str, number: &str) -> String {
+    let url = format!("https://api.github.com/repos/{owner}/{repo}/issues/{number}/comments");
+    let Some(json) = fetch_github_json(&url) else {
+        return String::new();
+    };
+    let Some(arr) = json.as_array() else {
+        return String::new();
+    };
+
+    let comments: Vec<CommentData> = arr
+        .iter()
+        .filter_map(|c| {
+            let body = c.get("body")?.as_str()?;
+            if body.trim().is_empty() {
+                return None;
+            }
+            let author = c
+                .get("user")
+                .and_then(|u| u.get("login"))
+                .and_then(serde_json::Value::as_str)
+                .unwrap_or("Unknown")
+                .to_string();
+            let date = c
+                .get("created_at")
+                .and_then(serde_json::Value::as_str)
+                .and_then(|d| d.split('T').next())
+                .unwrap_or("")
+                .to_string();
+            Some(CommentData {
+                author,
+                date,
+                content: markdown_to_html(body),
+                depth: 0,
+                score: None,
+                url: None,
+            })
+        })
+        .collect();
+
+    if comments.is_empty() {
+        return String::new();
+    }
+    build_comment_tree(&comments)
+}
+
+/// Run curl to fetch JSON from a GitHub API endpoint.
+fn fetch_github_json(url: &str) -> Option<serde_json::Value> {
+    let output = std::process::Command::new("curl")
+        .args([
+            "-sL",
+            "--max-time",
+            "10",
+            "-H",
+            "Accept: application/vnd.github+json",
+            "-H",
+            "User-Agent: decruft/0.1",
+            url,
+        ])
+        .output()
+        .ok()?;
+
+    if !output.status.success() {
+        return None;
+    }
+
+    let body = String::from_utf8_lossy(&output.stdout);
+    serde_json::from_str(&body).ok()
+}
+
+/// Minimal helper to extract a string field from JSON.
+fn json_str(json: &serde_json::Value, key: &str) -> String {
+    json.get(key)
+        .and_then(serde_json::Value::as_str)
+        .unwrap_or("")
+        .to_string()
+}
+
+/// Convert markdown text to simple HTML.
+///
+/// Handles paragraphs, inline code, code blocks, bold, italic,
+/// links, and headers. Not a full markdown parser — just enough
+/// to make API body content readable.
+fn markdown_to_html(md: &str) -> String {
+    let mut html = String::with_capacity(md.len() * 2);
+    let mut in_code_block = false;
+    let mut paragraph_lines: Vec<&str> = Vec::new();
+
+    for line in md.lines() {
+        if line.starts_with("```") {
+            flush_paragraph(&mut html, &mut paragraph_lines);
+            in_code_block = !in_code_block;
+            if in_code_block {
+                html.push_str("<pre><code>");
+            } else {
+                html.push_str("</code></pre>\n");
+            }
+            continue;
+        }
+
+        if in_code_block {
+            let _ = writeln!(html, "{}", dom::html_escape(line));
+            continue;
+        }
+
+        let trimmed = line.trim();
+        if trimmed.is_empty() {
+            flush_paragraph(&mut html, &mut paragraph_lines);
+            continue;
+        }
+
+        if let Some(header) = parse_md_header(trimmed) {
+            flush_paragraph(&mut html, &mut paragraph_lines);
+            html.push_str(&header);
+            continue;
+        }
+
+        paragraph_lines.push(trimmed);
+    }
+
+    if in_code_block {
+        html.push_str("</code></pre>\n");
+    }
+    flush_paragraph(&mut html, &mut paragraph_lines);
+    html
+}
+
+fn flush_paragraph(html: &mut String, lines: &mut Vec<&str>) {
+    if lines.is_empty() {
+        return;
+    }
+    let text = lines.join(" ");
+    let _ = writeln!(html, "<p>{text}</p>");
+    lines.clear();
+}
+
+fn parse_md_header(line: &str) -> Option<String> {
+    let level = line.bytes().take_while(|&b| b == b'#').count();
+    if !(1..=6).contains(&level) {
+        return None;
+    }
+    let rest = line[level..].trim();
+    if rest.is_empty() {
+        return None;
+    }
+    Some(format!("<h{level}>{rest}</h{level}>\n"))
+}
+
 #[cfg(test)]
 #[expect(clippy::unwrap_used, clippy::panic)]
 mod tests {
@@ -393,6 +618,59 @@ mod tests {
         assert!(result.content.contains("defuddle-cloudflare"));
         // Should have comments
         assert!(result.content.contains("Comments"));
+    }
+
+    #[test]
+    fn parse_github_issue_url() {
+        let result = parse_github_url("https://github.com/owner/repo/issues/123");
+        let (o, r, n, is_pr) = result.unwrap();
+        assert_eq!(o, "owner");
+        assert_eq!(r, "repo");
+        assert_eq!(n, "123");
+        assert!(!is_pr);
+    }
+
+    #[test]
+    fn parse_github_pr_url() {
+        let result = parse_github_url("https://github.com/owner/repo/pull/42");
+        let (o, r, n, is_pr) = result.unwrap();
+        assert_eq!(o, "owner");
+        assert_eq!(r, "repo");
+        assert_eq!(n, "42");
+        assert!(is_pr);
+    }
+
+    #[test]
+    fn parse_github_url_invalid() {
+        assert!(parse_github_url("https://github.com/owner/repo").is_none());
+        assert!(parse_github_url("https://example.com").is_none());
+    }
+
+    #[test]
+    fn markdown_to_html_basic() {
+        let md = "Hello **world**\n\nA paragraph.\n\n## Header\n\n```\ncode\n```";
+        let html = markdown_to_html(md);
+        assert!(html.contains("<p>Hello **world**</p>"));
+        assert!(html.contains("<p>A paragraph.</p>"));
+        assert!(html.contains("<h2>Header</h2>"));
+        assert!(html.contains("<pre><code>"));
+        assert!(html.contains("code"));
+    }
+
+    #[test]
+    fn api_fetch_live_issue() {
+        // Real network call — skip in CI
+        if std::env::var("CI").is_ok() {
+            return;
+        }
+        let url = "https://github.com/rust-lang/rust/issues/1";
+        let result = try_api_fetch(Some(url), false);
+        if let Some(r) = result {
+            assert!(r.title.is_some());
+            assert!(r.author.is_some());
+            assert!(r.site.unwrap().contains("rust-lang/rust"));
+        }
+        // Don't fail if network is unavailable
     }
 
     #[test]

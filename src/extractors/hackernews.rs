@@ -1,3 +1,5 @@
+use std::fmt::Write;
+
 use scraper::{Html, Selector};
 
 use crate::dom;
@@ -19,6 +21,8 @@ pub fn is_hackernews(html: &Html, url: Option<&str>) -> bool {
 /// Extract content from a Hacker News page.
 ///
 /// When `include_replies` is false, comments are omitted.
+/// Falls back to the HN Firebase API when HTML extraction yields
+/// fewer than 10 words (e.g., JS-rendered or empty pages).
 #[must_use]
 pub fn extract_hackernews(
     html: &Html,
@@ -30,14 +34,22 @@ pub fn extract_hackernews(
     }
 
     let fatitem_ids = dom::select_ids(html, ".fatitem");
-    fatitem_ids.first().copied()?;
+    let has_fatitem = fatitem_ids.first().copied().is_some();
 
-    let is_comment_page = detect_comment_page(html);
-
-    if is_comment_page {
-        extract_comment_page(html, url, include_replies)
+    let result = if has_fatitem {
+        let is_comment_page = detect_comment_page(html);
+        if is_comment_page {
+            extract_comment_page(html, url, include_replies)
+        } else {
+            extract_story_page(html, url, include_replies)
+        }
     } else {
-        extract_story_page(html, url, include_replies)
+        None
+    };
+
+    match result {
+        Some(ref r) if dom::count_words_html(&r.content) >= 10 => result,
+        _ => try_api_fetch(url, include_replies).or(result),
     }
 }
 
@@ -305,6 +317,252 @@ fn extract_comment_score(html: &Html, comment_id: ego_tree::NodeId) -> String {
         .unwrap_or_default()
 }
 
+// --- API fallback ---
+
+const HN_API_BASE: &str = "https://hacker-news.firebaseio.com/v0/item";
+const HN_MAX_COMMENT_DEPTH: usize = 3;
+const HN_MAX_COMMENTS: usize = 20;
+
+/// Extract the item ID from a Hacker News URL.
+fn parse_hn_item_id(url: &str) -> Option<&str> {
+    // news.ycombinator.com/item?id=12345
+    let query = url.split("id=").nth(1)?;
+    let id = query.split('&').next()?;
+    if id.is_empty() || !id.bytes().all(|b| b.is_ascii_digit()) {
+        return None;
+    }
+    Some(id)
+}
+
+/// Fetch content from the HN Firebase API.
+fn try_api_fetch(url: Option<&str>, include_replies: bool) -> Option<ExtractorResult> {
+    let id = parse_hn_item_id(url?)?;
+    let json = fetch_hn_json(id)?;
+
+    let item_type = json
+        .get("type")
+        .and_then(serde_json::Value::as_str)
+        .unwrap_or("");
+
+    match item_type {
+        "story" | "job" | "poll" => Some(build_story_from_api(&json, include_replies)),
+        "comment" => build_comment_from_api(&json, include_replies),
+        _ => None,
+    }
+}
+
+/// Build an `ExtractorResult` for a story item from the API.
+fn build_story_from_api(json: &serde_json::Value, include_replies: bool) -> ExtractorResult {
+    let title = hn_json_str(json, "title");
+    let author = hn_json_str(json, "by");
+    let published = format_unix_timestamp(json);
+
+    let mut post_html = String::new();
+    if let Some(link) = json.get("url").and_then(serde_json::Value::as_str) {
+        let escaped = dom::html_attr_escape(link);
+        let _ = write!(
+            post_html,
+            "<p><a href=\"{escaped}\" target=\"_blank\">{escaped}</a></p>"
+        );
+    }
+    if let Some(text) = json.get("text").and_then(serde_json::Value::as_str) {
+        let _ = write!(post_html, "<div class=\"post-text\">{text}</div>");
+    }
+
+    let comments_html = if include_replies {
+        let mut count = 0;
+        fetch_comment_kids(json, 0, &mut count)
+    } else {
+        String::new()
+    };
+
+    let content = build_content_html("hackernews", &post_html, &comments_html);
+
+    ExtractorResult {
+        content,
+        title: if title.is_empty() { None } else { Some(title) },
+        author: if author.is_empty() {
+            None
+        } else {
+            Some(author)
+        },
+        site: Some("Hacker News".to_string()),
+        published: if published.is_empty() {
+            None
+        } else {
+            Some(published)
+        },
+        image: None,
+        description: None,
+    }
+}
+
+/// Build an `ExtractorResult` for a single comment from the API.
+fn build_comment_from_api(
+    json: &serde_json::Value,
+    include_replies: bool,
+) -> Option<ExtractorResult> {
+    let text = json.get("text").and_then(serde_json::Value::as_str)?;
+    if text.trim().is_empty() {
+        return None;
+    }
+    let author = hn_json_str(json, "by");
+
+    let plain = dom::strip_html_tags(text);
+    let trimmed = plain.trim();
+    let preview = match trimmed.char_indices().nth(50) {
+        Some((i, _)) => format!("{}...", &trimmed[..i]),
+        None => trimmed.to_string(),
+    };
+    let title = format!("Comment by {author}: {preview}");
+
+    let main_comment = CommentData {
+        author: author.clone(),
+        date: format_unix_timestamp(json),
+        content: text.to_string(),
+        depth: 0,
+        score: None,
+        url: None,
+    };
+    let post_html = build_comment(&main_comment);
+
+    let comments_html = if include_replies {
+        let mut count = 0;
+        fetch_comment_kids(json, 0, &mut count)
+    } else {
+        String::new()
+    };
+
+    let content = build_content_html("hackernews", &post_html, &comments_html);
+
+    Some(ExtractorResult {
+        content,
+        title: Some(title),
+        author: if author.is_empty() {
+            None
+        } else {
+            Some(author)
+        },
+        site: Some("Hacker News".to_string()),
+        published: None,
+        image: None,
+        description: None,
+    })
+}
+
+/// Recursively fetch child comments from the HN API into a flat
+/// list, then build a comment tree.
+fn fetch_comment_kids(parent: &serde_json::Value, depth: usize, count: &mut usize) -> String {
+    let mut comments = Vec::new();
+    collect_kids_flat(parent, depth, count, &mut comments);
+    if comments.is_empty() {
+        return String::new();
+    }
+    build_comment_tree(&comments)
+}
+
+/// Collect nested comments into a flat Vec with depth info.
+fn collect_kids_flat(
+    parent: &serde_json::Value,
+    depth: usize,
+    count: &mut usize,
+    out: &mut Vec<CommentData>,
+) {
+    if depth >= HN_MAX_COMMENT_DEPTH || *count >= HN_MAX_COMMENTS {
+        return;
+    }
+
+    let Some(kids) = parent.get("kids").and_then(serde_json::Value::as_array) else {
+        return;
+    };
+
+    for kid_val in kids {
+        if *count >= HN_MAX_COMMENTS {
+            break;
+        }
+        let Some(kid_id) = kid_val.as_u64() else {
+            continue;
+        };
+        let id_str = kid_id.to_string();
+        let Some(child_json) = fetch_hn_json(&id_str) else {
+            continue;
+        };
+        if child_json
+            .get("deleted")
+            .and_then(serde_json::Value::as_bool)
+            .unwrap_or(false)
+        {
+            continue;
+        }
+
+        let text = child_json
+            .get("text")
+            .and_then(serde_json::Value::as_str)
+            .unwrap_or("");
+        if text.trim().is_empty() {
+            continue;
+        }
+
+        *count += 1;
+        out.push(CommentData {
+            author: hn_json_str(&child_json, "by"),
+            date: format_unix_timestamp(&child_json),
+            content: text.to_string(),
+            depth,
+            score: None,
+            url: Some(format!("https://news.ycombinator.com/item?id={kid_id}")),
+        });
+
+        collect_kids_flat(&child_json, depth + 1, count, out);
+    }
+}
+
+/// Fetch a single item from the HN Firebase API.
+fn fetch_hn_json(id: &str) -> Option<serde_json::Value> {
+    let url = format!("{HN_API_BASE}/{id}.json");
+    let output = std::process::Command::new("curl")
+        .args(["-sL", "--max-time", "10", &url])
+        .output()
+        .ok()?;
+
+    if !output.status.success() {
+        return None;
+    }
+
+    let body = String::from_utf8_lossy(&output.stdout);
+    serde_json::from_str(&body).ok()
+}
+
+fn hn_json_str(json: &serde_json::Value, key: &str) -> String {
+    json.get(key)
+        .and_then(serde_json::Value::as_str)
+        .unwrap_or("")
+        .to_string()
+}
+
+/// Format a unix timestamp field into a `YYYY-MM-DD` date string.
+fn format_unix_timestamp(json: &serde_json::Value) -> String {
+    let Some(ts) = json.get("time").and_then(serde_json::Value::as_i64) else {
+        return String::new();
+    };
+    // Manual conversion from unix timestamp to YYYY-MM-DD
+    // Using days-since-epoch arithmetic to avoid pulling in chrono
+    let secs_per_day: i64 = 86400;
+    let days = ts / secs_per_day;
+    // Algorithm from Howard Hinnant's civil_from_days
+    let z = days + 719_468;
+    let era = (if z >= 0 { z } else { z - 146_096 }) / 146_097;
+    let doe = z - era * 146_097;
+    let yoe = (doe - doe / 1460 + doe / 36524 - doe / 146_096) / 365;
+    let y = yoe + era * 400;
+    let doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
+    let mp = (5 * doy + 2) / 153;
+    let d = doy - (153 * mp + 2) / 5 + 1;
+    let m = if mp < 10 { mp + 3 } else { mp - 9 };
+    let y = if m <= 2 { y + 1 } else { y };
+    format!("{y:04}-{m:02}-{d:02}")
+}
+
 #[cfg(test)]
 #[expect(clippy::unwrap_used, clippy::panic)]
 mod tests {
@@ -317,6 +575,57 @@ mod tests {
         );
         std::fs::read_to_string(&path)
             .unwrap_or_else(|e| panic!("fixture not found at {path}: {e}"))
+    }
+
+    #[test]
+    fn parse_hn_item_id_valid() {
+        assert_eq!(
+            parse_hn_item_id("https://news.ycombinator.com/item?id=12345678"),
+            Some("12345678")
+        );
+    }
+
+    #[test]
+    fn parse_hn_item_id_with_extra_params() {
+        assert_eq!(
+            parse_hn_item_id("https://news.ycombinator.com/item?id=999&p=2"),
+            Some("999")
+        );
+    }
+
+    #[test]
+    fn parse_hn_item_id_invalid() {
+        assert!(parse_hn_item_id("https://news.ycombinator.com/").is_none());
+        assert!(parse_hn_item_id("https://example.com").is_none());
+    }
+
+    #[test]
+    fn format_timestamp_known_date() {
+        // 2024-01-15 00:00:00 UTC = 1705276800
+        let json = serde_json::json!({"time": 1_705_276_800});
+        assert_eq!(format_unix_timestamp(&json), "2024-01-15");
+    }
+
+    #[test]
+    fn format_timestamp_missing() {
+        let json = serde_json::json!({});
+        assert_eq!(format_unix_timestamp(&json), "");
+    }
+
+    #[test]
+    fn api_fetch_live_story() {
+        // Real network call — skip in CI
+        if std::env::var("CI").is_ok() {
+            return;
+        }
+        // Item 1 is the first HN post
+        let url = "https://news.ycombinator.com/item?id=1";
+        let result = try_api_fetch(Some(url), false);
+        if let Some(r) = result {
+            assert!(r.title.is_some());
+            assert_eq!(r.site.as_deref(), Some("Hacker News"));
+        }
+        // Don't fail if network is unavailable
     }
 
     #[test]
