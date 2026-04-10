@@ -1,6 +1,7 @@
 use std::sync::LazyLock;
 
 use fancy_regex::Regex;
+use scraper::Selector;
 
 /// CSS selectors that match elements to remove entirely.
 /// Each entry is a single CSS selector compatible with the `scraper` crate.
@@ -793,9 +794,78 @@ pub const CONTENT_ELEMENT_SELECTOR: &[&str] = &[
     "figure",
 ];
 
+/// Pre-compiled CSS selectors from `EXACT_SELECTORS`, paired with
+/// the original string for debug output. Built once and reused
+/// across all cleanup passes.
+pub static COMPILED_EXACT_SELECTORS: LazyLock<Vec<(&str, Selector)>> = LazyLock::new(|| {
+    EXACT_SELECTORS
+        .iter()
+        .filter_map(|s| Selector::parse(s).ok().map(|sel| (*s, sel)))
+        .collect()
+});
+
+/// Pre-compiled CSS selectors for footnote inline references.
+pub static COMPILED_FOOTNOTE_INLINE: LazyLock<Vec<Selector>> = LazyLock::new(|| {
+    FOOTNOTE_INLINE_REFERENCES
+        .iter()
+        .filter_map(|s| Selector::parse(s).ok())
+        .collect()
+});
+
+/// Pre-compiled CSS selectors for footnote list containers.
+pub static COMPILED_FOOTNOTE_LISTS: LazyLock<Vec<Selector>> = LazyLock::new(|| {
+    FOOTNOTE_LIST_SELECTORS
+        .iter()
+        .filter_map(|s| Selector::parse(s).ok())
+        .collect()
+});
+
+/// Pre-compiled CSS selectors for content element preservation.
+pub static COMPILED_CONTENT_ELEMENTS: LazyLock<Vec<Selector>> = LazyLock::new(|| {
+    CONTENT_ELEMENT_SELECTOR
+        .iter()
+        .filter_map(|s| Selector::parse(s).ok())
+        .collect()
+});
+
+/// Fast-path regex using the standard `regex` crate (no lookbehind
+/// support). Matches all `PARTIAL_PATTERNS` plus the plain substrings
+/// "access-wall" and "related" (without lookbehind guards). Used as a
+/// pre-filter before the slower `fancy_regex`.
+pub static FAST_PARTIAL_REGEX: LazyLock<regex::Regex> = LazyLock::new(|| {
+    let escaped: Vec<String> = PARTIAL_PATTERNS.iter().map(|p| regex::escape(p)).collect();
+    let mut all: Vec<String> = escaped;
+    // Include the raw lookbehind patterns as plain substring matches
+    all.push("access-wall".to_string());
+    all.push("related".to_string());
+    let combined = format!("(?i){}", all.join("|"));
+    regex::Regex::new(&combined).unwrap_or_else(|_| {
+        #[allow(clippy::unwrap_used)]
+        regex::Regex::new(r"^\b$").unwrap()
+    })
+});
+
 /// Compiled regex matching any partial pattern as a substring,
 /// case-insensitive. Uses `fancy_regex` for lookbehind support.
 pub static PARTIAL_REGEX: LazyLock<Regex> = LazyLock::new(build_partial_pattern);
+
+/// Check if a value matches any partial pattern. Uses the fast regex
+/// as a pre-filter, falling back to `fancy_regex` only when the match
+/// could be a lookbehind-guarded pattern.
+#[must_use]
+pub fn matches_partial(val: &str) -> bool {
+    // Fast path: no match at all
+    if !FAST_PARTIAL_REGEX.is_match(val) {
+        return false;
+    }
+    // If the value contains the lookbehind-guarded substrings,
+    // verify with the full fancy_regex
+    if val.contains("access-wall") || val.contains("related") {
+        return PARTIAL_REGEX.is_match(val).unwrap_or(false);
+    }
+    // Fast regex matched and no lookbehind patterns involved
+    true
+}
 
 /// Get a reference to the compiled partial pattern regex.
 #[must_use]

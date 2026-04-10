@@ -413,9 +413,6 @@ fn run_cleanup_pipeline(
     if options.standardize {
         math::standardize_math(html, main_content);
     }
-
-    // Mark footnotes and callouts before cleanup so they survive
-    // exact/partial selector removal.
     footnotes::standardize_footnotes(html, main_content);
     callouts::standardize_callouts(html, main_content);
 
@@ -425,19 +422,19 @@ fn run_cleanup_pipeline(
     if options.remove_small_images {
         cleanup::remove_small_images(html, main_content);
     }
-    if options.remove_hidden_elements {
-        cleanup::remove_hidden_elements(html, main_content, removals, options.debug);
-    }
     if options.remove_exact_selectors {
         cleanup::remove_exact_selectors(html, main_content, removals, options.debug);
         cleanup::remove_header_elements(html, main_content, removals, options.debug);
     }
-    if options.remove_partial_selectors {
-        cleanup::remove_partial_selectors(html, main_content, removals, options.debug);
-    }
-    if options.remove_low_scoring {
-        cleanup::score_and_remove(html, main_content, removals, options.debug);
-    }
+    cleanup::run_combined_cleanup(
+        html,
+        main_content,
+        removals,
+        options.debug,
+        options.remove_hidden_elements,
+        options.remove_partial_selectors,
+        options.remove_low_scoring,
+    );
     if options.remove_content_patterns {
         patterns::remove_content_patterns(html, main_content, removals, options.debug);
     }

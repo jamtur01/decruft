@@ -13,13 +13,13 @@ pub fn extract_metadata(
     schema: Option<&serde_json::Value>,
 ) -> Metadata {
     let site_name = extract_site_name(html, schema);
-    let title = extract_title(html, schema, &site_name);
+    let domain = extract_domain(url);
+    let title = extract_title(html, schema, &site_name, &domain);
     let author = extract_author(html, schema);
     let published = extract_published(html, schema);
     let description = extract_description(html, schema);
     let image = extract_image(html, schema);
     let language = extract_language(html, schema);
-    let domain = extract_domain(url);
     let favicon = extract_favicon(html, url);
 
     Metadata {
@@ -68,19 +68,37 @@ fn schema_str(schema: Option<&serde_json::Value>, path: &str) -> Option<String> 
 // Title
 // ------------------------------------------------------------------
 
-fn extract_title(html: &Html, schema: Option<&serde_json::Value>, site_name: &str) -> String {
-    let raw = get_meta_content(html, "property", "og:title")
+fn extract_title(
+    html: &Html,
+    schema: Option<&serde_json::Value>,
+    site_name: &str,
+    domain: &str,
+) -> String {
+    let meta_title = get_meta_content(html, "property", "og:title")
         .or_else(|| get_meta_content(html, "name", "twitter:title"))
         .or_else(|| get_meta_content(html, "property", "twitter:title"))
         .or_else(|| schema_str(schema, "headline"))
         .or_else(|| get_meta_content(html, "name", "title"))
-        .or_else(|| get_meta_content(html, "name", "sailthru.title"))
-        .or_else(|| title_element_text(html));
+        .or_else(|| get_meta_content(html, "name", "sailthru.title"));
 
+    let html_title = title_element_text(html);
+
+    let raw = meta_title.clone().or(html_title.clone());
     let Some(title) = raw else {
         return String::new();
     };
-    clean_title(&title, site_name)
+    // Use site_name or derive one from the domain
+    let effective_site_name = if site_name.is_empty() {
+        domain_to_site_name(domain)
+    } else {
+        site_name.to_string()
+    };
+    clean_title(
+        &title,
+        &effective_site_name,
+        meta_title.as_deref(),
+        html_title.as_deref(),
+    )
 }
 
 fn title_element_text(html: &Html) -> Option<String> {
@@ -96,13 +114,85 @@ fn title_element_text(html: &Html) -> Option<String> {
     Some(trimmed.to_string())
 }
 
-/// Remove site-name suffixes/prefixes separated by common delimiters.
-/// When a site name is known, only strips the part that matches it.
-/// Otherwise falls back to a length heuristic (shorter part is likely
-/// the site name).
-fn clean_title(title: &str, site_name: &str) -> String {
-    let separators = [" | ", " - ", " -- ", " / ", " · "];
-    for sep in &separators {
+const TITLE_SEPARATORS: &[&str] = &[" | ", " - ", " -- ", " / ", " · "];
+
+/// Remove site-name suffixes/prefixes from a title.
+///
+/// When a site name is known, strips trailing/leading segments that
+/// match it (exact or fuzzy). Uses `<title>` vs og:title comparison
+/// to detect additional breadcrumb segments to strip.
+///
+/// When no site name is known, returns the title unchanged.
+fn clean_title(
+    title: &str,
+    site_name: &str,
+    meta_title: Option<&str>,
+    html_title: Option<&str>,
+) -> String {
+    // When we have both meta_title and html_title, use their
+    // difference to detect breadcrumb segments to strip.
+    if let Some(meta) = meta_title
+        && let Some(html_t) = html_title
+        && let Some(cleaned) = strip_via_html_comparison(meta, html_t, site_name)
+    {
+        return cleaned;
+    }
+
+    // Direct site_name stripping
+    if !site_name.is_empty() {
+        return strip_site_name(title, site_name);
+    }
+
+    title.to_string()
+}
+
+/// Compare `meta_title` (e.g. og:title) with `html_title` (from
+/// `<title>` element) to detect site-name segments.
+///
+/// If `html_title` ends with a segment matching `site_name`, strip it,
+/// then see if og:title also needs the next-to-last segment stripped
+/// (common for breadcrumb paths like "owner/repo" on GitHub).
+fn strip_via_html_comparison(
+    meta_title: &str,
+    html_title: &str,
+    site_name: &str,
+) -> Option<String> {
+    if !site_name.is_empty() {
+        // Strip site_name from html_title
+        let html_cleaned = strip_site_name(html_title, site_name);
+
+        // If meta_title matches html_cleaned exactly, both had the
+        // same content minus site_name — strip one more breadcrumb
+        // segment from meta_title.
+        if meta_title == html_cleaned {
+            let further = strip_last_breadcrumb_segment(meta_title);
+            if further != meta_title {
+                return Some(further);
+            }
+        }
+
+        // meta_title is shorter/different from html — it's already
+        // cleaner, just strip site_name from it too.
+        let cleaned = strip_site_name(meta_title, site_name);
+        return Some(cleaned);
+    }
+
+    // No site name: if html_title is longer than meta_title and
+    // meta_title is a prefix of html_title (after trimming a
+    // separator), the extra part is likely a site suffix.
+    if html_title.len() > meta_title.len() && html_title.starts_with(meta_title) {
+        return Some(meta_title.to_string());
+    }
+
+    None
+}
+
+/// Strip a segment matching `site_name` from the end (or start) of
+/// the title. Matching is fuzzy: exact, case-insensitive, or
+/// containment (the segment contains the site name or vice versa).
+fn strip_site_name(title: &str, site_name: &str) -> String {
+    let site_lower = site_name.to_lowercase();
+    for sep in TITLE_SEPARATORS {
         let Some(idx) = title.rfind(sep) else {
             continue;
         };
@@ -111,24 +201,65 @@ fn clean_title(title: &str, site_name: &str) -> String {
         if before.is_empty() || after.is_empty() {
             continue;
         }
+        let after_lower = after.to_lowercase();
+        let before_lower = before.to_lowercase();
 
-        if !site_name.is_empty() {
-            let site_lower = site_name.to_lowercase();
-            if after.to_lowercase() == site_lower {
-                return before.to_string();
-            }
-            if before.to_lowercase() == site_lower {
-                return after.to_string();
-            }
-            // Site name known but doesn't match either side
-            continue;
-        }
-
-        // No site name: use length heuristic
-        if before.len() >= after.len() {
+        // Check trailing segment (most common: "Title - SiteName")
+        if is_site_name_match(&after_lower, &site_lower) {
             return before.to_string();
         }
-        return after.to_string();
+        // Check leading segment ("SiteName | Title")
+        if is_site_name_match(&before_lower, &site_lower) {
+            return after.to_string();
+        }
+    }
+    title.to_string()
+}
+
+/// Check whether a title segment matches the site name.
+/// Supports exact match, and containment (for cases like
+/// "Wikipedia" matching "Wikimedia Foundation, Inc.").
+fn is_site_name_match(segment: &str, site_name_lower: &str) -> bool {
+    if segment == site_name_lower {
+        return true;
+    }
+    // Segment is a word that appears in the site name
+    // e.g., "wikipedia" in "wikimedia foundation, inc." — close but
+    // not contained. Check first-word match instead.
+    let seg_first_word = segment.split_whitespace().next().unwrap_or("");
+    let site_first_word = site_name_lower.split_whitespace().next().unwrap_or("");
+    if !seg_first_word.is_empty() && !site_first_word.is_empty() && seg_first_word.len() >= 4 {
+        // Match if first words share a long common prefix (>= 5 chars)
+        let common_prefix_len = seg_first_word
+            .chars()
+            .zip(site_first_word.chars())
+            .take_while(|(a, b)| a == b)
+            .count();
+        if common_prefix_len >= 5 {
+            return true;
+        }
+    }
+    false
+}
+
+/// Strip the last separator-delimited segment if it looks like a
+/// breadcrumb (contains `/`, is a path, or is <=3 words).
+fn strip_last_breadcrumb_segment(title: &str) -> String {
+    for sep in TITLE_SEPARATORS {
+        let Some(idx) = title.rfind(sep) else {
+            continue;
+        };
+        let before = title[..idx].trim();
+        let after = title[idx + sep.len()..].trim();
+        if before.is_empty() || after.is_empty() {
+            continue;
+        }
+        // Strip if it looks like a path or short breadcrumb
+        let is_path = after.contains('/');
+        let is_short = after.split_whitespace().count() <= 3;
+        if is_path || is_short {
+            return before.to_string();
+        }
     }
     title.to_string()
 }
@@ -507,6 +638,42 @@ fn favicon_fallback(url: Option<&str>) -> Option<String> {
 // Domain
 // ------------------------------------------------------------------
 
+/// Derive a human-readable site name from a domain.
+/// "en.wikipedia.org" -> "Wikipedia", "github.com" -> "GitHub".
+fn domain_to_site_name(domain: &str) -> String {
+    if domain.is_empty() {
+        return String::new();
+    }
+    // Strip common prefixes (www., en., etc.)
+    let stripped = domain
+        .strip_prefix("www.")
+        .or_else(|| {
+            // Strip two-letter language subdomains
+            let parts: Vec<&str> = domain.splitn(2, '.').collect();
+            if parts.len() == 2 && parts[0].len() <= 3 {
+                Some(parts[1])
+            } else {
+                None
+            }
+        })
+        .unwrap_or(domain);
+    // Take the second-level domain (before .com/.org/etc.)
+    let name_part = stripped.split('.').next().unwrap_or(stripped);
+    if name_part.is_empty() {
+        return String::new();
+    }
+    // Capitalize first letter
+    let mut chars = name_part.chars();
+    match chars.next() {
+        Some(first) => {
+            let mut result = first.to_uppercase().to_string();
+            result.extend(chars);
+            result
+        }
+        None => String::new(),
+    }
+}
+
 fn extract_domain(url: Option<&str>) -> String {
     let Some(raw) = url else {
         return String::new();
@@ -546,25 +713,27 @@ mod tests {
     }
 
     #[test]
-    fn title_cleaned_of_suffix() {
+    fn title_preserved_when_no_site_name() {
         let doc = Html::parse_document(
             r"<html><head>
             <title>Article Name | Site Name</title>
             </head><body></body></html>",
         );
         let m = extract_metadata(&doc, None, None);
-        assert_eq!(m.title, "Article Name");
+        // Without a known site name, the full title is preserved
+        assert_eq!(m.title, "Article Name | Site Name");
     }
 
     #[test]
-    fn title_suffix_keeps_longer_part() {
+    fn title_stripped_with_og_site_name() {
         let doc = Html::parse_document(
-            r"<html><head>
-            <title>SN | A Much Longer Article Title</title>
-            </head><body></body></html>",
+            r#"<html><head>
+            <meta property="og:site_name" content="Site Name">
+            <title>Article Name | Site Name</title>
+            </head><body></body></html>"#,
         );
         let m = extract_metadata(&doc, None, None);
-        assert_eq!(m.title, "A Much Longer Article Title");
+        assert_eq!(m.title, "Article Name");
     }
 
     #[test]

@@ -8,6 +8,30 @@ use crate::scorer;
 use crate::selectors;
 use crate::types::Removal;
 
+/// Run hidden, partial, and scoring cleanup in a single pass over all
+/// elements, avoiding the cost of three separate tree walks.
+#[allow(clippy::fn_params_excessive_bools)]
+pub fn run_combined_cleanup(
+    html: &mut Html,
+    main_content: NodeId,
+    removals: &mut Vec<Removal>,
+    debug: bool,
+    do_hidden: bool,
+    do_partial: bool,
+    do_scoring: bool,
+) {
+    let all_elements = collect_all_elements(html);
+    if do_hidden {
+        remove_hidden_with_elements(html, main_content, removals, debug, &all_elements);
+    }
+    if do_partial {
+        remove_partial_selectors_with_elements(html, main_content, removals, debug, &all_elements);
+    }
+    if do_scoring {
+        score_and_remove_with_elements(html, main_content, removals, debug, &all_elements);
+    }
+}
+
 /// Remove elements matching exact CSS selectors.
 pub fn remove_exact_selectors(
     html: &mut Html,
@@ -15,8 +39,8 @@ pub fn remove_exact_selectors(
     removals: &mut Vec<Removal>,
     debug: bool,
 ) {
-    for selector_str in selectors::EXACT_SELECTORS {
-        let ids = dom::select_ids(html, selector_str);
+    for (selector_str, compiled) in selectors::COMPILED_EXACT_SELECTORS.iter() {
+        let ids: Vec<NodeId> = html.select(compiled).map(|el| el.id()).collect();
         for id in ids {
             if dom::is_ancestor(html, main_content, id) {
                 continue;
@@ -43,11 +67,25 @@ pub fn remove_partial_selectors(
     removals: &mut Vec<Removal>,
     debug: bool,
 ) {
-    let pattern = selectors::partial_pattern();
+    remove_partial_selectors_with_elements(
+        html,
+        main_content,
+        removals,
+        debug,
+        &collect_all_elements(html),
+    );
+}
+
+fn remove_partial_selectors_with_elements(
+    html: &mut Html,
+    main_content: NodeId,
+    removals: &mut Vec<Removal>,
+    debug: bool,
+    all_elements: &[NodeId],
+) {
     let mut to_remove = Vec::new();
 
-    let all_elements = collect_all_elements(html);
-    for node_id in all_elements {
+    for &node_id in all_elements {
         if dom::is_ancestor(html, main_content, node_id) {
             continue;
         }
@@ -65,7 +103,7 @@ pub fn remove_partial_selectors(
         let mut matched = false;
         for attr in selectors::PARTIAL_ATTRIBUTES {
             if let Some(val) = el.attr(attr)
-                && pattern.is_match(val).unwrap_or(false)
+                && selectors::matches_partial(val)
             {
                 matched = true;
                 break;
@@ -98,10 +136,25 @@ pub fn remove_hidden_elements(
     removals: &mut Vec<Removal>,
     debug: bool,
 ) {
+    remove_hidden_with_elements(
+        html,
+        main_content,
+        removals,
+        debug,
+        &collect_all_elements(html),
+    );
+}
+
+fn remove_hidden_with_elements(
+    html: &mut Html,
+    main_content: NodeId,
+    removals: &mut Vec<Removal>,
+    debug: bool,
+    all_elements: &[NodeId],
+) {
     let mut to_remove = Vec::new();
 
-    let all_elements = collect_all_elements(html);
-    for node_id in all_elements {
+    for &node_id in all_elements {
         if dom::is_ancestor(html, main_content, node_id) {
             continue;
         }
@@ -174,28 +227,57 @@ pub fn score_and_remove(
     removals: &mut Vec<Removal>,
     debug: bool,
 ) {
-    let block_tags = [
+    score_and_remove_with_elements(
+        html,
+        main_content,
+        removals,
+        debug,
+        &collect_all_elements(html),
+    );
+}
+
+fn score_and_remove_with_elements(
+    html: &mut Html,
+    main_content: NodeId,
+    removals: &mut Vec<Removal>,
+    debug: bool,
+    all_elements: &[NodeId],
+) {
+    let block_tags: HashSet<&str> = [
         "div", "section", "article", "main", "aside", "header", "footer", "nav",
-    ];
+    ]
+    .into_iter()
+    .collect();
+
+    // Pre-collect ancestors of main_content to avoid O(depth)
+    // is_ancestor checks per element.
+    let main_ancestors: HashSet<NodeId> = collect_ancestors(html, main_content);
 
     let mut to_remove = Vec::new();
+    let mut removed_set: HashSet<NodeId> = HashSet::new();
 
-    let all_elements = collect_all_elements(html);
-    for node_id in all_elements {
-        if dom::is_ancestor(html, main_content, node_id) {
+    // Process in reverse (deepest first) so children are scored
+    // before parents, reducing redundant subtree walks.
+    for &node_id in all_elements.iter().rev() {
+        if node_id == main_content || main_ancestors.contains(&node_id) {
             continue;
         }
-        if node_id == main_content {
+        // Skip if this element is inside an already-removed ancestor
+        if is_descendant_of_set(html, node_id, &removed_set) {
             continue;
         }
         if is_inside_pre_or_code(html, node_id) {
             continue;
         }
 
-        let Some(tag) = dom::tag_name(html, node_id) else {
+        let Some(node_ref) = html.tree.get(node_id) else {
             continue;
         };
-        if !block_tags.contains(&tag.as_str()) {
+        let Node::Element(el) = node_ref.value() else {
+            continue;
+        };
+        let tag = el.name.local.as_ref();
+        if !block_tags.contains(tag) {
             continue;
         }
 
@@ -215,6 +297,7 @@ pub fn score_and_remove(
                 });
             }
             to_remove.push(node_id);
+            removed_set.insert(node_id);
         }
     }
 
@@ -335,6 +418,42 @@ fn has_consecutive_paragraphs(html: &Html, node_id: NodeId) -> bool {
     }
 
     false
+}
+
+/// Check if any ancestor of `node_id` is in the given set.
+fn is_descendant_of_set(html: &Html, node_id: NodeId, set: &HashSet<NodeId>) -> bool {
+    let mut current = node_id;
+    loop {
+        let Some(node_ref) = html.tree.get(current) else {
+            return false;
+        };
+        let Some(parent) = node_ref.parent() else {
+            return false;
+        };
+        if set.contains(&parent.id()) {
+            return true;
+        }
+        current = parent.id();
+    }
+}
+
+/// Collect all ancestor element IDs of a node (walking up to root).
+fn collect_ancestors(html: &Html, node_id: NodeId) -> HashSet<NodeId> {
+    let mut ancestors = HashSet::new();
+    let mut current = node_id;
+    loop {
+        let Some(node_ref) = html.tree.get(current) else {
+            break;
+        };
+        let Some(parent) = node_ref.parent() else {
+            break;
+        };
+        if matches!(parent.value(), Node::Element(_)) {
+            ancestors.insert(parent.id());
+        }
+        current = parent.id();
+    }
+    ancestors
 }
 
 fn collect_all_elements(html: &Html) -> Vec<NodeId> {

@@ -328,6 +328,13 @@ pub fn child_elements(html: &Html, node_id: NodeId) -> Vec<NodeId> {
 #[must_use]
 pub fn link_density(html: &Html, node_id: NodeId) -> f64 {
     let total_text = text_content(html, node_id);
+    link_density_with_text(html, node_id, &total_text)
+}
+
+/// Compute link density using pre-computed total text to avoid
+/// redundant tree walks.
+#[must_use]
+pub fn link_density_with_text(html: &Html, node_id: NodeId, total_text: &str) -> f64 {
     let total_len = total_text.trim().len();
     if total_len == 0 {
         return 0.0;

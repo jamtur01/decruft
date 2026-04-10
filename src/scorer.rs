@@ -2,7 +2,7 @@ use std::sync::LazyLock;
 
 use ego_tree::NodeId;
 use regex::Regex;
-use scraper::Html;
+use scraper::{Html, Node};
 
 use crate::dom;
 
@@ -77,8 +77,6 @@ const FOOTNOTE_REF_SELECTOR: &str = "a[href^=\"#fn\"], sup.reference";
 
 const FOOTNOTE_LIST_SELECTOR: &str = "ol.footnotes, div.footnotes";
 
-const MATH_SELECTOR: &str = ".katex, .MathJax, math, mjx-container";
-
 fn class_and_id(html: &Html, node_id: NodeId) -> String {
     let class = dom::get_attr(html, node_id, "class").unwrap_or_default();
     let id = dom::get_attr(html, node_id, "id").unwrap_or_default();
@@ -147,7 +145,8 @@ pub fn score_element(html: &Html, node_id: NodeId) -> f64 {
         score += 15.0;
     }
 
-    let ratio = dom::link_density(html, node_id);
+    // Use pre-computed text to avoid redundant tree walk
+    let ratio = dom::link_density_with_text(html, node_id, &text);
     score *= 1.0 - ratio.min(0.5);
 
     score += score_alignment_and_metadata(html, node_id, &text);
@@ -210,6 +209,7 @@ pub fn find_best_element(html: &Html, elements: &[NodeId], min_score: f64) -> Op
 
 /// Check if an element is likely content (should be preserved).
 pub fn is_likely_content(html: &Html, node_id: NodeId) -> bool {
+    // Cheap attribute checks first
     if let Some(role) = dom::get_attr(html, node_id, "role")
         && (role == "article" || role == "main" || role == "contentinfo")
     {
@@ -225,10 +225,18 @@ pub fn is_likely_content(html: &Html, node_id: NodeId) -> bool {
         return true;
     }
 
+    // Compute text once and reuse
     let text = dom::text_content(html, node_id);
     let word_count = dom::count_words(&text);
 
-    if should_reject_as_non_content(html, node_id, word_count) {
+    // Quick rejection for small nav-like elements
+    if word_count < 200 && has_nav_heading(html, node_id) {
+        return false;
+    }
+    if is_card_grid(html, node_id) {
+        return false;
+    }
+    if word_count < 80 && has_social_profile_links(html, node_id) {
         return false;
     }
 
@@ -243,30 +251,11 @@ pub fn is_likely_content(html: &Html, node_id: NodeId) -> bool {
     }
     if word_count >= 10
         && SENTENCE_PUNCT_RE.is_match(&text)
-        && dom::link_density(html, node_id) < 0.1
+        && dom::link_density_with_text(html, node_id, &text) < 0.1
     {
         return true;
     }
 
-    false
-}
-
-/// Checks that should cause early rejection from `is_likely_content`.
-fn should_reject_as_non_content(html: &Html, node_id: NodeId, word_count: usize) -> bool {
-    let has_nav = has_nav_heading(html, node_id);
-
-    if has_nav && word_count < 200 {
-        return true;
-    }
-    if has_nav && dom::link_density(html, node_id) > 0.2 {
-        return true;
-    }
-    if is_card_grid(html, node_id) {
-        return true;
-    }
-    if word_count < 80 && has_social_profile_links(html, node_id) {
-        return true;
-    }
     false
 }
 
@@ -312,22 +301,46 @@ fn has_social_profile_links(html: &Html, node_id: NodeId) -> bool {
         .any(|href| SOCIAL_DOMAINS.iter().any(|domain| href.contains(domain)))
 }
 
+/// Check if any descendant has a structural content tag.
+/// Uses a single tree walk instead of separate per-tag searches.
 fn has_structural_content(html: &Html, node_id: NodeId) -> bool {
-    let tags = ["pre", "table", "figure", "picture"];
-    for tag in &tags {
-        if !dom::descendant_elements_by_tag(html, node_id, tag).is_empty() {
+    has_descendant_with_tag(
+        html,
+        node_id,
+        &[
+            "pre",
+            "table",
+            "figure",
+            "picture",
+            "code",
+            "blockquote",
+            "math",
+            "mjx-container",
+        ],
+    )
+}
+
+/// Walk descendants once, checking if any match the given tag names.
+fn has_descendant_with_tag(html: &Html, node_id: NodeId, tags: &[&str]) -> bool {
+    let Some(node_ref) = html.tree.get(node_id) else {
+        return false;
+    };
+    for child in node_ref.children() {
+        if let Node::Element(el) = child.value() {
+            let tag = el.name.local.as_ref();
+            if tags.contains(&tag) {
+                return true;
+            }
+            // Also check for math classes
+            if let Some(class) = el.attr("class")
+                && (class.contains("katex") || class.contains("MathJax"))
+            {
+                return true;
+            }
+        }
+        if has_descendant_with_tag(html, child.id(), tags) {
             return true;
         }
-    }
-    // Also check for math, code, and blockquote elements
-    if dom::has_descendant_matching(html, node_id, MATH_SELECTOR) {
-        return true;
-    }
-    if !dom::descendant_elements_by_tag(html, node_id, "code").is_empty() {
-        return true;
-    }
-    if !dom::descendant_elements_by_tag(html, node_id, "blockquote").is_empty() {
-        return true;
     }
     false
 }
@@ -335,7 +348,7 @@ fn has_structural_content(html: &Html, node_id: NodeId) -> bool {
 /// Score a non-content block. Negative score = should be removed.
 #[allow(clippy::cast_precision_loss)]
 pub fn score_non_content(html: &Html, node_id: NodeId) -> f64 {
-    // Skip scoring for footnote lists — preserve them
+    // Skip scoring for footnote lists -- preserve them
     if dom::has_descendant_matching(html, node_id, FOOTNOTE_LIST_SELECTOR) {
         return 0.0;
     }
@@ -352,7 +365,8 @@ pub fn score_non_content(html: &Html, node_id: NodeId) -> f64 {
     let nav_matches = NAV_INDICATORS_RE.find_iter(&text).count();
     score -= nav_matches as f64 * 10.0;
 
-    if dom::link_density(html, node_id) > 0.5 {
+    // Reuse text for link density computation
+    if dom::link_density_with_text(html, node_id, &text) > 0.5 {
         score -= 15.0;
     }
 
@@ -366,9 +380,9 @@ pub fn score_non_content(html: &Html, node_id: NodeId) -> f64 {
         score -= 10.0;
     }
 
+    let links = dom::descendant_elements_by_tag(html, node_id, "a").len();
     let lists = dom::descendant_elements_by_tag(html, node_id, "ul").len()
         + dom::descendant_elements_by_tag(html, node_id, "ol").len();
-    let links = dom::descendant_elements_by_tag(html, node_id, "a").len();
     if lists > 0 && links > lists * 3 {
         score -= 10.0;
     }
@@ -393,7 +407,7 @@ fn score_social_and_card_penalties(html: &Html, node_id: NodeId, word_count: usi
 fn apply_link_heavy_penalty(html: &Html, node_id: NodeId, text: &str, mut score: f64) -> f64 {
     let links = dom::descendant_elements_by_tag(html, node_id, "a");
     let words = dom::count_words(text);
-    if links.len() > 1 && words < 80 && dom::link_density(html, node_id) > 0.8 {
+    if links.len() > 1 && words < 80 && dom::link_density_with_text(html, node_id, text) > 0.8 {
         score -= 15.0;
     }
     score

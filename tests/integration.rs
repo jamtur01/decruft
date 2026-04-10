@@ -661,12 +661,8 @@ fn wikipedia_bengaluru_extraction() {
         o
     });
 
-    // Title should preserve Wikipedia suffix
-    assert_eq!(
-        result.title, "Bengaluru - Wikipedia",
-        "title: {}",
-        result.title
-    );
+    // Title should strip "- Wikipedia" suffix (domain-derived site name)
+    assert_eq!(result.title, "Bengaluru", "title: {}", result.title);
 
     // Metadata
     assert_eq!(result.language, "en");
