@@ -125,57 +125,69 @@ fn strip_json_comments(s: &str) -> String {
     let s = s.strip_suffix("]]>").unwrap_or(s).trim();
 
     let mut result = String::with_capacity(s.len());
-    let bytes = s.as_bytes();
-    let len = bytes.len();
-    let mut i = 0;
+    let mut chars = s.chars().peekable();
     let mut in_string = false;
 
-    while i < len {
+    while let Some(&ch) = chars.peek() {
         if in_string {
-            if bytes[i] == b'\\' && i + 1 < len {
-                result.push(bytes[i] as char);
-                result.push(bytes[i + 1] as char);
-                i += 2;
+            chars.next();
+            if ch == '\\' {
+                result.push(ch);
+                if let Some(&next) = chars.peek() {
+                    result.push(next);
+                    chars.next();
+                }
                 continue;
             }
-            if bytes[i] == b'"' {
+            if ch == '"' {
                 in_string = false;
             }
-            result.push(bytes[i] as char);
-            i += 1;
+            result.push(ch);
             continue;
         }
 
-        if bytes[i] == b'"' {
+        if ch == '"' {
             in_string = true;
-            result.push('"');
-            i += 1;
+            result.push(ch);
+            chars.next();
             continue;
         }
 
         // Line comment
-        if bytes[i] == b'/' && i + 1 < len && bytes[i + 1] == b'/' {
-            i += 2;
-            while i < len && bytes[i] != b'\n' {
-                i += 1;
+        if ch == '/' {
+            chars.next();
+            if let Some(&next) = chars.peek() {
+                if next == '/' {
+                    chars.next();
+                    // Skip until newline
+                    while let Some(&c) = chars.peek() {
+                        chars.next();
+                        if c == '\n' {
+                            break;
+                        }
+                    }
+                    continue;
+                }
+                if next == '*' {
+                    chars.next();
+                    // Skip until */
+                    let mut prev = ' ';
+                    while let Some(&c) = chars.peek() {
+                        chars.next();
+                        if prev == '*' && c == '/' {
+                            break;
+                        }
+                        prev = c;
+                    }
+                    continue;
+                }
             }
+            result.push('/');
             continue;
         }
 
-        // Block comment
-        if bytes[i] == b'/' && i + 1 < len && bytes[i + 1] == b'*' {
-            i += 2;
-            while i + 1 < len && !(bytes[i] == b'*' && bytes[i + 1] == b'/') {
-                i += 1;
-            }
-            if i + 1 < len {
-                i += 2; // skip */
-            }
-            continue;
-        }
-
-        result.push(bytes[i] as char);
-        i += 1;
+        result.push(ch);
+        chars.next();
     }
     result
 }

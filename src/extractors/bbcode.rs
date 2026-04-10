@@ -113,9 +113,16 @@ fn bbcode_to_html(bbcode: &str) -> String {
         )
         .to_string();
 
-    // Image tags: [img]URL[/img]
+    // Image tags: [img]URL[/img] — validate URL scheme
     out = BBCODE_IMG_RE
-        .replace_all(&out, r#"<img src="$1">"#)
+        .replace_all(&out, |caps: &regex::Captures| {
+            let url = &caps[1];
+            if is_safe_url(url) {
+                format!("<img src=\"{url}\">")
+            } else {
+                caps[0].to_string()
+            }
+        })
         .to_string();
 
     out

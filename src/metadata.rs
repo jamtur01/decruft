@@ -692,13 +692,17 @@ fn domain_to_site_name(domain: &str) -> String {
     if domain.is_empty() {
         return String::new();
     }
-    // Strip common prefixes (www., en., etc.)
+    // Strip common prefixes (www. or 2-letter language subdomains)
     let stripped = domain
         .strip_prefix("www.")
         .or_else(|| {
-            // Strip two-letter language subdomains
             let parts: Vec<&str> = domain.splitn(2, '.').collect();
-            if parts.len() == 2 && parts[0].len() <= 3 {
+            // Only strip 2-letter subdomains that look like language
+            // codes (ISO 639-1), not short domain labels like "bbc"
+            if parts.len() == 2
+                && parts[0].len() == 2
+                && parts[0].chars().all(|c| c.is_ascii_lowercase())
+            {
                 Some(parts[1])
             } else {
                 None

@@ -100,16 +100,16 @@ fn strip_leading_h1(html: &str) -> &str {
 /// `"WelcomeVisitors"` becomes `"Welcome Visitors"`.
 fn expand_wiki_word(word: &str) -> String {
     let mut result = String::with_capacity(word.len() + 8);
-    for (i, ch) in word.char_indices() {
-        if i > 0 && ch.is_uppercase() {
-            // Insert space before uppercase letter preceded by
-            // a lowercase letter
-            let prev = word.as_bytes()[i - 1];
-            if prev.is_ascii_lowercase() {
-                result.push(' ');
-            }
+    let mut prev_char: Option<char> = None;
+    for ch in word.chars() {
+        if ch.is_uppercase()
+            && let Some(prev) = prev_char
+            && prev.is_lowercase()
+        {
+            result.push(' ');
         }
         result.push(ch);
+        prev_char = Some(ch);
     }
     result
 }

@@ -862,8 +862,10 @@ pub fn matches_partial(val: &str) -> bool {
         return false;
     }
     // If the value contains the lookbehind-guarded substrings,
-    // verify with the full fancy_regex
-    if val.contains("access-wall") || val.contains("related") {
+    // verify with the full fancy_regex (case-insensitive to match
+    // the case-insensitive fast regex)
+    let val_lower = val.to_lowercase();
+    if val_lower.contains("access-wall") || val_lower.contains("related") {
         return PARTIAL_REGEX.is_match(val).unwrap_or(false);
     }
     // Fast regex matched and no lookbehind patterns involved

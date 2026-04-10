@@ -99,7 +99,10 @@ fn extract_matching_note_body(
     let is_single = body_ids.len() == 1;
 
     if let Some(desc) = og_desc {
-        let prefix = &desc[..desc.len().min(60)];
+        let prefix = desc
+            .char_indices()
+            .nth(60)
+            .map_or(desc.as_ref(), |(i, _)| &desc[..i]);
         for &body_id in &body_ids {
             let text = dom::text_content(html, body_id);
             if text.trim().starts_with(prefix) {
