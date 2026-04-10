@@ -35,8 +35,9 @@ URLS=(
     "https://arxiv.org/abs/2401.00001"
     # ── Hugo static site ──
     "https://gohugo.io/getting-started/quick-start/"
-    # ── Medium ──
-    "https://medium.com/@jordanisip/what-i-learned-from-mass-applying-as-an-engineering-manager-7fb426b37562"
+    # ── Classic blogs ──
+    "https://martinfowler.com/articles/microservices.html"
+    "https://www.joelonsoftware.com/2000/08/09/the-joel-test-12-steps-to-better-code/"
 )
 
 PASS=0
