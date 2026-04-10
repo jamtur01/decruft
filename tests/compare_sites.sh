@@ -39,6 +39,9 @@ URLS=(
     # ── Classic blogs ──
     "https://martinfowler.com/articles/microservices.html"
     "https://www.joelonsoftware.com/2000/08/09/the-joel-test-12-steps-to-better-code/"
+    # Note: C2 Wiki, Steam (BBCode), X/Twitter, and new GitHub PRs
+    # are JS-rendered — static curl fetch returns empty shells.
+    # These are tested via HTML fixtures instead (tests/fixtures/defuddle/).
 )
 
 PASS=0
@@ -96,18 +99,18 @@ for url in "${URLS[@]}"; do
     df_start=$(python3 -c "import time; print(int(time.time()*1000))")
 
     # Try URL first, fall back to file
-    if ! npx defuddle parse --json "$url" >"$OUTDIR/${name}.df.json" 2>"$df_err"; then
-        if ! npx defuddle parse --json "$html_file" >"$OUTDIR/${name}.df.json" 2>>"$df_err"; then
+    if ! timeout 30 npx defuddle parse --json "$url" >"$OUTDIR/${name}.df.json" 2>"$df_err"; then
+        if ! timeout 30 npx defuddle parse --json "$html_file" >"$OUTDIR/${name}.df.json" 2>>"$df_err"; then
             reason=$(grep -v "^$" "$df_err" | head -1 | sed 's/^Error: //')
             [ -z "$reason" ] && reason="exit code $?, no stderr"
             echo "    SKIP defuddle: $reason"
             SKIP=$((SKIP + 1)); echo ""; continue
         fi
     fi
-    npx defuddle parse "$url" >"$OUTDIR/${name}.df.html" 2>/dev/null || \
-        npx defuddle parse "$html_file" >"$OUTDIR/${name}.df.html" 2>/dev/null || true
-    npx defuddle parse --markdown "$url" >"$OUTDIR/${name}.df.md" 2>/dev/null || \
-        npx defuddle parse --markdown "$html_file" >"$OUTDIR/${name}.df.md" 2>/dev/null || true
+    timeout 30 npx defuddle parse "$url" >"$OUTDIR/${name}.df.html" 2>/dev/null || \
+        timeout 30 npx defuddle parse "$html_file" >"$OUTDIR/${name}.df.html" 2>/dev/null || true
+    timeout 30 npx defuddle parse --markdown "$url" >"$OUTDIR/${name}.df.md" 2>/dev/null || \
+        timeout 30 npx defuddle parse --markdown "$html_file" >"$OUTDIR/${name}.df.md" 2>/dev/null || true
 
     df_end=$(python3 -c "import time; print(int(time.time()*1000))")
     df_ms=$((df_end - df_start))
