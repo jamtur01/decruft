@@ -24,6 +24,7 @@ pub const EXACT_SELECTORS: &[&str] = &[
     ".promo",
     ".Promo",
     "#barrier-page",
+    ".alert:not([data-callout])",
     // Comments
     "[id=\"comments\" i]",
     "[id=\"comment\" i]",
