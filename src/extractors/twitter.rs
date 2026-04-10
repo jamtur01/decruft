@@ -159,14 +159,11 @@ fn has_selector(html: &Html, sel: &str) -> bool {
 }
 
 fn html_attr_escape(s: &str) -> String {
-    s.replace('&', "&amp;")
-        .replace('"', "&quot;")
-        .replace('<', "&lt;")
-        .replace('>', "&gt;")
+    dom::html_attr_escape(s)
 }
 
 #[cfg(test)]
-#[allow(clippy::unwrap_used)]
+#[expect(clippy::unwrap_used)]
 mod tests {
     use super::*;
 

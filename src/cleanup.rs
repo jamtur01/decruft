@@ -10,7 +10,7 @@ use crate::types::Removal;
 
 /// Run hidden, partial, and scoring cleanup in a single pass over all
 /// elements, avoiding the cost of three separate tree walks.
-#[allow(clippy::fn_params_excessive_bools)]
+#[expect(clippy::fn_params_excessive_bools)]
 pub fn run_combined_cleanup(
     html: &mut Html,
     main_content: NodeId,
@@ -58,22 +58,6 @@ pub fn remove_exact_selectors(
             dom::remove_node(html, id);
         }
     }
-}
-
-/// Remove elements matching partial class/id patterns.
-pub fn remove_partial_selectors(
-    html: &mut Html,
-    main_content: NodeId,
-    removals: &mut Vec<Removal>,
-    debug: bool,
-) {
-    remove_partial_selectors_with_elements(
-        html,
-        main_content,
-        removals,
-        debug,
-        &collect_all_elements(html),
-    );
 }
 
 fn remove_partial_selectors_with_elements(
@@ -127,22 +111,6 @@ fn remove_partial_selectors_with_elements(
     for id in to_remove {
         dom::remove_node(html, id);
     }
-}
-
-/// Remove hidden elements (display:none, visibility:hidden, etc.).
-pub fn remove_hidden_elements(
-    html: &mut Html,
-    main_content: NodeId,
-    removals: &mut Vec<Removal>,
-    debug: bool,
-) {
-    remove_hidden_with_elements(
-        html,
-        main_content,
-        removals,
-        debug,
-        &collect_all_elements(html),
-    );
 }
 
 fn remove_hidden_with_elements(
@@ -218,22 +186,6 @@ fn remove_hidden_with_elements(
     for id in to_remove {
         dom::remove_node(html, id);
     }
-}
-
-/// Score and remove non-content blocks.
-pub fn score_and_remove(
-    html: &mut Html,
-    main_content: NodeId,
-    removals: &mut Vec<Removal>,
-    debug: bool,
-) {
-    score_and_remove_with_elements(
-        html,
-        main_content,
-        removals,
-        debug,
-        &collect_all_elements(html),
-    );
 }
 
 fn score_and_remove_with_elements(

@@ -47,7 +47,7 @@ fn serialize_node(html: &Html, node_id: NodeId, node: &Node) -> String {
             }
             out
         }
-        Node::Text(t) => html_escape(t),
+        Node::Text(t) => text_escape(t),
         Node::Element(el) => {
             let tag = el.name.local.as_ref();
             let mut out = format!("<{tag}");
@@ -88,7 +88,7 @@ pub fn inner_html(html: &Html, node_id: NodeId) -> String {
     out
 }
 
-fn html_escape(s: &str) -> String {
+fn text_escape(s: &str) -> String {
     s.replace('&', "&amp;")
         .replace('<', "&lt;")
         .replace('>', "&gt;")
@@ -268,6 +268,24 @@ fn decode_entities(s: &str) -> String {
         .replace("&quot;", "\"")
 }
 
+/// Escape a string for safe use inside an HTML attribute value.
+#[must_use]
+pub fn html_attr_escape(s: &str) -> String {
+    s.replace('&', "&amp;")
+        .replace('"', "&quot;")
+        .replace('<', "&lt;")
+        .replace('>', "&gt;")
+}
+
+/// Escape text for safe use in HTML content.
+#[must_use]
+pub fn html_escape(s: &str) -> String {
+    s.replace('&', "&amp;")
+        .replace('<', "&lt;")
+        .replace('>', "&gt;")
+        .replace('"', "&quot;")
+}
+
 /// Check if an element has a specific CSS class.
 #[must_use]
 pub fn has_class(html: &Html, node_id: NodeId, class: &str) -> bool {
@@ -343,7 +361,7 @@ pub fn link_density_with_text(html: &Html, node_id: NodeId, total_text: &str) ->
     for a_id in descendant_elements_by_tag(html, node_id, "a") {
         link_len += text_content(html, a_id).trim().len();
     }
-    #[allow(clippy::cast_precision_loss)]
+    #[expect(clippy::cast_precision_loss)]
     let ratio = link_len as f64 / total_len as f64;
     ratio
 }

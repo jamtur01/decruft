@@ -213,7 +213,6 @@ const LANGUAGES: &[&str] = &[
     "cs",
     "hs",
     "yml",
-    "sh",
     "md",
 ];
 

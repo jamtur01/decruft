@@ -840,7 +840,7 @@ pub static FAST_PARTIAL_REGEX: LazyLock<regex::Regex> = LazyLock::new(|| {
     all.push("related".to_string());
     let combined = format!("(?i){}", all.join("|"));
     regex::Regex::new(&combined).unwrap_or_else(|_| {
-        #[allow(clippy::unwrap_used)]
+        #[expect(clippy::unwrap_used)]
         regex::Regex::new(r"^\b$").unwrap()
     })
 });
@@ -865,12 +865,6 @@ pub fn matches_partial(val: &str) -> bool {
     }
     // Fast regex matched and no lookbehind patterns involved
     true
-}
-
-/// Get a reference to the compiled partial pattern regex.
-#[must_use]
-pub fn partial_pattern() -> &'static Regex {
-    &PARTIAL_REGEX
 }
 
 /// Builds a compiled regex from all partial patterns, joined with `|`
@@ -904,7 +898,7 @@ pub fn build_partial_pattern() -> Regex {
         // All patterns are known at compile time and are valid after
         // escaping, so this branch is unreachable in practice.
         // Return a regex that never matches as a safe fallback.
-        #[allow(clippy::unwrap_used)]
+        #[expect(clippy::unwrap_used)]
         return Regex::new(r"^\b$").unwrap();
     };
     re
@@ -914,7 +908,7 @@ pub fn build_partial_pattern() -> Regex {
 mod tests {
     use super::*;
 
-    #[allow(clippy::unwrap_used)]
+    #[expect(clippy::unwrap_used)]
     #[test]
     fn partial_regex_compiles() {
         let re = build_partial_pattern();
@@ -923,14 +917,14 @@ mod tests {
         assert!(re.is_match("my-sidebar-content-widget").unwrap());
     }
 
-    #[allow(clippy::unwrap_used)]
+    #[expect(clippy::unwrap_used)]
     #[test]
     fn partial_regex_rejects_unrelated() {
         let re = build_partial_pattern();
         assert!(!re.is_match("paragraph").unwrap());
     }
 
-    #[allow(clippy::unwrap_used)]
+    #[expect(clippy::unwrap_used)]
     #[test]
     fn lookbehind_access_wall() {
         let re = build_partial_pattern();
@@ -938,7 +932,7 @@ mod tests {
         assert!(!re.is_match("main-access-wall").unwrap());
     }
 
-    #[allow(clippy::unwrap_used)]
+    #[expect(clippy::unwrap_used)]
     #[test]
     fn lookbehind_related() {
         let re = build_partial_pattern();
@@ -959,7 +953,7 @@ mod tests {
         assert!(PARTIAL_ATTRIBUTES.contains(&"id"));
     }
 
-    #[allow(clippy::unwrap_used)]
+    #[expect(clippy::unwrap_used)]
     #[test]
     fn lazy_static_works() {
         assert!(PARTIAL_REGEX.is_match("newsletter-signup").unwrap());

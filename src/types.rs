@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 /// Options for configuring the decruft extraction pipeline.
 #[derive(Debug, Clone)]
 #[non_exhaustive]
-#[allow(clippy::struct_excessive_bools)]
+#[expect(clippy::struct_excessive_bools)]
 pub struct DecruftOptions {
     /// URL of the page being parsed (for resolving relative URLs).
     pub url: Option<String>,

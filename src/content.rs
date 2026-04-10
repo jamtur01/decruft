@@ -71,7 +71,7 @@ fn collect_candidates(html: &Html, total_selectors: usize) -> (Vec<Candidate>, b
         };
         for el_ref in html.select(&sel) {
             let node_id = el_ref.id();
-            #[allow(clippy::cast_precision_loss)]
+            #[expect(clippy::cast_precision_loss)]
             let priority_bonus = (total_selectors - idx) as f64 * 40.0;
             let element_score = scorer::score_element(html, node_id);
             let score = priority_bonus + element_score;

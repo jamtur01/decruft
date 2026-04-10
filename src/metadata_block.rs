@@ -107,7 +107,6 @@ fn next_element_sibling(html: &Html, node_id: NodeId) -> Option<NodeId> {
 }
 
 #[cfg(test)]
-#[allow(clippy::unwrap_used)]
 mod tests {
     use super::*;
 

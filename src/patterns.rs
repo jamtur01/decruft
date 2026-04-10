@@ -660,7 +660,7 @@ fn remove_trailing_related_posts(
             .filter(|&&p_id| dom::link_density(html, p_id) > 0.5)
             .count();
 
-        #[allow(clippy::cast_precision_loss)]
+        #[expect(clippy::cast_precision_loss)]
         let ratio = link_dense_count as f64 / paragraphs.len() as f64;
         if ratio > 0.5 {
             let text = dom::text_content(html, child_id);
@@ -716,7 +716,7 @@ fn remove_trailing_thin_sections(
 
         thin_words += word_count;
 
-        #[allow(clippy::cast_precision_loss)]
+        #[expect(clippy::cast_precision_loss)]
         let pct = thin_words as f64 / total_words as f64;
         if pct >= 0.15 {
             break;

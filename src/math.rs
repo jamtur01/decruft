@@ -28,7 +28,7 @@ fn standardize_katex(html: &mut Html, main_content: NodeId) {
     let ids = select_within(html, main_content, selector);
 
     for id in ids {
-        let is_block = has_class(html, id, "katex-display");
+        let is_block = dom::has_class(html, id, "katex-display");
         let latex = find_katex_latex(html, id);
         let Some(latex) = latex else { continue };
         replace_with_math_element(html, id, &latex, is_block);
@@ -40,7 +40,7 @@ fn standardize_temml(html: &mut Html, main_content: NodeId) {
     let ids = select_within(html, main_content, ".temml");
 
     for id in ids {
-        let is_block = has_class(html, id, "temml-display");
+        let is_block = dom::has_class(html, id, "temml-display");
         let latex = find_annotation_latex(html, id);
         let Some(latex) = latex else { continue };
         replace_with_math_element(html, id, &latex, is_block);
@@ -277,11 +277,6 @@ fn create_math_element(latex: &str, tag: &str) -> scraper::node::Element {
     scraper::node::Element::new(name, attrs)
 }
 
-/// Check if an element has a specific CSS class.
-fn has_class(html: &Html, node_id: NodeId, class: &str) -> bool {
-    dom::has_class(html, node_id, class)
-}
-
 /// Determine if a math element is block-level display.
 fn is_block_math(html: &Html, node_id: NodeId) -> bool {
     // Check display attribute
@@ -292,14 +287,14 @@ fn is_block_math(html: &Html, node_id: NodeId) -> bool {
     }
 
     // Check class names for display/block indicators
-    if has_class(html, node_id, "MathJax_Display") {
+    if dom::has_class(html, node_id, "MathJax_Display") {
         return true;
     }
 
     // Check parent for display class
     if let Some(parent_id) = dom::parent_element(html, node_id)
-        && (has_class(html, parent_id, "MathJax_Display")
-            || has_class(html, parent_id, "katex-display"))
+        && (dom::has_class(html, parent_id, "MathJax_Display")
+            || dom::has_class(html, parent_id, "katex-display"))
     {
         return true;
     }
@@ -307,13 +302,14 @@ fn is_block_math(html: &Html, node_id: NodeId) -> bool {
     false
 }
 
-/// Select elements matching a CSS selector that are descendants of
-/// `ancestor_id`.
+/// Select elements matching a CSS selector within `ancestor_id`
+/// (including the ancestor itself).
 fn select_within(html: &Html, ancestor_id: NodeId, selector: &str) -> Vec<NodeId> {
-    dom::select_ids(html, selector)
-        .into_iter()
-        .filter(|&id| id == ancestor_id || dom::is_ancestor(html, id, ancestor_id))
-        .collect()
+    let mut ids = dom::select_within(html, ancestor_id, selector);
+    if dom::element_matches(html, ancestor_id, selector) && !ids.contains(&ancestor_id) {
+        ids.insert(0, ancestor_id);
+    }
+    ids
 }
 
 /// Remove `MathJax` preview and script siblings.

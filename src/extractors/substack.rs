@@ -220,12 +220,8 @@ fn combine_content(prose_html: &str, og_image: Option<&str>, has_image_grid: boo
     prose_html.to_string()
 }
 
-/// Escape a string for safe use inside an HTML attribute value.
 fn html_attr_escape(s: &str) -> String {
-    s.replace('&', "&amp;")
-        .replace('"', "&quot;")
-        .replace('<', "&lt;")
-        .replace('>', "&gt;")
+    dom::html_attr_escape(s)
 }
 
 /// Extract author name from the note's author link.

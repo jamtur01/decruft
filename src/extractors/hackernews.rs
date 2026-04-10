@@ -206,12 +206,8 @@ fn build_comment_title(comment: &CommentData) -> String {
     format!("Comment by {}: {preview}", comment.author)
 }
 
-/// Escape a string for safe use inside an HTML attribute value.
 fn html_attr_escape(s: &str) -> String {
-    s.replace('&', "&amp;")
-        .replace('"', "&quot;")
-        .replace('<', "&lt;")
-        .replace('>', "&gt;")
+    dom::html_attr_escape(s)
 }
 
 // --- Comment extraction (shared) ---
@@ -299,7 +295,7 @@ fn extract_comment_score(html: &Html, comment_id: ego_tree::NodeId) -> String {
 }
 
 #[cfg(test)]
-#[allow(clippy::unwrap_used, clippy::panic)]
+#[expect(clippy::unwrap_used, clippy::panic)]
 mod tests {
     use super::*;
 

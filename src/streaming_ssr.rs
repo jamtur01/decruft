@@ -143,7 +143,6 @@ fn remove_skeleton_siblings(html: &mut Html, template_id: NodeId) {
 mod tests {
     use super::*;
 
-    #[allow(clippy::unwrap_used)]
     #[test]
     fn parse_rc_calls_extracts_ids() {
         let text = r#"$RC("B:0","S:0")"#;
@@ -153,7 +152,6 @@ mod tests {
         assert_eq!(calls[0].1, "S:0");
     }
 
-    #[allow(clippy::unwrap_used)]
     #[test]
     fn parse_rc_calls_with_surrounding_code() {
         let text = r#"$RB=[];$RC=function(b,c){};$RC("B:0","S:0")"#;
@@ -163,7 +161,6 @@ mod tests {
         assert_eq!(calls[0].1, "S:0");
     }
 
-    #[allow(clippy::unwrap_used)]
     #[test]
     fn resolve_streaming_ssr_inlines_content() {
         let input = r#"<html><body>

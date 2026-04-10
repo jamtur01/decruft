@@ -350,7 +350,7 @@ fn extract_single_pr_comment(html: &Html, comment_id: ego_tree::NodeId) -> Optio
 }
 
 #[cfg(test)]
-#[allow(clippy::unwrap_used, clippy::panic)]
+#[expect(clippy::unwrap_used, clippy::panic)]
 mod tests {
     use super::*;
 

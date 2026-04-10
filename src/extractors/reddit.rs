@@ -303,7 +303,7 @@ fn extract_new_reddit_comments(html: &Html) -> String {
 }
 
 #[cfg(test)]
-#[allow(clippy::unwrap_used, clippy::panic)]
+#[expect(clippy::unwrap_used, clippy::panic)]
 mod tests {
     use super::*;
 

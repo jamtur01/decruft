@@ -199,7 +199,7 @@ fn table_has_large_width(html: &Html, table_id: NodeId) -> bool {
 
 /// Score an element for content likelihood.
 /// Higher = more likely to be main content.
-#[allow(clippy::cast_precision_loss)]
+#[expect(clippy::cast_precision_loss)]
 pub fn score_element(html: &Html, node_id: NodeId) -> f64 {
     let text = dom::text_content(html, node_id);
     let words = dom::count_words(&text);
@@ -247,7 +247,7 @@ fn score_alignment_and_metadata(html: &Html, node_id: NodeId, text: &str) -> f64
 
 /// Bonus for footnotes, layout table cells, and penalty for nested
 /// tables.
-#[allow(clippy::cast_precision_loss)]
+#[expect(clippy::cast_precision_loss)]
 fn score_footnotes_and_tables(html: &Html, node_id: NodeId) -> f64 {
     let mut bonus = 0.0;
     if dom::has_descendant_matching(html, node_id, FOOTNOTE_REF_SELECTOR) {
@@ -364,7 +364,7 @@ fn has_nav_heading(html: &Html, node_id: NodeId) -> bool {
 /// Fix #10: detect card grid pattern.
 /// Only check h2-h4, skip if words < 3 or >= 500, subtract heading
 /// word count from total before computing prose-per-heading.
-#[allow(clippy::cast_precision_loss)]
+#[expect(clippy::cast_precision_loss)]
 fn is_card_grid(html: &Html, node_id: NodeId) -> bool {
     let text = dom::text_content(html, node_id);
     let total_words = dom::count_words(&text);
@@ -445,7 +445,7 @@ fn has_descendant_with_tag(html: &Html, node_id: NodeId, tags: &[&str]) -> bool 
 }
 
 /// Score a non-content block. Negative score = should be removed.
-#[allow(clippy::cast_precision_loss)]
+#[expect(clippy::cast_precision_loss)]
 pub fn score_non_content(html: &Html, node_id: NodeId) -> f64 {
     // Fix #12: skip if element itself, any ancestor, or any descendant
     // matches footnote list selectors

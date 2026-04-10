@@ -12,6 +12,7 @@ use crate::extractors;
 use crate::footnotes;
 use crate::math;
 use crate::metadata;
+use crate::metadata_block;
 use crate::noscript;
 use crate::patterns;
 use crate::schema_org;
@@ -73,7 +74,7 @@ pub fn parse(html_str: &str, options: &DecruftOptions) -> DecruftResult {
     result = retry_schema_fallback(html_str, options, schema_data.as_ref(), result);
 
     let elapsed = start.elapsed();
-    #[allow(clippy::cast_possible_truncation)]
+    #[expect(clippy::cast_possible_truncation)]
     let parse_time_ms = elapsed.as_millis() as u64;
 
     let content_markdown = if options.markdown || options.separate_markdown {
@@ -435,6 +436,7 @@ fn run_cleanup_pipeline(
         options.remove_partial_selectors,
         options.remove_low_scoring,
     );
+    metadata_block::remove_metadata_block(html, main_content);
     if options.remove_content_patterns {
         patterns::remove_content_patterns(html, main_content, removals, options.debug);
     }
@@ -448,7 +450,7 @@ fn run_cleanup_pipeline(
     cleanup::deduplicate_images(html, main_content);
 }
 
-#[allow(clippy::too_many_arguments)]
+#[expect(clippy::too_many_arguments)]
 fn build_result(
     content: String,
     content_markdown: Option<String>,
@@ -495,7 +497,6 @@ fn find_main(html: &Html) -> NodeId {
 
 /// Try specialized extractors (`BBCode`, Substack) before the general
 /// pipeline. Returns `Some` with the result if an extractor matched.
-#[allow(clippy::too_many_arguments)]
 fn try_extractors(
     html: &Html,
     start: &Instant,
@@ -513,7 +514,6 @@ fn try_extractors(
     try_site_extractors(html, start, options, meta, schema_data, meta_tags)
 }
 
-#[allow(clippy::too_many_arguments)]
 fn try_bbcode(
     html: &Html,
     start: &Instant,
@@ -547,7 +547,6 @@ fn try_bbcode(
     Some(result)
 }
 
-#[allow(clippy::too_many_arguments)]
 fn try_substack(
     html: &Html,
     start: &Instant,
@@ -576,7 +575,7 @@ fn try_substack(
     Some(result)
 }
 
-#[allow(clippy::too_many_arguments)]
+#[expect(clippy::too_many_arguments)]
 fn build_extractor_result(
     raw_html: String,
     selector_label: &str,
@@ -594,7 +593,7 @@ fn build_extractor_result(
         raw_html
     };
     let elapsed = start.elapsed();
-    #[allow(clippy::cast_possible_truncation)]
+    #[expect(clippy::cast_possible_truncation)]
     let parse_time_ms = elapsed.as_millis() as u64;
     build_result(
         content,
@@ -611,7 +610,6 @@ fn build_extractor_result(
 }
 
 /// Try site-specific extractors (GitHub, Reddit, Hacker News, etc.).
-#[allow(clippy::too_many_arguments)]
 fn try_site_extractors(
     html: &Html,
     start: &Instant,
@@ -716,7 +714,7 @@ fn convert_to_markdown(html: &str) -> Option<String> {
 }
 
 /// Handle `<sup>` elements: convert canonical footnote refs to `[^N]`.
-#[allow(clippy::needless_pass_by_value, clippy::unnecessary_wraps)]
+#[expect(clippy::needless_pass_by_value, clippy::unnecessary_wraps)]
 fn handle_sup_element(
     handlers: &dyn htmd::element_handler::Handlers,
     element: htmd::Element,
@@ -735,7 +733,6 @@ fn handle_sup_element(
 
 /// Handle `<span>` and `<div>` elements: data-latex math or
 /// canonical footnotes container.
-#[allow(clippy::needless_pass_by_value)]
 fn handle_span_div_element(
     handlers: &dyn htmd::element_handler::Handlers,
     element: htmd::Element,
@@ -783,7 +780,6 @@ fn handle_span_div_element(
 }
 
 /// Handle `<a>` elements: suppress footnote backref links.
-#[allow(clippy::needless_pass_by_value)]
 fn handle_anchor_element(
     handlers: &dyn htmd::element_handler::Handlers,
     element: htmd::Element,

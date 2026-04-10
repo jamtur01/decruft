@@ -7,7 +7,7 @@ use clap::Parser;
 /// Extract clean, readable content from web pages.
 #[derive(Parser, Debug)]
 #[command(name = "decruft", version, about)]
-#[allow(clippy::struct_excessive_bools)]
+#[expect(clippy::struct_excessive_bools)]
 struct Cli {
     /// URL of the page (used for resolving relative URLs and metadata).
     #[arg(short, long)]

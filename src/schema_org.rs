@@ -32,8 +32,9 @@ pub fn extract_schema_org(html: &Html) -> Option<Value> {
 /// Get a property from schema.org data using dot-path notation.
 /// Supports: `author.name`, `author.[].name` (array traversal),
 /// `datePublished`. Searches recursively through the data structure.
+#[cfg(test)]
 #[must_use]
-pub fn get_property(data: &Value, path: &str) -> Option<String> {
+fn get_property(data: &Value, path: &str) -> Option<String> {
     let segments: Vec<&str> = path.split('.').collect();
 
     // Try direct path traversal first
@@ -208,6 +209,7 @@ fn collect_items(value: &Value, items: &mut Vec<Value>) {
 }
 
 /// Walk a dot-path through JSON, returning the final string value.
+#[cfg(test)]
 fn walk_path(value: &Value, segments: &[&str]) -> Option<String> {
     if segments.is_empty() {
         return value_to_string(value);
@@ -235,6 +237,7 @@ fn walk_path(value: &Value, segments: &[&str]) -> Option<String> {
 }
 
 /// Search recursively for a path through nested objects.
+#[cfg(test)]
 fn recursive_search(value: &Value, segments: &[&str]) -> Option<String> {
     if segments.is_empty() {
         return value_to_string(value);
@@ -269,6 +272,7 @@ fn recursive_search(value: &Value, segments: &[&str]) -> Option<String> {
 }
 
 /// Convert a JSON value to a string if possible.
+#[cfg(test)]
 fn value_to_string(value: &Value) -> Option<String> {
     match value {
         Value::String(s) => Some(s.clone()),

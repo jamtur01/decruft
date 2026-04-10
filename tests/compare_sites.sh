@@ -29,6 +29,16 @@ URLS=(
     "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array"
     # Hacker News
     "https://news.ycombinator.com/item?id=42338514"
+    # Reddit (extractor)
+    "https://old.reddit.com/r/rust/comments/1i6gxbr/this_week_in_rust_583/"
+    # X/Twitter article
+    "https://x.com/elikiwen/status/1900575802102243559"
+    # Tech blog
+    "https://blog.rust-lang.org/2025/02/20/Rust-1.85.0.html"
+    # Hugo site
+    "https://gohugo.io/getting-started/quick-start/"
+    # Dan Luu (simple HTML blog)
+    "https://danluu.com/cocktail-ideas/"
 )
 
 PASS=0
