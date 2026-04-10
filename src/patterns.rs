@@ -41,6 +41,17 @@ static AUTHOR_DATE_RE: LazyLock<Regex> = LazyLock::new(|| {
     .expect("valid regex")
 });
 
+/// Matches text starting with a metadata label like "Date:", "Published:",
+/// etc. These should not be treated as author bylines.
+static METADATA_LABEL_RE: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r"(?i)^(?:date|published|updated|posted|from|to|subject|sent|cc|bcc)\s*:")
+        .expect("valid regex")
+});
+
+/// Weekday abbreviations that should not be mistaken for author names.
+static WEEKDAY_RE: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"(?i)^(Mon|Tue|Wed|Thu|Fri|Sat|Sun)\b").expect("valid regex"));
+
 static SOCIAL_COUNTER_RE: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(r"(?i)^\s*\d+\s*(likes?|comments?|shares?|retweets?|replies|reactions?)\s*$")
         .expect("valid regex")
@@ -453,6 +464,11 @@ fn remove_article_metadata_header(
 }
 
 /// Rule 5: Author + date bylines - combined name + date patterns.
+///
+/// Skips lines starting with metadata labels (Date:, Published:, etc.)
+/// and lines where the "author" portion is just a weekday abbreviation
+/// (Mon, Tue, Wed...), which would otherwise false-positive on
+/// email-style headers like "Date: Wed, 08 Apr 2026".
 fn remove_author_date_bylines(
     html: &mut Html,
     main_content: NodeId,
@@ -466,8 +482,18 @@ fn remove_author_date_bylines(
         let elements = dom::descendant_elements_by_tag(html, main_content, tag);
         for node_id in elements {
             let text = dom::text_content(html, node_id);
+            let trimmed = text.trim();
             let word_count = dom::count_words(&text);
-            if word_count <= 15 && AUTHOR_DATE_RE.is_match(text.trim()) {
+            if word_count > 15 {
+                continue;
+            }
+            if METADATA_LABEL_RE.is_match(trimmed) {
+                continue;
+            }
+            if WEEKDAY_RE.is_match(trimmed) {
+                continue;
+            }
+            if AUTHOR_DATE_RE.is_match(trimmed) {
                 record_removal(removals, debug, "author date byline", &text);
                 to_remove.push(node_id);
             }

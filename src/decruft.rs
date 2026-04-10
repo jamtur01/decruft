@@ -33,7 +33,8 @@ struct ParseResult {
 pub fn parse(html_str: &str, options: &DecruftOptions) -> DecruftResult {
     let start = Instant::now();
     let sanitized = sanitize_html_comments(html_str);
-    let html_str = sanitized.as_str();
+    let repaired = repair_surrogate_pairs(&sanitized);
+    let html_str = repaired.as_str();
 
     let html = Html::parse_document(html_str);
     let schema_data = schema_org::extract_schema_org(&html);
@@ -360,6 +361,63 @@ fn safe_truncate(s: &str, max_chars: usize) -> &str {
     }
 }
 
+/// Repair HTML numeric character references for surrogate pairs.
+///
+/// Draft.js (used by X/Twitter articles) splits emoji at the JS
+/// surrogate boundary, producing high/low surrogate char refs that
+/// may be separated by HTML tags: `&#55357;<span>&#56580;`.
+/// html5ever replaces lone surrogates with U+FFFD, destroying the
+/// emoji.
+///
+/// This function finds high surrogate char refs followed by a low
+/// surrogate char ref (possibly separated by HTML tags) and merges
+/// them into the correct Unicode character.
+fn repair_surrogate_pairs(html: &str) -> String {
+    use regex::Regex;
+    use std::sync::LazyLock;
+
+    // Match a high surrogate char ref, optionally followed by HTML
+    // tags (no text content between them), then a low surrogate ref.
+    // The tags between surrogates are captured as a single group
+    // using a greedy match of tag sequences.
+    static SURROGATE_PAIR_RE: LazyLock<Regex> = LazyLock::new(|| {
+        Regex::new(
+            r"(?i)&#(?:x([dD][89aAbB][0-9a-fA-F]{2})|(5[5-6]\d{3}));((?:<[^>]*>)*)&#(?:x([dD][cCdDeEfF][0-9a-fA-F]{2})|(5[6-7]\d{3}));"
+        )
+        .expect("surrogate pair regex is valid")
+    });
+
+    SURROGATE_PAIR_RE
+        .replace_all(html, |caps: &regex::Captures| {
+            let high = parse_surrogate_cap(caps, 1, 2);
+            let low = parse_surrogate_cap(caps, 4, 5);
+            match (high, low) {
+                (Some(h), Some(l))
+                    if (0xD800..=0xDBFF).contains(&h) && (0xDC00..=0xDFFF).contains(&l) =>
+                {
+                    let code_point = ((h - 0xD800) << 10) + (l - 0xDC00) + 0x10000;
+                    let tags = caps.get(3).map_or("", |m| m.as_str());
+                    char::from_u32(code_point)
+                        .map_or_else(|| caps[0].to_string(), |c| format!("{tags}{c}"))
+                }
+                _ => caps[0].to_string(),
+            }
+        })
+        .into_owned()
+}
+
+/// Parse a surrogate value from a regex capture: group `hex_idx` is
+/// the hex digits, group `dec_idx` is the decimal digits.
+fn parse_surrogate_cap(caps: &regex::Captures, hex_idx: usize, dec_idx: usize) -> Option<u32> {
+    if let Some(hex) = caps.get(hex_idx) {
+        u32::from_str_radix(hex.as_str(), 16).ok()
+    } else if let Some(dec) = caps.get(dec_idx) {
+        dec.as_str().parse::<u32>().ok()
+    } else {
+        None
+    }
+}
+
 /// Strip HTML-like tags from inside comments to prevent html5ever
 /// from mis-parsing the DOM tree. Comments containing `<p>`, `<br>`,
 /// etc. can break sibling element detection.
@@ -620,14 +678,10 @@ fn try_site_extractors(
 ) -> Option<DecruftResult> {
     let (extracted, extractor_name) =
         extractors::try_extract(html, options.url.as_deref(), options.include_replies)?;
-    if let Some(t) = &extracted.title
-        && meta.title.is_empty()
-    {
+    if let Some(t) = &extracted.title {
         meta.title.clone_from(t);
     }
-    if let Some(a) = &extracted.author
-        && meta.author.is_empty()
-    {
+    if let Some(a) = &extracted.author {
         meta.author.clone_from(a);
     }
     if let Some(s) = &extracted.site
@@ -711,6 +765,7 @@ fn convert_to_markdown(html: &str) -> Option<String> {
         .convert(html)
         .ok()
         .map(|s| fix_bang_image_collision(s.as_str()))
+        .map(|s| unescape_latex_delimiters(&s))
 }
 
 /// Handle `<sup>` elements: convert canonical footnote refs to `[^N]`.
@@ -799,6 +854,71 @@ fn collect_attrs(element: &htmd::Element) -> Vec<(String, String)> {
         .iter()
         .map(|a| (a.name.local.as_ref().to_string(), a.value.to_string()))
         .collect()
+}
+
+/// Reverse markdown escaping inside LaTeX math delimiters.
+///
+/// htmd escapes markdown-special characters (`_`, `\`, `*`, etc.)
+/// everywhere, including inside `$...$` and `$$...$$` math
+/// delimiters. This breaks LaTeX: `$\sum_{i=0}^n$` becomes
+/// `$\\sum\_{i=0}^n$`. We restore the original LaTeX by removing
+/// the extra backslash escapes within math regions.
+fn unescape_latex_delimiters(md: &str) -> String {
+    use regex::Regex;
+    use std::sync::LazyLock;
+
+    // Match $$...$$ (block) and $...$ (inline), non-greedy.
+    // The block pattern must come first so `$$` isn't parsed as
+    // two inline delimiters.
+    static MATH_RE: LazyLock<Regex> = LazyLock::new(|| {
+        Regex::new(r"\$\$[\s\S]+?\$\$|\$[^\$\n]+?\$").expect("latex delimiter regex is valid")
+    });
+
+    MATH_RE
+        .replace_all(md, |caps: &regex::Captures| {
+            let matched = &caps[0];
+            unescape_latex(matched)
+        })
+        .into_owned()
+}
+
+/// Remove backslash escapes that htmd inserts for markdown-special
+/// characters. Only the escapes htmd adds are reversed: `\\` -> `\`,
+/// `\_` -> `_`, `\*` -> `*`, `\[` -> `[`, `\]` -> `]`, `\{` -> `{`,
+/// `\}` -> `}`, `\#` -> `#`, `\~` -> `~`, `\|` -> `|`, `\>` -> `>`.
+fn unescape_latex(s: &str) -> String {
+    let mut result = String::with_capacity(s.len());
+    let mut chars = s.chars().peekable();
+    while let Some(ch) = chars.next() {
+        if ch == '\\'
+            && let Some(&next) = chars.peek()
+            && matches!(
+                next,
+                '\\' | '_'
+                    | '*'
+                    | '['
+                    | ']'
+                    | '{'
+                    | '}'
+                    | '#'
+                    | '~'
+                    | '|'
+                    | '>'
+                    | '.'
+                    | '!'
+                    | '-'
+                    | '('
+                    | ')'
+                    | '+'
+            )
+        {
+            result.push(next);
+            chars.next();
+            continue;
+        }
+        result.push(ch);
+    }
+    result
 }
 
 /// Prevent `!` at the end of a word from merging with markdown image

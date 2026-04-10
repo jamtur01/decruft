@@ -1,4 +1,5 @@
 pub mod bbcode;
+pub mod c2wiki;
 pub mod comments;
 pub mod conversations;
 pub mod github;
@@ -41,6 +42,9 @@ pub fn try_extract(
     }
     if let Some(result) = twitter::extract_x_article(html, url) {
         return Some((result, "twitter"));
+    }
+    if let Some(result) = c2wiki::extract_c2wiki(html, url) {
+        return Some((result, "c2wiki"));
     }
     if let Some(result) = conversations::extract_conversation(html, url) {
         return Some((result, "conversation"));

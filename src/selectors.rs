@@ -98,6 +98,9 @@ pub const EXACT_SELECTORS: &[&str] = &[
     "aside:not([class*=\"callout\"])",
     // Interactive / form elements
     "button",
+    "[class*=\"dismiss\" i]",
+    "[class*=\"close-btn\" i]",
+    "[class*=\"btn-close\" i]",
     "canvas",
     "date",
     "dialog",

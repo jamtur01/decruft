@@ -994,3 +994,301 @@ fn without_markdown_options_no_markdown_conversion() {
         "contentMarkdown should be None when markdown is off"
     );
 }
+
+// ═══════════════════════════════════════════════════════════════════
+// LaTeX math escaping  (defuddle #224/#225)
+// ═══════════════════════════════════════════════════════════════════
+
+#[test]
+fn markdown_preserves_inline_latex_without_escaping() {
+    let html = r#"<html><head><title>Math</title></head><body><article>
+        <p>The formula <span data-latex="\sum_{i=0}^n x_i">sum</span> is inline.</p>
+    </article></body></html>"#;
+    let result = parse(html, &{
+        let mut o = DecruftOptions::default();
+        o.markdown = true;
+        o
+    });
+
+    assert!(
+        result.content.contains(r"$\sum_{i=0}^n x_i$"),
+        "inline LaTeX should not be escaped: {}",
+        result.content
+    );
+    assert!(
+        !result.content.contains(r"\\_"),
+        "underscores should not be double-escaped"
+    );
+}
+
+#[test]
+fn markdown_preserves_block_latex_without_escaping() {
+    let html = r#"<html><head><title>Math</title></head><body><article>
+        <p>Some text before.</p>
+        <div data-latex="E = mc^2">energy</div>
+        <p>Some text after.</p>
+    </article></body></html>"#;
+    let result = parse(html, &{
+        let mut o = DecruftOptions::default();
+        o.markdown = true;
+        o
+    });
+
+    assert!(
+        result.content.contains("E = mc^2"),
+        "block LaTeX should preserve content: {}",
+        result.content
+    );
+    assert!(
+        result.content.contains("$$"),
+        "block LaTeX should use $$ delimiters: {}",
+        result.content
+    );
+}
+
+#[test]
+fn markdown_preserves_raw_dollar_sign_latex() {
+    let html = r"<html><head><title>Math</title></head><body><article>
+        <p>The formula $\sum_{i=0}^n x_i$ and $$E = mc^2$$ are here.</p>
+    </article></body></html>";
+    let result = parse(html, &{
+        let mut o = DecruftOptions::default();
+        o.markdown = true;
+        o
+    });
+
+    assert!(
+        result.content.contains(r"$\sum_{i=0}^n x_i$"),
+        "raw inline LaTeX should be unescaped: {}",
+        result.content
+    );
+    assert!(
+        result.content.contains("$$E = mc^2$$"),
+        "raw block LaTeX should be unescaped: {}",
+        result.content
+    );
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// Reddit author extraction  (reddit-author.test.ts)
+// ═══════════════════════════════════════════════════════════════════
+
+const REDDIT_URL: &str = "https://www.reddit.com/r/test/comments/abc123/test_post/";
+
+const NEW_REDDIT_NO_COMMENTS_HTML: &str = r#"
+<html>
+<head><title>Test Post : test</title></head>
+<body>
+<h1>Test Post Title</h1>
+<shreddit-post
+  author="original_poster"
+  subreddit-prefixed-name="r/test"
+  post-title="Test Post Title"
+  score="42"
+  comment-count="5"
+  created-timestamp="2025-01-15T10:00:00Z"
+  permalink="/r/test/comments/abc123/test_post/">
+  <div slot="text-body"><p>This is the post body content.</p></div>
+</shreddit-post>
+<span class="author">logged_in_user</span>
+<span class="author">some_commenter</span>
+</body>
+</html>
+"#;
+
+const NEW_REDDIT_WITH_COMMENTS_HTML: &str = r#"
+<html>
+<head><title>Test Post : test</title></head>
+<body>
+<h1>Test Post Title</h1>
+<shreddit-post
+  author="original_poster"
+  subreddit-prefixed-name="r/test"
+  post-title="Test Post Title"
+  score="42"
+  comment-count="5"
+  created-timestamp="2025-01-15T10:00:00Z"
+  permalink="/r/test/comments/abc123/test_post/">
+  <div slot="text-body"><p>This is the post body content.</p></div>
+</shreddit-post>
+<shreddit-comment author="commenter_one" depth="0" score="10"
+  permalink="/r/test/comments/abc123/test_post/c1/"
+  created="2025-01-15T11:00:00Z">
+  <div slot="comment"><p>Nice post!</p></div>
+</shreddit-comment>
+<shreddit-comment author="commenter_two" depth="0" score="5"
+  permalink="/r/test/comments/abc123/test_post/c2/"
+  created="2025-01-15T12:00:00Z">
+  <div slot="comment"><p>I agree.</p></div>
+</shreddit-comment>
+<span class="author">logged_in_user</span>
+</body>
+</html>
+"#;
+
+#[test]
+fn reddit_no_comments_returns_post_author() {
+    let result = parse(NEW_REDDIT_NO_COMMENTS_HTML, &opts(REDDIT_URL));
+
+    assert_eq!(
+        result.author, "original_poster",
+        "author should be the post author, got: {:?}",
+        result.author
+    );
+    assert_eq!(result.site, "r/test");
+    assert_eq!(result.title, "Test Post Title");
+}
+
+#[test]
+fn reddit_with_comments_returns_post_author() {
+    let result = parse(NEW_REDDIT_WITH_COMMENTS_HTML, &opts(REDDIT_URL));
+
+    assert_eq!(
+        result.author, "original_poster",
+        "author should be the post author, not a commenter: {:?}",
+        result.author
+    );
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// X/Twitter article surrogate pair repair  (x-article-surrogates.test.ts)
+// ═══════════════════════════════════════════════════════════════════
+
+const X_ARTICLE_URL: &str = "https://x.com/testuser/article/123456789";
+
+fn make_x_article_html(paragraph_inner: &str) -> String {
+    format!(
+        r#"<html><head><title>Test Article</title></head>
+        <body>
+            <div data-testid="twitterArticleRichTextView">
+                <h1 data-testid="twitter-article-title">Test Article</h1>
+                <div class="public-DraftStyleDefault-block">{paragraph_inner}</div>
+            </div>
+        </body></html>"#
+    )
+}
+
+#[test]
+fn x_article_repairs_emoji_split_across_bold_span() {
+    // U+1F504 (🔄) = high surrogate 0xD83D (55357) + low 0xDD04 (56580)
+    let html = make_x_article_html(
+        "Refresh &#55357;<span style=\"font-weight: bold\">&#56580; updates</span> daily",
+    );
+    let result = parse(&html, &opts(X_ARTICLE_URL));
+
+    assert!(
+        result.content.contains('\u{1F504}'),
+        "should contain intact emoji: {}",
+        result.content
+    );
+}
+
+#[test]
+fn x_article_repairs_emoji_split_across_link() {
+    let html = make_x_article_html("See &#55357;<a href=\"https://example.com\">&#56580;here</a>");
+    let result = parse(&html, &opts(X_ARTICLE_URL));
+
+    // The emoji should be present and not replaced with U+FFFD
+    assert!(
+        !result.content.contains('\u{FFFD}'),
+        "should not contain replacement characters: {}",
+        result.content
+    );
+}
+
+#[test]
+fn x_article_preserves_intact_emojis() {
+    let html = make_x_article_html("Refresh \u{1F504} daily");
+    let result = parse(&html, &opts(X_ARTICLE_URL));
+
+    assert!(
+        result.content.contains('\u{1F504}'),
+        "should preserve intact emoji: {}",
+        result.content
+    );
+}
+
+#[test]
+fn x_article_repairs_hex_surrogate_refs() {
+    // Same emoji via hex character references
+    let html = make_x_article_html("Refresh &#xD83D;<span>&#xDD04; updates</span> daily");
+    let result = parse(&html, &opts(X_ARTICLE_URL));
+
+    assert!(
+        result.content.contains('\u{1F504}'),
+        "should repair hex surrogate refs: {}",
+        result.content
+    );
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// Weekday abbreviation not treated as author  (defuddle #233)
+// ═══════════════════════════════════════════════════════════════════
+
+#[test]
+fn weekday_in_date_not_treated_as_author_byline() {
+    let html = r"<html><head><title>Email</title></head><body><article>
+        <p><span>Date:</span> <span>Wed, 08 Apr 2026</span></p>
+        <p><span>From:</span> <span>Alice Bob</span></p>
+        <p><span>Subject:</span> <span>Meeting notes</span></p>
+        <p>Here are the meeting notes from today's discussion about the project roadmap and upcoming milestones. We covered several important topics including budget allocation, timeline adjustments, and resource planning for the next quarter.</p>
+    </article></body></html>";
+    let result = parse(html, &opts("https://example.com"));
+
+    // "Wed, 08 Apr 2026" should NOT be removed as a byline
+    assert!(
+        result.content.contains("Wed")
+            || result.content.contains("2026")
+            || result.content.contains("Date"),
+        "date line should not be stripped as author byline: {}",
+        result.content
+    );
+}
+
+#[test]
+fn real_author_date_byline_still_removed() {
+    let html = r"<html><head><title>Blog</title></head><body><article>
+        <h1>Great Article</h1>
+        <p>John Smith | January 15, 2026</p>
+        <p>This is the main content of the article with plenty of words to make the scorer happy. It discusses various topics at length to ensure it passes word count thresholds for content extraction.</p>
+    </article></body></html>";
+    let result = parse(html, &opts("https://example.com"));
+
+    assert!(
+        !result.content.contains("John Smith"),
+        "real author bylines should still be removed: {}",
+        result.content
+    );
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// Dismiss buttons in hidden content retry  (defuddle #232/#234)
+// ═══════════════════════════════════════════════════════════════════
+
+#[test]
+fn dismiss_buttons_removed_in_hidden_content_retry() {
+    let html = r#"<html><head><title>Newsletter</title></head><body>
+        <div class="updates-overlay overlay--post-detail" aria-hidden="true">
+            <div class="updates-letter">
+                <a class="updates-dismiss" href="/posts/">&lt;</a>
+                <h1>Newsletter Issue</h1>
+                <p>This is a long newsletter article with substantial content that needs many words to pass the extraction threshold. The article discusses several important topics in great detail across multiple paragraphs.</p>
+                <p>The second paragraph continues the discussion with additional analysis and commentary on the subject matter at hand. More words are added to ensure sufficient content length for the retry logic to activate.</p>
+                <p>A third paragraph provides further elaboration and concluding thoughts on the topics discussed. This ensures the hidden content recovery path triggers and selects this content.</p>
+            </div>
+        </div>
+    </body></html>"#;
+    let result = parse(html, &opts("https://example.com"));
+
+    assert!(
+        result.content.contains("Newsletter Issue")
+            || result.content.contains("newsletter article"),
+        "should recover hidden content: {}",
+        result.content
+    );
+    assert!(
+        !result.content.contains("updates-dismiss"),
+        "dismiss links should be removed: {}",
+        result.content
+    );
+}
