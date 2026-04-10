@@ -485,11 +485,8 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "real network call"]
     fn api_fetch_live() {
-        // Real network call — skip in CI
-        if std::env::var("CI").is_ok() {
-            return;
-        }
         let url = "https://stackoverflow.com/questions/927358/\
              how-do-i-undo-the-most-recent-local-commits-in-git";
         let result = try_api_fetch(Some(url), false);

@@ -89,7 +89,7 @@ pub struct DecruftResult {
     pub word_count: usize,
     /// Schema.org data if found.
     pub schema_org_data: Option<serde_json::Value>,
-    /// All meta tags found on the page.
+    /// All meta tags found on the page. Only populated when debug mode is enabled.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub meta_tags: Option<Vec<MetaTag>>,
     /// Which site-specific extractor produced this result (if any).

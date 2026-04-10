@@ -613,11 +613,8 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "real network call"]
     fn api_fetch_live_story() {
-        // Real network call — skip in CI
-        if std::env::var("CI").is_ok() {
-            return;
-        }
         // Item 1 is the first HN post
         let url = "https://news.ycombinator.com/item?id=1";
         let result = try_api_fetch(Some(url), false);

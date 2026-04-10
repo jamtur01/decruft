@@ -78,40 +78,45 @@ pub fn parse(html_str: &str, options: &DecruftOptions) -> DecruftResult {
         return result;
     }
 
-    // ── Retry strategy ─────────────────────────────────────────
-    // Each stage relaxes cleanup constraints progressively when the
-    // extracted content is too short, measured by word count:
-    //
-    //   Stage 0 (default):  full cleanup pipeline
-    //   Stage 1 (<200 wc):  drop partial-selector removal
-    //   Stage 2 (<50 wc):   drop hidden-element removal; also try
-    //                        targeting the largest hidden subtree
-    //   Stage 3 (<30 wc):   drop scoring and content patterns;
-    //                        try body as fallback content root
-    //   Stage 4 (always):   if schema.org text has 1.5x more words,
-    //                        locate the DOM element or use raw text
-    // ──────────────────────────────────────────────────────────
-
     // Stage 0: default pipeline
     let mut result = parse_internal(html_str, options);
 
-    // Stage 1: relax partial selectors
-    if result.word_count < 200 {
-        result = retry_without_partials(html_str, options, &result);
-    }
+    // User-specified content selector is a hard override — no retries.
+    // The retry stages can replace the selector with body, hidden
+    // subtree, or schema selector, undermining the user's choice.
+    if options.content_selector.is_none() {
+        // ── Retry strategy ─────────────────────────────────────────
+        // Each stage relaxes cleanup constraints progressively when
+        // the extracted content is too short, measured by word count:
+        //
+        //   Stage 1 (<200 wc):  drop partial-selector removal
+        //   Stage 2 (<50 wc):   drop hidden-element removal; also try
+        //                        targeting the largest hidden subtree
+        //   Stage 3 (<30 wc):   drop scoring and content patterns;
+        //                        try body as fallback content root
+        //   Stage 4 (always):   if schema.org text has 1.5x more
+        //                        words, locate the DOM element or use
+        //                        raw text
+        // ──────────────────────────────────────────────────────────
 
-    // Stage 2: relax hidden-element removal
-    if result.word_count < 50 {
-        result = retry_without_hidden(html_str, options, result);
-    }
+        // Stage 1: relax partial selectors
+        if result.word_count < 200 {
+            result = retry_without_partials(html_str, options, &result);
+        }
 
-    // Stage 3: fully relaxed (no scoring, no patterns)
-    if result.word_count < 30 {
-        result = retry_fully_relaxed(html_str, options, result);
-    }
+        // Stage 2: relax hidden-element removal
+        if result.word_count < 50 {
+            result = retry_without_hidden(html_str, options, result);
+        }
 
-    // Stage 4: schema.org articleBody fallback
-    result = retry_schema_fallback(html_str, options, schema_data.as_ref(), result);
+        // Stage 3: fully relaxed (no scoring, no patterns)
+        if result.word_count < 30 {
+            result = retry_fully_relaxed(html_str, options, result);
+        }
+
+        // Stage 4: schema.org articleBody fallback
+        result = retry_schema_fallback(html_str, options, schema_data.as_ref(), result);
+    }
 
     let elapsed = start.elapsed();
     #[expect(clippy::cast_possible_truncation)]

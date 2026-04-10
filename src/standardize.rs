@@ -462,11 +462,14 @@ fn resolve_single_attr(html: &mut Html, node_id: NodeId, base: &url::Url, attr: 
     let Some(val) = dom::get_attr(html, node_id, attr) else {
         return;
     };
-    if val.starts_with("http://") || val.starts_with("https://") || val.starts_with("//") {
-        return;
-    }
+    // srcset values are comma-separated lists; individual entries may
+    // mix absolute and relative URLs, so always dispatch to the
+    // dedicated parser instead of short-circuiting on the first entry.
     if attr == "srcset" {
         resolve_srcset(html, node_id, base);
+        return;
+    }
+    if val.starts_with("http://") || val.starts_with("https://") || val.starts_with("//") {
         return;
     }
     let Ok(resolved) = base.join(&val) else {

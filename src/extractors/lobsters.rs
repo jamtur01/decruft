@@ -430,11 +430,8 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "real network call"]
     fn api_fetch_live() {
-        // Real network call — skip in CI
-        if std::env::var("CI").is_ok() {
-            return;
-        }
         let url = "https://lobste.rs/s/abc123";
         let result = try_api_fetch(Some(url), false);
         // Don't assert success — just verify it doesn't crash

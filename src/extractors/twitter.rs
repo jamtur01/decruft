@@ -354,11 +354,8 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "real network call"]
     fn oembed_on_live_tweet() {
-        // This test makes a real network call -- skip in CI
-        if std::env::var("CI").is_ok() {
-            return;
-        }
         let result = try_oembed("https://x.com/elikiris/status/1925627023102992830");
         if let Some(r) = result {
             assert!(!r.content.is_empty(), "oEmbed should return content");

@@ -62,8 +62,6 @@ Options:
   -s, --selector <SELECTOR>   CSS selector to override content root detection
   -f, --format <FORMAT>       Output format: json, html, text, or markdown [default: json]
   -d, --debug                 Include removal details in output
-  -F, --fetch                 Fetch the URL with curl before processing
-      --markdown              Convert output to Markdown
       --no-images             Strip all images
       --no-exact-selectors    Disable exact CSS selector removal
       --no-partial-selectors  Disable partial class/id pattern removal
@@ -108,7 +106,7 @@ options.url = Some("https://example.com/article".into());
 
 let result = parse(html, &options);
 
-assert_eq!(result.title, "My Article");
+assert_eq!(result.title, "My Article - Blog Name");
 assert!(result.content.contains("actual content"));
 assert!(!result.content.contains("Copyright"));
 ```

@@ -238,10 +238,12 @@ pub fn count_words_html(html_str: &str) -> usize {
     count_words(&decoded)
 }
 
-/// Strip HTML tags, replacing closing `>` with a space.
+/// Strip HTML tags and decode common HTML entities, producing plain
+/// text suitable for display.
 #[must_use]
 pub fn strip_html_tags(html: &str) -> String {
-    strip_tags(html)
+    let stripped = strip_tags(html);
+    decode_entities(&stripped)
 }
 
 fn strip_tags(html: &str) -> String {

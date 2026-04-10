@@ -306,11 +306,8 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "real network call"]
     fn api_fetch_on_live_page() {
-        // This test makes a real network call — skip in CI
-        if std::env::var("CI").is_ok() {
-            return;
-        }
         let result = try_api_fetch("ExtremeProgramming");
         if let Some(r) = result {
             assert!(r.content.len() > 100, "should have substantial content");
