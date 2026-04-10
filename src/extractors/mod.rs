@@ -1,9 +1,11 @@
 pub mod bbcode;
 pub mod comments;
+pub mod conversations;
 pub mod github;
 pub mod hackernews;
 pub mod reddit;
 pub mod substack;
+pub mod twitter;
 
 use scraper::Html;
 
@@ -17,24 +19,31 @@ pub struct ExtractorResult {
 
 /// Try each site-specific extractor in order.
 ///
-/// Returns the first successful extraction, or `None` if no extractor
-/// matched the page.
+/// Returns the first successful extraction along with the extractor
+/// type name, or `None` if no extractor matched the page.
 #[must_use]
-pub fn try_extract(html: &Html, url: Option<&str>) -> Option<ExtractorResult> {
+pub fn try_extract(
+    html: &Html,
+    url: Option<&str>,
+    include_replies: bool,
+) -> Option<(ExtractorResult, &'static str)> {
     // Note: BBCode and Substack are handled separately in decruft.rs
     // because they interact with the metadata pipeline differently.
 
-    if let Some(result) = github::extract_github(html, url) {
-        return Some(result);
+    if let Some(result) = github::extract_github(html, url, include_replies) {
+        return Some((result, "github"));
     }
-    if let Some(result) = reddit::extract_reddit(html, url) {
-        return Some(result);
+    if let Some(result) = reddit::extract_reddit(html, url, include_replies) {
+        return Some((result, "reddit"));
     }
-    if let Some(result) = hackernews::extract_hackernews(html, url) {
-        return Some(result);
+    if let Some(result) = hackernews::extract_hackernews(html, url, include_replies) {
+        return Some((result, "hackernews"));
     }
-    // C2 Wiki: skipped (async-only, requires API fetch).
-    // YouTube, Twitter/X, ChatGPT, Claude, Gemini, Grok: skipped
-    // because they require JS rendering or API calls.
+    if let Some(result) = twitter::extract_x_article(html, url) {
+        return Some((result, "twitter"));
+    }
+    if let Some(result) = conversations::extract_conversation(html, url) {
+        return Some((result, "conversation"));
+    }
     None
 }

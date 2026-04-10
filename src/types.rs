@@ -31,6 +31,8 @@ pub struct DecruftOptions {
     pub markdown: bool,
     /// Include Markdown alongside HTML content.
     pub separate_markdown: bool,
+    /// Include replies/comments in extracted content.
+    pub include_replies: bool,
 }
 
 impl Default for DecruftOptions {
@@ -49,6 +51,7 @@ impl Default for DecruftOptions {
             content_selector: None,
             markdown: false,
             separate_markdown: false,
+            include_replies: true,
         }
     }
 }
@@ -89,6 +92,9 @@ pub struct DecruftResult {
     /// All meta tags found on the page.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub meta_tags: Option<Vec<MetaTag>>,
+    /// Which site-specific extractor produced this result (if any).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub extractor_type: Option<String>,
     /// Debug information (only present when debug mode is enabled).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub debug: Option<DebugInfo>,

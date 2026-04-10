@@ -15,15 +15,21 @@ pub fn is_reddit(html: &Html, url: Option<&str>) -> bool {
 }
 
 /// Extract content from a Reddit page.
+///
+/// When `include_replies` is false, comments are omitted.
 #[must_use]
-pub fn extract_reddit(html: &Html, url: Option<&str>) -> Option<ExtractorResult> {
+pub fn extract_reddit(
+    html: &Html,
+    url: Option<&str>,
+    include_replies: bool,
+) -> Option<ExtractorResult> {
     if !is_reddit(html, url) {
         return None;
     }
     if is_old_reddit(html) {
-        extract_old_reddit(html, url)
+        extract_old_reddit(html, url, include_replies)
     } else if has_shreddit_post(html) {
-        extract_new_reddit(html, url)
+        extract_new_reddit(html, url, include_replies)
     } else {
         None
     }
@@ -58,7 +64,11 @@ fn get_subreddit(url: Option<&str>) -> String {
 
 // --- Old Reddit extraction ---
 
-fn extract_old_reddit(html: &Html, url: Option<&str>) -> Option<ExtractorResult> {
+fn extract_old_reddit(
+    html: &Html,
+    url: Option<&str>,
+    include_replies: bool,
+) -> Option<ExtractorResult> {
     let thing_ids = dom::select_ids(html, ".thing.link");
     let thing_id = thing_ids.first().copied()?;
 
@@ -73,7 +83,11 @@ fn extract_old_reddit(html: &Html, url: Option<&str>) -> Option<ExtractorResult>
         .map(|&id| dom::inner_html(html, id).trim().to_string())
         .unwrap_or_default();
 
-    let comments = extract_old_reddit_comments(html);
+    let comments = if include_replies {
+        extract_old_reddit_comments(html)
+    } else {
+        String::new()
+    };
     let content = build_content_html("reddit", &body, &comments);
 
     Some(ExtractorResult {
@@ -197,7 +211,11 @@ fn extract_old_comment_meta(html: &Html, comment_id: ego_tree::NodeId) -> (Strin
 
 // --- New Reddit extraction (shreddit) ---
 
-fn extract_new_reddit(html: &Html, url: Option<&str>) -> Option<ExtractorResult> {
+fn extract_new_reddit(
+    html: &Html,
+    url: Option<&str>,
+    include_replies: bool,
+) -> Option<ExtractorResult> {
     let title_ids = dom::select_ids(html, "h1");
     let title = title_ids
         .first()
@@ -216,7 +234,11 @@ fn extract_new_reddit(html: &Html, url: Option<&str>) -> Option<ExtractorResult>
         .map(|&id| dom::inner_html(html, id).trim().to_string())
         .unwrap_or_default();
 
-    let comments = extract_new_reddit_comments(html);
+    let comments = if include_replies {
+        extract_new_reddit_comments(html)
+    } else {
+        String::new()
+    };
     let content = build_content_html("reddit", &body, &comments);
 
     Some(ExtractorResult {
@@ -302,7 +324,7 @@ mod tests {
         let html = Html::parse_document(&html_str);
 
         assert!(is_reddit(&html, url));
-        let result = extract_reddit(&html, url).unwrap();
+        let result = extract_reddit(&html, url, true).unwrap();
 
         assert_eq!(result.title.as_deref(), Some("Test Post"));
         assert_eq!(result.author.as_deref(), Some("poster_user"));

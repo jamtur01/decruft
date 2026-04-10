@@ -34,6 +34,7 @@ pub mod extractors;
 pub mod footnotes;
 pub mod math;
 pub mod metadata;
+pub mod metadata_block;
 pub mod noscript;
 pub mod patterns;
 pub mod schema_org;

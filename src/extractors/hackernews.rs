@@ -17,8 +17,14 @@ pub fn is_hackernews(html: &Html, url: Option<&str>) -> bool {
 }
 
 /// Extract content from a Hacker News page.
+///
+/// When `include_replies` is false, comments are omitted.
 #[must_use]
-pub fn extract_hackernews(html: &Html, url: Option<&str>) -> Option<ExtractorResult> {
+pub fn extract_hackernews(
+    html: &Html,
+    url: Option<&str>,
+    include_replies: bool,
+) -> Option<ExtractorResult> {
     if !is_hackernews(html, url) {
         return None;
     }
@@ -29,9 +35,9 @@ pub fn extract_hackernews(html: &Html, url: Option<&str>) -> Option<ExtractorRes
     let is_comment_page = detect_comment_page(html);
 
     if is_comment_page {
-        extract_comment_page(html, url)
+        extract_comment_page(html, url, include_replies)
     } else {
-        extract_story_page(html, url)
+        extract_story_page(html, url, include_replies)
     }
 }
 
@@ -47,7 +53,11 @@ fn detect_comment_page(html: &Html) -> bool {
 
 // --- Story page extraction ---
 
-fn extract_story_page(html: &Html, _url: Option<&str>) -> Option<ExtractorResult> {
+fn extract_story_page(
+    html: &Html,
+    _url: Option<&str>,
+    include_replies: bool,
+) -> Option<ExtractorResult> {
     let fatitem_ids = dom::select_ids(html, ".fatitem");
     let fatitem = fatitem_ids.first().copied()?;
 
@@ -55,7 +65,11 @@ fn extract_story_page(html: &Html, _url: Option<&str>) -> Option<ExtractorResult
     let author = extract_author(html, fatitem);
     let _published = extract_date(html, fatitem);
     let post_content = extract_story_content(html, fatitem);
-    let comments = extract_comments(html);
+    let comments = if include_replies {
+        extract_comments(html)
+    } else {
+        String::new()
+    };
     let content = build_content_html("hackernews", &post_content, &comments);
 
     Some(ExtractorResult {
@@ -124,7 +138,11 @@ fn extract_story_content(html: &Html, fatitem: ego_tree::NodeId) -> String {
 
 // --- Comment page extraction ---
 
-fn extract_comment_page(html: &Html, _url: Option<&str>) -> Option<ExtractorResult> {
+fn extract_comment_page(
+    html: &Html,
+    _url: Option<&str>,
+    include_replies: bool,
+) -> Option<ExtractorResult> {
     let fatitem_ids = dom::select_ids(html, ".fatitem");
     let fatitem = fatitem_ids.first().copied()?;
 
@@ -132,7 +150,11 @@ fn extract_comment_page(html: &Html, _url: Option<&str>) -> Option<ExtractorResu
     let author = main_comment.author.clone();
     let title = build_comment_title(&main_comment);
     let post_content = build_comment(&main_comment);
-    let comments = extract_comments(html);
+    let comments = if include_replies {
+        extract_comments(html)
+    } else {
+        String::new()
+    };
     let content = build_content_html("hackernews", &post_content, &comments);
 
     Some(ExtractorResult {
@@ -292,13 +314,12 @@ mod tests {
 
     #[test]
     fn extract_hn_comment_page() {
-        // The "general" fixture is a single-comment page (has .onstory)
         let html_str = load_fixture("general--news.ycombinator.com-item-id=12345678.html");
         let url = Some("https://news.ycombinator.com/item?id=12345678");
         let html = Html::parse_document(&html_str);
 
         assert!(is_hackernews(&html, url));
-        let result = extract_hackernews(&html, url).unwrap();
+        let result = extract_hackernews(&html, url, true).unwrap();
 
         assert!(result.title.unwrap().contains("testuser"));
         assert_eq!(result.author.as_deref(), Some("testuser"));
@@ -307,20 +328,17 @@ mod tests {
 
     #[test]
     fn extract_hn_story_with_comments() {
-        // The "comments" fixture is a story page with comment thread
         let html_str = load_fixture("comments--news.ycombinator.com-item-id=12345678.html");
         let url = Some("https://news.ycombinator.com/item?id=12345678");
         let html = Html::parse_document(&html_str);
 
         assert!(is_hackernews(&html, url));
-        let result = extract_hackernews(&html, url).unwrap();
+        let result = extract_hackernews(&html, url, true).unwrap();
 
         assert_eq!(result.title.as_deref(), Some("A Sample Article"));
         assert_eq!(result.author.as_deref(), Some("author_one"));
         assert_eq!(result.site.as_deref(), Some("Hacker News"));
-        // Story link
         assert!(result.content.contains("example.com/article"));
-        // Comments
         assert!(result.content.contains("Comments"));
         assert!(result.content.contains("commenter_one"));
         assert!(result.content.contains("distributed systems"));

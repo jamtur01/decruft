@@ -476,6 +476,7 @@ fn build_result(
         site: meta.site_name,
         word_count,
         schema_org_data: schema_data,
+        extractor_type: None,
         meta_tags: if debug { Some(meta_tags) } else { None },
         debug: if debug {
             Some(DebugInfo {
@@ -532,7 +533,7 @@ fn try_bbcode(
     if word_count == 0 {
         return None;
     }
-    Some(build_extractor_result(
+    let mut result = build_extractor_result(
         bbcode.html,
         "div[data-partnereventstore]",
         start,
@@ -541,7 +542,9 @@ fn try_bbcode(
         schema_data,
         meta_tags,
         word_count,
-    ))
+    );
+    result.extractor_type = Some("bbcode".to_string());
+    Some(result)
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -559,7 +562,7 @@ fn try_substack(
     if word_count == 0 {
         return None;
     }
-    Some(build_extractor_result(
+    let mut result = build_extractor_result(
         substack.html,
         "feedCommentBody",
         start,
@@ -568,7 +571,9 @@ fn try_substack(
         schema_data,
         meta_tags,
         word_count,
-    ))
+    );
+    result.extractor_type = Some("substack".to_string());
+    Some(result)
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -615,7 +620,8 @@ fn try_site_extractors(
     schema_data: Option<&serde_json::Value>,
     meta_tags: &[crate::types::MetaTag],
 ) -> Option<DecruftResult> {
-    let extracted = extractors::try_extract(html, options.url.as_deref())?;
+    let (extracted, extractor_name) =
+        extractors::try_extract(html, options.url.as_deref(), options.include_replies)?;
     if let Some(t) = &extracted.title
         && meta.title.is_empty()
     {
@@ -635,7 +641,7 @@ fn try_site_extractors(
     if word_count == 0 {
         return None;
     }
-    Some(build_extractor_result(
+    let mut result = build_extractor_result(
         extracted.content,
         "site-extractor",
         start,
@@ -644,7 +650,9 @@ fn try_site_extractors(
         schema_data,
         meta_tags,
         word_count,
-    ))
+    );
+    result.extractor_type = Some(extractor_name.to_string());
+    Some(result)
 }
 
 /// Apply Substack-extracted metadata to the result metadata.

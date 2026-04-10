@@ -18,17 +18,23 @@ pub fn is_github(html: &Html, url: Option<&str>) -> bool {
 }
 
 /// Extract content from a GitHub issue or pull request page.
+///
+/// When `include_replies` is false, comments are omitted.
 #[must_use]
-pub fn extract_github(html: &Html, url: Option<&str>) -> Option<ExtractorResult> {
+pub fn extract_github(
+    html: &Html,
+    url: Option<&str>,
+    include_replies: bool,
+) -> Option<ExtractorResult> {
     if !is_github(html, url) {
         return None;
     }
 
     let is_pr = url.is_some_and(is_pr_url) || has_pr_markers(html);
     if is_pr {
-        Some(extract_pr(html, url))
+        Some(extract_pr(html, url, include_replies))
     } else {
-        Some(extract_issue(html, url))
+        Some(extract_issue(html, url, include_replies))
     }
 }
 
@@ -102,11 +108,15 @@ fn extract_repo_info(url: Option<&str>) -> (String, String) {
 
 // --- Issue extraction ---
 
-fn extract_issue(html: &Html, url: Option<&str>) -> ExtractorResult {
+fn extract_issue(html: &Html, url: Option<&str>, include_replies: bool) -> ExtractorResult {
     let (owner, repo) = extract_repo_info(url);
     let title = extract_title(html);
     let (body, author) = extract_issue_body(html);
-    let comments = extract_issue_comments(html);
+    let comments = if include_replies {
+        extract_issue_comments(html)
+    } else {
+        String::new()
+    };
     let content = build_content_html("github", &body, &comments);
 
     ExtractorResult {
@@ -239,11 +249,15 @@ fn extract_relative_time(html: &Html, container_id: ego_tree::NodeId) -> String 
 
 // --- PR extraction ---
 
-fn extract_pr(html: &Html, url: Option<&str>) -> ExtractorResult {
+fn extract_pr(html: &Html, url: Option<&str>, include_replies: bool) -> ExtractorResult {
     let (owner, repo) = extract_repo_info(url);
     let title = extract_title(html);
     let (body, author) = extract_pr_body(html);
-    let comments = extract_pr_comments(html);
+    let comments = if include_replies {
+        extract_pr_comments(html)
+    } else {
+        String::new()
+    };
     let content = build_content_html("github", &body, &comments);
 
     ExtractorResult {
@@ -365,7 +379,7 @@ mod tests {
         let html = Html::parse_document(&html_str);
 
         assert!(is_github(&html, url.as_deref()));
-        let result = extract_github(&html, url.as_deref()).unwrap();
+        let result = extract_github(&html, url.as_deref(), true).unwrap();
 
         assert!(result.title.as_ref().unwrap().contains("Issue #56"));
         assert!(result.site.as_ref().unwrap().contains("GitHub"));
@@ -382,7 +396,7 @@ mod tests {
         let html = Html::parse_document(&html_str);
 
         assert!(is_github(&html, url.as_deref()));
-        let result = extract_github(&html, url.as_deref()).unwrap();
+        let result = extract_github(&html, url.as_deref(), true).unwrap();
 
         assert!(result.title.unwrap().contains("Pull Request #42"));
         assert_eq!(result.author.as_deref(), Some("author-one"));
