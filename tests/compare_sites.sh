@@ -70,16 +70,17 @@ for url in "${URLS[@]}"; do
         SKIP=$((SKIP + 1)); continue
     fi
 
-    # ── Decruft (4 formats) ──
+    # ── Decruft (3 shared formats + text) ──
     dc_start=$(python3 -c "import time; print(int(time.time()*1000))")
     $DECRUFT "$html_file" --url "$url" -f json >"$OUTDIR/${name}.dc.json" 2>/dev/null
     $DECRUFT "$html_file" --url "$url" -f html >"$OUTDIR/${name}.dc.html" 2>/dev/null
-    $DECRUFT "$html_file" --url "$url" -f text >"$OUTDIR/${name}.dc.text" 2>/dev/null
     $DECRUFT "$html_file" --url "$url" -f markdown >"$OUTDIR/${name}.dc.md" 2>/dev/null
     dc_end=$(python3 -c "import time; print(int(time.time()*1000))")
     dc_ms=$((dc_end - dc_start))
+    # Text is decruft-only (defuddle has no text mode); run separately, not timed
+    $DECRUFT "$html_file" --url "$url" -f text >"$OUTDIR/${name}.dc.text" 2>/dev/null
 
-    # ── Defuddle (all 3 formats: json, html, markdown) ──
+    # ── Defuddle (same 3 formats: json, html, markdown) ──
     df_start=$(python3 -c "import time; print(int(time.time()*1000))")
     if ! timeout 45 npx defuddle parse --json "$html_file" >"$OUTDIR/${name}.df.json" 2>/dev/null; then
         echo "SKIP (defuddle json failed)"
