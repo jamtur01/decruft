@@ -400,6 +400,32 @@ pub fn has_descendant_matching(html: &Html, node_id: NodeId, selector_str: &str)
         .any(|el| is_ancestor(html, el.id(), node_id))
 }
 
+/// Check if the element itself matches a CSS selector.
+#[must_use]
+pub fn element_matches(html: &Html, node_id: NodeId, selector_str: &str) -> bool {
+    let Ok(sel) = Selector::parse(selector_str) else {
+        return false;
+    };
+    html.select(&sel).any(|el| el.id() == node_id)
+}
+
+/// Check if element or any ancestor matches a CSS selector.
+#[must_use]
+pub fn self_or_ancestor_matches(html: &Html, node_id: NodeId, selector_str: &str) -> bool {
+    let Ok(sel) = Selector::parse(selector_str) else {
+        return false;
+    };
+    let matching_ids: Vec<NodeId> = html.select(&sel).map(|el| el.id()).collect();
+    let mut current = Some(node_id);
+    while let Some(id) = current {
+        if matching_ids.contains(&id) {
+            return true;
+        }
+        current = parent_element(html, id);
+    }
+    false
+}
+
 /// Count descendants of `node_id` matching a CSS selector.
 #[must_use]
 pub fn count_descendants_matching(html: &Html, node_id: NodeId, selector_str: &str) -> usize {

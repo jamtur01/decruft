@@ -11,40 +11,56 @@ static CONTENT_CLASS_RE: LazyLock<Regex> = LazyLock::new(|| {
         .unwrap_or_else(|_| Regex::new("a]^").expect("infallible fallback"))
 });
 
+// Fix #4: added admonition, image, img, font, figure, figcaption, pre, table
 static LIKELY_CONTENT_CLASS_RE: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r"(?i)(article|content|entry|main|post|story)")
-        .unwrap_or_else(|_| Regex::new("a]^").expect("infallible fallback"))
-});
-
-static NAV_INDICATORS_RE: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(concat!(
-        r"(?i)",
-        r"(advertisement|all rights reserved|banner|cookie|",
-        r"comments|copyright|follow me|follow us|footer|",
-        r"header|homepage|login|menu|more articles|",
-        r"more like this|most read|nav|navigation|",
-        r"newsletter|popular|privacy|recommended|register|",
-        r"related|responses|share|sidebar|sign in|sign up|",
-        r"signup|social|sponsored|subscribe|terms|trending)"
+        r"(?i)(admonition|article|content|entry|figcaption|",
+        r"figure|font|image|img|main|post|pre|story|table)"
     ))
     .unwrap_or_else(|_| Regex::new("a]^").expect("infallible fallback"))
 });
 
+// Fix #7: each nav indicator wrapped with \b word boundaries
+static NAV_INDICATORS_RE: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(concat!(
+        r"(?i)",
+        r"(\b(?:advertisement)\b|\b(?:all rights reserved)\b|",
+        r"\b(?:banner)\b|\b(?:cookie)\b|",
+        r"\b(?:comments)\b|\b(?:copyright)\b|",
+        r"\b(?:follow me)\b|\b(?:follow us)\b|\b(?:footer)\b|",
+        r"\b(?:header)\b|\b(?:homepage)\b|\b(?:login)\b|",
+        r"\b(?:menu)\b|\b(?:more articles)\b|",
+        r"\b(?:more like this)\b|\b(?:most read)\b|",
+        r"\b(?:nav)\b|\b(?:navigation)\b|",
+        r"\b(?:newsletter)\b|\b(?:popular)\b|\b(?:privacy)\b|",
+        r"\b(?:recommended)\b|\b(?:register)\b|",
+        r"\b(?:related)\b|\b(?:responses)\b|\b(?:share)\b|",
+        r"\b(?:sidebar)\b|\b(?:sign in)\b|\b(?:sign up)\b|",
+        r"\b(?:signup)\b|\b(?:social)\b|\b(?:sponsored)\b|",
+        r"\b(?:subscribe)\b|\b(?:terms)\b|\b(?:trending)\b)"
+    ))
+    .unwrap_or_else(|_| Regex::new("a]^").expect("infallible fallback"))
+});
+
+// Fix #8: add homepage, popular, privacy, recommended, rights, terms,
+// trending; remove popup, promo; change sponsor to sponsored
 static NON_CONTENT_RE: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(concat!(
         r"(?i)",
         r"(advert|ad-|ads|banner|cookie|copyright|footer|",
-        r"header|menu|nav|newsletter|popup|promo|related|",
-        r"share|sidebar|social|sponsor|subscribe|widget)"
+        r"header|homepage|menu|nav|newsletter|popular|privacy|",
+        r"recommended|related|rights|share|sidebar|social|",
+        r"sponsored|subscribe|terms|trending|widget)"
     ))
     .unwrap_or_else(|_| Regex::new("a]^").expect("infallible fallback"))
 });
 
+// Fix #3: case-sensitive, match capital letter after "By "
 static BYLINE_RE: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r"(?i)\bBy\s+[A-Z][a-z]+")
-        .unwrap_or_else(|_| Regex::new("a]^").expect("infallible fallback"))
+    Regex::new(r"\bBy\s+[A-Z]").unwrap_or_else(|_| Regex::new("a]^").expect("infallible fallback"))
 });
 
+// Loose date regex for byline detection (no year required)
 static DATE_RE: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(concat!(
         r"(?i)",
@@ -55,13 +71,45 @@ static DATE_RE: LazyLock<Regex> = LazyLock::new(|| {
     .unwrap_or_else(|_| Regex::new("a]^").expect("infallible fallback"))
 });
 
+// Fix #1: strict date regex for scoring (requires 4-digit year)
+static CONTENT_DATE_RE: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(concat!(
+        r"(?i)\b(?:",
+        r"(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)",
+        r"[a-z]*\s+\d{1,2},?\s+\d{4}",
+        r"|",
+        r"\d{1,2}(?:st|nd|rd|th)?\s+",
+        r"(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)",
+        r"[a-z]*,?\s+\d{4}",
+        r")\b"
+    ))
+    .unwrap_or_else(|_| Regex::new("a]^").expect("infallible fallback"))
+});
+
+// Fix #2: author regex requires trailing name characters
 static AUTHOR_RE: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r"(?i)\b(?:by|written by|author:)\s+")
+    Regex::new(r"(?i)\b(?:by|written by|author:)\s+[A-Za-z\s]+\b")
         .unwrap_or_else(|_| Regex::new("a]^").expect("infallible fallback"))
 });
 
 static SENTENCE_PUNCT_RE: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(r"[.!?]").unwrap_or_else(|_| Regex::new("a]^").expect("infallible fallback"))
+});
+
+// Fix #9: social profile regex with negative lookahead (fancy_regex)
+static SOCIAL_PROFILE_RE: LazyLock<fancy_regex::Regex> = LazyLock::new(|| {
+    fancy_regex::Regex::new(concat!(
+        r"(?i)\b(",
+        r"linkedin\.com/(in|company)/|",
+        r"twitter\.com/(?!intent\b)\w|",
+        r"x\.com/(?!intent\b)\w|",
+        r"facebook\.com/(?!share\b)\w|",
+        r"instagram\.com/\w|",
+        r"threads\.net/\w|",
+        r"mastodon\.\w",
+        r")"
+    ))
+    .unwrap_or_else(|_| fancy_regex::Regex::new("a]^").expect("infallible fallback"))
 });
 
 /// CSS selector for elements that indicate real content and should be
@@ -70,8 +118,6 @@ pub const CONTENT_ELEMENT_SELECTOR: &str = concat!(
     "math, .katex, .MathJax, mjx-container, ",
     "code, pre, table, img, blockquote, figure"
 );
-
-const SOCIAL_DOMAINS: &[&str] = &["twitter.com", "linkedin.com", "facebook.com"];
 
 const FOOTNOTE_REF_SELECTOR: &str = "a[href^=\"#fn\"], sup.reference";
 
@@ -104,23 +150,51 @@ fn is_right_aligned(html: &Html, node_id: NodeId) -> bool {
     false
 }
 
-/// Detect center table cell layout (table cell with large width,
-/// content/article class).
-fn is_center_table_cell(html: &Html, node_id: NodeId) -> bool {
-    let tds = dom::descendant_elements_by_tag(html, node_id, "td");
-    for td_id in tds {
-        let class_id = class_and_id(html, td_id);
-        if !CONTENT_CLASS_RE.is_match(&class_id) {
-            continue;
+/// Fix #11: check if the scored element itself is a `<td>` inside a
+/// layout table (width>400), with align=center or content class,
+/// and is not the first or last child of its parent.
+fn is_layout_table_cell(html: &Html, node_id: NodeId) -> bool {
+    let Some(tag) = dom::tag_name(html, node_id) else {
+        return false;
+    };
+    if tag != "td" {
+        return false;
+    }
+    // Check align=center or content class
+    let has_center =
+        dom::get_attr(html, node_id, "align").is_some_and(|a| a.eq_ignore_ascii_case("center"));
+    let class_id = class_and_id(html, node_id);
+    if !has_center && !CONTENT_CLASS_RE.is_match(&class_id) {
+        return false;
+    }
+    // Must not be first or last child
+    if let Some(parent_id) = dom::parent_element(html, node_id) {
+        let siblings = dom::child_elements(html, parent_id);
+        if siblings.first() == Some(&node_id) || siblings.last() == Some(&node_id) {
+            return false;
         }
-        if let Some(width) = dom::get_attr(html, td_id, "width")
-            && let Ok(w) = width.trim_end_matches("px").parse::<u32>()
-            && w > 400
+        // Check containing table has width > 400
+        if let Some(table_tag) = dom::tag_name(html, parent_id)
+            && table_tag == "table"
         {
-            return true;
+            return table_has_large_width(html, parent_id);
+        }
+        // Walk up to find the table
+        let mut cur = Some(parent_id);
+        while let Some(id) = cur {
+            if dom::tag_name(html, id).as_deref() == Some("table") {
+                return table_has_large_width(html, id);
+            }
+            cur = dom::parent_element(html, id);
         }
     }
     false
+}
+
+fn table_has_large_width(html: &Html, table_id: NodeId) -> bool {
+    dom::get_attr(html, table_id, "width")
+        .and_then(|w| w.trim_end_matches("px").parse::<u32>().ok())
+        .is_some_and(|w| w > 400)
 }
 
 /// Score an element for content likelihood.
@@ -161,7 +235,8 @@ fn score_alignment_and_metadata(html: &Html, node_id: NodeId, text: &str) -> f64
     if is_right_aligned(html, node_id) {
         bonus += 5.0;
     }
-    if DATE_RE.is_match(text) {
+    // Fix #1: use strict date regex requiring 4-digit year
+    if CONTENT_DATE_RE.is_match(text) {
         bonus += 10.0;
     }
     if AUTHOR_RE.is_match(text) {
@@ -170,7 +245,7 @@ fn score_alignment_and_metadata(html: &Html, node_id: NodeId, text: &str) -> f64
     bonus
 }
 
-/// Bonus for footnotes, center table cells, and penalty for nested
+/// Bonus for footnotes, layout table cells, and penalty for nested
 /// tables.
 #[allow(clippy::cast_precision_loss)]
 fn score_footnotes_and_tables(html: &Html, node_id: NodeId) -> f64 {
@@ -183,7 +258,8 @@ fn score_footnotes_and_tables(html: &Html, node_id: NodeId) -> f64 {
     }
     let nested_tables = dom::descendant_elements_by_tag(html, node_id, "table").len();
     bonus -= nested_tables as f64 * 5.0;
-    if is_center_table_cell(html, node_id) {
+    // Fix #11: check if element itself is a layout table cell
+    if is_layout_table_cell(html, node_id) {
         bonus += 10.0;
     }
     bonus
@@ -191,6 +267,7 @@ fn score_footnotes_and_tables(html: &Html, node_id: NodeId) -> f64 {
 
 /// Find the best-scoring element from a list, above
 /// `min_score` threshold.
+/// Fix #14: on tie, pick the last element (>= instead of >).
 #[must_use]
 pub fn find_best_element(html: &Html, elements: &[NodeId], min_score: f64) -> Option<NodeId> {
     let mut best: Option<(NodeId, f64)> = None;
@@ -199,7 +276,7 @@ pub fn find_best_element(html: &Html, elements: &[NodeId], min_score: f64) -> Op
         if score < min_score {
             continue;
         }
-        let dominated = best.is_some_and(|(_, best_score)| score <= best_score);
+        let dominated = best.is_some_and(|(_, best_score)| score < best_score);
         if !dominated {
             best = Some((id, score));
         }
@@ -229,9 +306,15 @@ pub fn is_likely_content(html: &Html, node_id: NodeId) -> bool {
     let text = dom::text_content(html, node_id);
     let word_count = dom::count_words(&text);
 
-    // Quick rejection for small nav-like elements
-    if word_count < 200 && has_nav_heading(html, node_id) {
-        return false;
+    // Fix #5: nav heading rejection with 200-999 word tier
+    if word_count < 1000 && has_nav_heading(html, node_id) {
+        if word_count < 200 {
+            return false;
+        }
+        let link_density = dom::link_density_with_text(html, node_id, &text);
+        if link_density > 0.2 {
+            return false;
+        }
     }
     if is_card_grid(html, node_id) {
         return false;
@@ -246,6 +329,11 @@ pub fn is_likely_content(html: &Html, node_id: NodeId) -> bool {
 
     let paragraph_count = dom::descendant_elements_by_tag(html, node_id, "p").len();
     let list_item_count = dom::descendant_elements_by_tag(html, node_id, "li").len();
+
+    // Fix #6: words > 30 with at least one content block
+    if word_count > 30 && (paragraph_count + list_item_count) > 0 {
+        return true;
+    }
     if word_count > 50 && (paragraph_count + list_item_count) > 1 {
         return true;
     }
@@ -273,32 +361,43 @@ fn has_nav_heading(html: &Html, node_id: NodeId) -> bool {
     false
 }
 
-/// Detect card grid pattern: 3+ headings, 2+ images, sparse prose.
+/// Fix #10: detect card grid pattern.
+/// Only check h2-h4, skip if words < 3 or >= 500, subtract heading
+/// word count from total before computing prose-per-heading.
 #[allow(clippy::cast_precision_loss)]
 fn is_card_grid(html: &Html, node_id: NodeId) -> bool {
-    let mut heading_count = 0usize;
-    for tag in &["h1", "h2", "h3", "h4", "h5", "h6"] {
-        heading_count += dom::descendant_elements_by_tag(html, node_id, tag).len();
+    let text = dom::text_content(html, node_id);
+    let total_words = dom::count_words(&text);
+    if !(3..500).contains(&total_words) {
+        return false;
     }
-    if heading_count < 3 {
+    let mut heading_ids = Vec::new();
+    for tag in &["h2", "h3", "h4"] {
+        heading_ids.extend(dom::descendant_elements_by_tag(html, node_id, tag));
+    }
+    if heading_ids.len() < 3 {
         return false;
     }
     let image_count = dom::descendant_elements_by_tag(html, node_id, "img").len();
     if image_count < 2 {
         return false;
     }
-    let text = dom::text_content(html, node_id);
-    let total_words = dom::count_words(&text);
-    let words_per_heading = total_words as f64 / heading_count as f64;
+    let heading_words: usize = heading_ids
+        .iter()
+        .map(|&h_id| dom::count_words(&dom::text_content(html, h_id)))
+        .sum();
+    let prose_words = total_words.saturating_sub(heading_words);
+    let words_per_heading = prose_words as f64 / heading_ids.len() as f64;
     words_per_heading < 20.0
 }
 
-/// Check if element has links to social profile domains.
+/// Fix #9: check social profile links with full regex including
+/// negative lookahead for intent/share URLs.
 fn has_social_profile_links(html: &Html, node_id: NodeId) -> bool {
     let hrefs = dom::collect_link_hrefs(html, node_id);
     hrefs
         .iter()
-        .any(|href| SOCIAL_DOMAINS.iter().any(|domain| href.contains(domain)))
+        .any(|href| SOCIAL_PROFILE_RE.is_match(href).unwrap_or(false))
 }
 
 /// Check if any descendant has a structural content tag.
@@ -348,8 +447,11 @@ fn has_descendant_with_tag(html: &Html, node_id: NodeId, tags: &[&str]) -> bool 
 /// Score a non-content block. Negative score = should be removed.
 #[allow(clippy::cast_precision_loss)]
 pub fn score_non_content(html: &Html, node_id: NodeId) -> f64 {
-    // Skip scoring for footnote lists -- preserve them
-    if dom::has_descendant_matching(html, node_id, FOOTNOTE_LIST_SELECTOR) {
+    // Fix #12: skip if element itself, any ancestor, or any descendant
+    // matches footnote list selectors
+    if dom::self_or_ancestor_matches(html, node_id, FOOTNOTE_LIST_SELECTOR)
+        || dom::has_descendant_matching(html, node_id, FOOTNOTE_LIST_SELECTOR)
+    {
         return 0.0;
     }
 

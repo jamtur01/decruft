@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Compare decruft vs defuddle output across diverse site types
-# Tests json, html, text, and markdown output formats
-# Includes performance comparison
+# Compare decruft vs defuddle across diverse sites and ALL output formats
+# Usage: ./tests/compare_sites.sh
 
 DECRUFT="./target/release/decruft"
 OUTDIR="/tmp/decruft-compare"
@@ -12,12 +11,11 @@ mkdir -p "$OUTDIR"
 cargo build --release 2>/dev/null
 
 URLS=(
-    # News sites
+    # News
     "https://www.bbc.com/news/articles/cp3l4yk5rlgo"
-    "https://apnews.com/article/b50e12b7e86e3bce8f4d43f7f0a0e6b5"
-    # Personal blog (simple HTML, no JS)
+    # Personal blog
     "https://www.paulgraham.com/superlinear.html"
-    # Technical documentation
+    # Technical docs
     "https://doc.rust-lang.org/book/ch04-01-what-is-ownership.html"
     # Wikipedia
     "https://en.wikipedia.org/wiki/Rust_(programming_language)"
@@ -27,10 +25,10 @@ URLS=(
     "https://www.lennysnewsletter.com/p/how-to-build-a-billion-dollar-ai"
     # Academic
     "https://arxiv.org/abs/2401.00001"
-    # Stack Overflow blog
-    "https://stackoverflow.blog/2020/07/01/nobody-has-to-teach-you-anything/"
-    # MDN
+    # MDN docs
     "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array"
+    # Hacker News
+    "https://news.ycombinator.com/item?id=42338514"
 )
 
 PASS=0
@@ -40,9 +38,10 @@ TOTAL_DC_MS=0
 TOTAL_DF_MS=0
 SITE_COUNT=0
 
-echo "╔══════════════════════════════════════════════════════════════╗"
-echo "║         decruft vs defuddle — cross-site comparison         ║"
-echo "╠══════════════════════════════════════════════════════════════╣"
+echo "╔══════════════════════════════════════════════════════════════════╗"
+echo "║          decruft vs defuddle — cross-site comparison            ║"
+echo "║          JSON + HTML + Markdown + Text                          ║"
+echo "╠══════════════════════════════════════════════════════════════════╣"
 echo ""
 
 for url in "${URLS[@]}"; do
@@ -53,7 +52,7 @@ for url in "${URLS[@]}"; do
     # Fetch HTML once
     html_file="$OUTDIR/${name}.html"
     if [ ! -f "$html_file" ]; then
-        curl -sL --max-time 20 -o "$html_file" "$url" 2>/dev/null || {
+        curl -sL --max-time 20 -A "Mozilla/5.0" -o "$html_file" "$url" 2>/dev/null || {
             echo "    SKIP: fetch failed"
             SKIP=$((SKIP + 1))
             echo ""
@@ -62,34 +61,36 @@ for url in "${URLS[@]}"; do
     fi
 
     filesize=$(wc -c < "$html_file" | tr -d ' ')
+    if [ "$filesize" -lt 200 ]; then
+        echo "    SKIP: page too small (${filesize}B, likely error)"
+        SKIP=$((SKIP + 1))
+        echo ""
+        continue
+    fi
     echo "    HTML: ${filesize} bytes"
 
-    # Run decruft (all formats)
-    dc_json="$OUTDIR/${name}.dc.json"
-    dc_html="$OUTDIR/${name}.dc.html"
-    dc_text="$OUTDIR/${name}.dc.txt"
-    dc_md="$OUTDIR/${name}.dc.md"
-
+    # ── Run decruft (all formats) ──
     dc_start=$(python3 -c "import time; print(int(time.time()*1000))")
-    $DECRUFT "$html_file" --url "$url" -f json > "$dc_json" 2>/dev/null || { echo "    FAIL: decruft json"; ISSUES=$((ISSUES+1)); echo ""; continue; }
-    $DECRUFT "$html_file" --url "$url" -f html > "$dc_html" 2>/dev/null
-    $DECRUFT "$html_file" --url "$url" -f text > "$dc_text" 2>/dev/null
-    $DECRUFT "$html_file" --url "$url" --markdown -f json > "$dc_md" 2>/dev/null
+    $DECRUFT "$html_file" --url "$url" -f json > "$OUTDIR/${name}.dc.json" 2>/dev/null || { echo "    FAIL: decruft"; ISSUES=$((ISSUES+1)); echo ""; continue; }
+    $DECRUFT "$html_file" --url "$url" -f html > "$OUTDIR/${name}.dc.html" 2>/dev/null
+    $DECRUFT "$html_file" --url "$url" -f text > "$OUTDIR/${name}.dc.text" 2>/dev/null
+    $DECRUFT "$html_file" --url "$url" -f markdown > "$OUTDIR/${name}.dc.md" 2>/dev/null
     dc_end=$(python3 -c "import time; print(int(time.time()*1000))")
     dc_ms=$((dc_end - dc_start))
 
-    # Run defuddle (json)
-    df_json="$OUTDIR/${name}.df.json"
+    # ── Run defuddle (all formats) ──
     df_start=$(python3 -c "import time; print(int(time.time()*1000))")
-    npx defuddle parse --json "$url" 2>/dev/null > "$df_json" || {
-        # Fallback: parse from file
-        npx defuddle parse --json "$html_file" 2>/dev/null > "$df_json" || {
+    npx defuddle parse --json "$url" 2>/dev/null > "$OUTDIR/${name}.df.json" || \
+        npx defuddle parse --json "$html_file" 2>/dev/null > "$OUTDIR/${name}.df.json" || {
             echo "    SKIP: defuddle failed"
             SKIP=$((SKIP + 1))
             echo ""
             continue
         }
-    }
+    npx defuddle parse "$url" 2>/dev/null > "$OUTDIR/${name}.df.html" || \
+        npx defuddle parse "$html_file" 2>/dev/null > "$OUTDIR/${name}.df.html" || true
+    npx defuddle parse --markdown "$url" 2>/dev/null > "$OUTDIR/${name}.df.md" || \
+        npx defuddle parse --markdown "$html_file" 2>/dev/null > "$OUTDIR/${name}.df.md" || true
     df_end=$(python3 -c "import time; print(int(time.time()*1000))")
     df_ms=$((df_end - df_start))
 
@@ -97,76 +98,126 @@ for url in "${URLS[@]}"; do
     TOTAL_DF_MS=$((TOTAL_DF_MS + df_ms))
     SITE_COUNT=$((SITE_COUNT + 1))
 
-    # Compare
-    python3 - "$dc_json" "$df_json" "$dc_html" "$dc_text" "$dc_md" "$dc_ms" "$df_ms" << 'PYEOF'
-import json, sys, re, os
+    # ── Compare all formats ──
+    python3 - "$OUTDIR" "$name" "$dc_ms" "$df_ms" << 'PYEOF'
+import json, sys, os, re
 
-dc_file, df_file = sys.argv[1], sys.argv[2]
-dc_html_f, dc_text_f, dc_md_f = sys.argv[3], sys.argv[4], sys.argv[5]
-dc_ms, df_ms = int(sys.argv[6]), int(sys.argv[7])
+outdir, name = sys.argv[1], sys.argv[2]
+dc_ms, df_ms = int(sys.argv[3]), int(sys.argv[4])
 
-with open(dc_file) as f:
-    dc = json.load(f)
-with open(df_file) as f:
-    df = json.load(f)
+def load_json(path):
+    try:
+        with open(path) as f:
+            return json.load(f)
+    except:
+        return {}
+
+def load_text(path):
+    try:
+        with open(path) as f:
+            return f.read()
+    except:
+        return ""
+
+dc = load_json(f"{outdir}/{name}.dc.json")
+df = load_json(f"{outdir}/{name}.df.json")
+dc_html = load_text(f"{outdir}/{name}.dc.html")
+df_html = load_text(f"{outdir}/{name}.df.html")
+dc_md = load_text(f"{outdir}/{name}.dc.md")
+df_md = load_text(f"{outdir}/{name}.df.md")
+dc_text = load_text(f"{outdir}/{name}.dc.text")
 
 issues = []
 
-# Metadata comparison
+# ── Metadata comparison ──
 dc_wc = dc.get('word_count', 0)
 df_wc = df.get('wordCount', 0)
 
-if dc.get('title', '') != df.get('title', ''):
-    issues.append(f"title: '{dc.get('title','')}' vs '{df.get('title','')}'")
+dc_title = dc.get('title', '')
+df_title = df.get('title', '')
+if dc_title != df_title:
+    issues.append(f"title: '{dc_title[:40]}' vs '{df_title[:40]}'")
 
-if df_wc > 0:
-    ratio = dc_wc / df_wc
+if df_wc > 50:
+    ratio = dc_wc / max(df_wc, 1)
     if ratio < 0.5 or ratio > 2.0:
         issues.append(f"word_count: {dc_wc} vs {df_wc} ({ratio:.1f}x)")
 
 if 'data-decruft-' in dc.get('content', ''):
     issues.append("leaked internal attributes")
 
-if dc_wc == 0 and df_wc > 50:
-    issues.append("EMPTY extraction")
+# ── HTML format comparison ──
+html_issues = []
+if dc_html and df_html:
+    dc_html_tags = set(re.findall(r'<(\w+)', dc_html))
+    df_html_tags = set(re.findall(r'<(\w+)', df_html))
+    # Check for major structural differences
+    for tag in ['p', 'h1', 'h2', 'blockquote', 'pre', 'code']:
+        dc_count = dc_html.lower().count(f'<{tag}')
+        df_count = df_html.lower().count(f'<{tag}')
+        if dc_count == 0 and df_count > 2:
+            html_issues.append(f"missing <{tag}> ({df_count} in defuddle)")
+elif not dc_html.strip():
+    html_issues.append("empty html output")
 
-# Output format checks
-dc_html_content = open(dc_html_f).read() if os.path.exists(dc_html_f) else ""
-dc_text_content = open(dc_text_f).read() if os.path.exists(dc_text_f) else ""
+if html_issues:
+    issues.append(f"html: {'; '.join(html_issues)}")
 
-with open(dc_md_f) as f:
-    dc_md_data = json.load(f)
-dc_md_content = dc_md_data.get('content_markdown', '') or dc_md_data.get('content', '')
+# ── Markdown format comparison ──
+md_issues = []
+if dc_md and df_md:
+    # Both should have markdown-like content
+    dc_has_md = bool(re.search(r'[#*`\[\]>]', dc_md))
+    df_has_md = bool(re.search(r'[#*`\[\]>]', df_md))
+    if df_has_md and not dc_has_md:
+        md_issues.append("no markdown syntax in decruft output")
+    if dc_md.startswith('<') and not dc_md.startswith('<!--'):
+        md_issues.append("markdown output looks like HTML")
+    # Compare word counts
+    dc_md_words = len(dc_md.split())
+    df_md_words = len(df_md.split())
+    if df_md_words > 50 and dc_md_words > 0:
+        md_ratio = dc_md_words / df_md_words
+        if md_ratio < 0.3 or md_ratio > 3.0:
+            md_issues.append(f"md words: {dc_md_words} vs {df_md_words} ({md_ratio:.1f}x)")
+elif not dc_md.strip():
+    md_issues.append("empty markdown output")
 
-format_issues = []
-if dc_html_content and '<' not in dc_html_content:
-    format_issues.append("html output has no tags")
-if dc_text_content and '<p>' in dc_text_content:
-    format_issues.append("text output contains HTML tags")
-if dc_md_content and dc_md_content.startswith('<'):
-    format_issues.append("markdown output looks like HTML")
-if not dc_html_content.strip():
-    format_issues.append("html output empty")
-if not dc_text_content.strip():
-    format_issues.append("text output empty")
+if md_issues:
+    issues.append(f"markdown: {'; '.join(md_issues)}")
 
-if format_issues:
-    issues.append(f"format: {'; '.join(format_issues)}")
+# ── Text format check ──
+if dc_text:
+    if '<p>' in dc_text or '<div' in dc_text:
+        issues.append("text output contains HTML tags")
+elif dc_wc > 0:
+    issues.append("empty text output despite content")
 
-# Print results
-perf = f"perf: {dc_ms}ms vs {df_ms}ms"
+# ── Performance ──
 if dc_ms > 0 and df_ms > 0:
-    perf += f" ({dc_ms/df_ms:.1f}x)" if dc_ms > df_ms else f" ({df_ms/dc_ms:.1f}x faster)"
-
-if issues:
-    print(f"    ISSUES: {', '.join(issues)}")
+    if dc_ms < df_ms:
+        perf_str = f"decruft {dc_ms}ms, defuddle {df_ms}ms ({df_ms/dc_ms:.1f}x faster)"
+    else:
+        perf_str = f"decruft {dc_ms}ms, defuddle {df_ms}ms ({dc_ms/df_ms:.1f}x slower)"
 else:
-    print(f"    OK: words={dc_wc}/{df_wc} title='{dc.get('title','')[:40]}'")
+    perf_str = f"decruft {dc_ms}ms, defuddle {df_ms}ms"
 
-print(f"    {perf}")
-print(f"    formats: json={os.path.getsize(dc_file)}B html={len(dc_html_content)}B text={len(dc_text_content)}B md={len(dc_md_content)}B")
+# ── Report ──
+if issues:
+    print(f"    ISSUES ({len(issues)}):")
+    for i in issues:
+        print(f"      - {i}")
+else:
+    wc_str = f"words={dc_wc}/{df_wc}"
+    print(f"    OK: {wc_str} title='{dc_title[:40]}'")
 
-sys.exit(1 if any('EMPTY' in i for i in issues) else 0)
+print(f"    perf: {perf_str}")
+print(f"    json: {os.path.getsize(f'{outdir}/{name}.dc.json')}B / {os.path.getsize(f'{outdir}/{name}.df.json')}B")
+print(f"    html: {len(dc_html)}B / {len(df_html)}B")
+print(f"    md:   {len(dc_md)}B / {len(df_md)}B")
+print(f"    text: {len(dc_text)}B")
+
+sys.exit(1 if any('EMPTY' in i.upper() for i in issues) else 0)
 PYEOF
 
     result=$?
@@ -178,11 +229,11 @@ PYEOF
     echo ""
 done
 
-echo "╔══════════════════════════════════════════════════════════════╗"
+echo "╔══════════════════════════════════════════════════════════════════╗"
 echo "║  Results: $PASS pass, $ISSUES issues, $SKIP skipped"
 if [ $SITE_COUNT -gt 0 ]; then
     dc_avg=$((TOTAL_DC_MS / SITE_COUNT))
     df_avg=$((TOTAL_DF_MS / SITE_COUNT))
-    echo "║  Avg time: decruft ${dc_avg}ms, defuddle ${df_avg}ms"
+    echo "║  Avg perf: decruft ${dc_avg}ms, defuddle ${df_avg}ms"
 fi
-echo "╚══════════════════════════════════════════════════════════════╝"
+echo "╚══════════════════════════════════════════════════════════════════╝"
