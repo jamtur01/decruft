@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1775854704849,
+  "lastUpdate": 1775854848604,
   "repoUrl": "https://github.com/jamtur01/decruft",
   "entries": {
     "decruft benchmarks": [
@@ -179,6 +179,66 @@ window.BENCHMARK_DATA = {
             "name": "large_page_no_scoring (1.1MB)",
             "value": 241070821,
             "range": "± 1748229",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "james@lovedthanlost.net",
+            "name": "James Turnbull",
+            "username": "jamtur01"
+          },
+          "committer": {
+            "email": "james@lovedthanlost.net",
+            "name": "James Turnbull",
+            "username": "jamtur01"
+          },
+          "distinct": true,
+          "id": "6448ce28d9e745f0d2b0cce33813980fc5cd3f96",
+          "message": "Update all GitHub Actions to latest versions (Node.js 24)\n\n- actions/configure-pages v5 -> v6\n- actions/deploy-pages v4 -> v5\n- actions/upload-artifact v4 -> v7\n- actions/download-artifact v4 -> v8\n- actions/upload-pages-artifact v3 -> v5\n- softprops/action-gh-release v2 -> v2.6.1\n- Swatinem/rust-cache v2 -> v2.9.1\n- benchmark-action/github-action-benchmark v1 -> v1.22.0",
+          "timestamp": "2026-04-10T16:58:21-04:00",
+          "tree_id": "c3443ec445e4bd31a972f82d9e4fbd30ad5fcd8b",
+          "url": "https://github.com/jamtur01/decruft/commit/6448ce28d9e745f0d2b0cce33813980fc5cd3f96"
+        },
+        "date": 1775854848273,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "small_page (12KB blog)",
+            "value": 2586245,
+            "range": "± 44024",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "medium_page (317KB stephango)",
+            "value": 3577156,
+            "range": "± 18548",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "large_page (1.1MB wikipedia)",
+            "value": 391290193,
+            "range": "± 5666495",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "github_issue (267KB)",
+            "value": 3919343,
+            "range": "± 16454",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "markdown_output (12KB blog)",
+            "value": 2751187,
+            "range": "± 18176",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "large_page_no_scoring (1.1MB)",
+            "value": 240283410,
+            "range": "± 2462799",
             "unit": "ns/iter"
           }
         ]
