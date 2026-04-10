@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1775854848604,
+  "lastUpdate": 1775854929959,
   "repoUrl": "https://github.com/jamtur01/decruft",
   "entries": {
     "decruft benchmarks": [
@@ -239,6 +239,66 @@ window.BENCHMARK_DATA = {
             "name": "large_page_no_scoring (1.1MB)",
             "value": 240283410,
             "range": "± 2462799",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "james@lovedthanlost.net",
+            "name": "James Turnbull",
+            "username": "jamtur01"
+          },
+          "committer": {
+            "email": "james@lovedthanlost.net",
+            "name": "James Turnbull",
+            "username": "jamtur01"
+          },
+          "distinct": true,
+          "id": "3fe007e3b619c1d80c43fdbd68e94b6d73546e3b",
+          "message": "Fix upload-pages-artifact version tag (v5 -> v5.0.0)",
+          "timestamp": "2026-04-10T16:59:41-04:00",
+          "tree_id": "34e00a40524f5d20ea3477f4ab58a216fb84c186",
+          "url": "https://github.com/jamtur01/decruft/commit/3fe007e3b619c1d80c43fdbd68e94b6d73546e3b"
+        },
+        "date": 1775854929613,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "small_page (12KB blog)",
+            "value": 2613967,
+            "range": "± 14371",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "medium_page (317KB stephango)",
+            "value": 3658437,
+            "range": "± 58983",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "large_page (1.1MB wikipedia)",
+            "value": 387807851,
+            "range": "± 2053564",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "github_issue (267KB)",
+            "value": 3907713,
+            "range": "± 26935",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "markdown_output (12KB blog)",
+            "value": 2800200,
+            "range": "± 27376",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "large_page_no_scoring (1.1MB)",
+            "value": 242215013,
+            "range": "± 863866",
             "unit": "ns/iter"
           }
         ]
