@@ -1,0 +1,81 @@
+<body>
+<br>
+<span class="onright" id="time_taken">Time taken by KaTeX to render formulæ : 8 ms</span>
+<span class="onleft"><a href="centraliser.pdf">PDF version</a></span>
+
+<br><br><h4>Theorem </h4><em>
+If <span class="maths"><span data-latex="g">g</span></span> is an element of <span class="maths"><span data-latex="G=S_n">G=S_n</span></span> then <span class="maths"><span data-latex="C_G(g)=\langle g\rangle">C_G(g)=\langle g\rangle</span></span> if and only if the cycles of <span class="maths"><span data-latex="g">g</span></span> are of unequal coprime lengths.<br>
+Alternatively, <span class="maths"><span data-latex="C_G(g)=\langle g\rangle">C_G(g)=\langle g\rangle</span></span> if and only if <span class="maths"><span data-latex="g">g</span></span> has cycles of coprime length with at most one 1-cycle.
+</em><br><br>
+<em>Proof. </em>
+Since powers of <span class="maths"><span data-latex="g">g</span></span> centralise <span class="maths"><span data-latex="g">g</span></span> it follows that <span class="maths"><span data-latex="\langle g\rangle\subseteq C_G(g)">\langle g\rangle\subseteq C_G(g)</span></span> so 
+<div data-latex="\begin{aligned}
+C_G(g)=\langle g\rangle\iff \lvert\langle g\rangle\rvert=\lvert C_G(g)\rvert\iff\lvert g\rvert=\lvert C_G(g)\rvert
+\end{aligned}">\begin{aligned}
+C_G(g)=\langle g\rangle\iff \lvert\langle g\rangle\rvert=\lvert C_G(g)\rvert\iff\lvert g\rvert=\lvert C_G(g)\rvert
+\end{aligned}</div>
+<span class="eqnum">(1)</span>
+Let <span class="maths"><span data-latex="G">G</span></span> act on itself by conjugation. Then <span class="maths"><span data-latex="xgx^{-1} = x\iff xg=gx">xgx^{-1} = x\iff xg=gx</span></span> so 
+<div data-latex="\begin{aligned}
+ \text{Stab}(g)=C_G(g)
+\end{aligned}">\begin{aligned}
+ \text{Stab}(g)=C_G(g)
+\end{aligned}</div>
+<span class="eqnum">(2)</span>
+
+<div data-latex="\begin{aligned}
+\lvert \text{Orb}(g)\rvert&amp;=\text{\small the number of distinct conjugates of g}\\
+&amp;=\text{\small the number of permutations with the same cycle structure as }g
+\end{aligned}">\begin{aligned}
+\lvert \text{Orb}(g)\rvert&amp;=\text{\small the number of distinct conjugates of g}\\
+&amp;=\text{\small the number of permutations with the same cycle structure as }g
+\end{aligned}</div>
+
+Let <span class="maths"><span data-latex="a">a</span></span> be the product of the lengths of the cycles of <span class="maths"><span data-latex="g">g</span></span><br>
+Let <span class="maths"><span data-latex="b">b</span></span> be the number of cycles of equal length.<br>
+Let <span class="maths"><span data-latex="l">l</span></span> be the least common multiple of the lengths of the cycles, <span class="maths"><span data-latex="\lvert g\rvert=l\leq a">\lvert g\rvert=l\leq a</span></span>.<br><br>
+Then the number of permutations with the same cycle structure as <span class="maths"><span data-latex="g">g</span></span> is
+<div data-latex="\begin{aligned}
+\frac{n!}{ab}=\frac{\lvert G\rvert}{ab}
+\end{aligned}">\begin{aligned}
+\frac{n!}{ab}=\frac{\lvert G\rvert}{ab}
+\end{aligned}</div>
+Hence
+<div data-latex="\begin{aligned}
+\lvert \text{Orb}(g)\rvert=\frac{\lvert G\rvert}{ab}
+\end{aligned}">\begin{aligned}
+\lvert \text{Orb}(g)\rvert=\frac{\lvert G\rvert}{ab}
+\end{aligned}</div>
+<span class="eqnum">(3)</span>
+By the Orbit-Stabiliser theorem, <span class="maths"><span data-latex="\lvert \text{Orb}(g)\rvert\times\lvert \text{Stab}(g)\rvert=\lvert G\rvert">\lvert \text{Orb}(g)\rvert\times\lvert \text{Stab}(g)\rvert=\lvert G\rvert</span></span> so by (3) 
+<div data-latex="\begin{aligned}
+\lvert \text{Stab}(g)\rvert=\frac{\lvert G\rvert}{\lvert \text{Orb}(g)\rvert}=\frac{\lvert G\rvert}{\lvert G\rvert/ab}=ab\geq\lvert g\rvert b\geq\lvert g\rvert=l
+\end{aligned}">\begin{aligned}
+\lvert \text{Stab}(g)\rvert=\frac{\lvert G\rvert}{\lvert \text{Orb}(g)\rvert}=\frac{\lvert G\rvert}{\lvert G\rvert/ab}=ab\geq\lvert g\rvert b\geq\lvert g\rvert=l
+\end{aligned}</div>
+and it follows that
+<div data-latex="\begin{aligned}
+\lvert \text{Stab}(g)\rvert=\lvert g \rvert\iff a = l \text{ and } b = 1
+\end{aligned}">\begin{aligned}
+\lvert \text{Stab}(g)\rvert=\lvert g \rvert\iff a = l \text{ and } b = 1
+\end{aligned}</div>
+<span class="eqnum">(4)</span>
+But
+<div data-latex="\begin{aligned}
+a=l\iff g\text{ has coprime cycle lengths}\\
+b=1 \iff g \text{ has unequal cycle lengths}
+\end{aligned}">\begin{aligned}
+a=l\iff g\text{ has coprime cycle lengths}\\
+b=1 \iff g \text{ has unequal cycle lengths}
+\end{aligned}</div>
+<span class="eqnum">(5)</span>
+<span class="eqnum">(6)</span>
+The result now follows from (1), (2), (4), (5) and (6).
+<div data-latex="C_G(g)=\langle g\rangle\iff\lvert \text{Stab}(g)\rvert=\lvert g \rvert\iff\text{the cycles of g are of unequal coprime lengths}">C_G(g)=\langle g\rangle\iff\lvert \text{Stab}(g)\rvert=\lvert g \rvert\iff\text{the cycles of g are of unequal coprime lengths}</div>
+Cycles of coprime length will have unequal lengths unless they are 1-cycles. Hence we may replace <em>unequal</em> by <em>at most one 1-cycle</em>. 
+<span class="halmos"><span class="maths"><span data-latex="\blacksquare">\blacksquare</span></span></span><br><br>
+<p> </p>
+
+
+
+</body>

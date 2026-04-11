@@ -27,7 +27,7 @@ fn opts_debug(url: &str) -> DecruftOptions {
 /// Fixture HTML from stephango.com buy-wisely (loaded from disk).
 fn fixture_html() -> String {
     let path = format!(
-        "{}/tests/fixtures/defuddle/general--stephango.com-buy-wisely.html",
+        "{}/tests/fixtures/general--stephango.com-buy-wisely.html",
         env!("CARGO_MANIFEST_DIR")
     );
     std::fs::read_to_string(&path)

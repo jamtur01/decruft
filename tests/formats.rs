@@ -169,7 +169,7 @@ fn favicon_from_link_icon() {
 #[test]
 fn extractor_type_for_github() {
     let html = std::fs::read_to_string(format!(
-        "{}/tests/fixtures/defuddle/general--github.com-issue-56.html",
+        "{}/tests/fixtures/general--github.com-issue-56.html",
         env!("CARGO_MANIFEST_DIR")
     ))
     .unwrap();
@@ -181,7 +181,7 @@ fn extractor_type_for_github() {
 #[test]
 fn include_replies_reduces_content() {
     let html = std::fs::read_to_string(format!(
-        "{}/tests/fixtures/defuddle/general--github.com-issue-56.html",
+        "{}/tests/fixtures/general--github.com-issue-56.html",
         env!("CARGO_MANIFEST_DIR")
     ))
     .unwrap();

@@ -314,10 +314,7 @@ mod tests {
     use super::*;
 
     fn load_fixture(name: &str) -> String {
-        let path = format!(
-            "{}/tests/fixtures/defuddle/{name}",
-            env!("CARGO_MANIFEST_DIR")
-        );
+        let path = format!("{}/tests/fixtures/{name}", env!("CARGO_MANIFEST_DIR"));
         std::fs::read_to_string(&path)
             .unwrap_or_else(|e| panic!("fixture not found at {path}: {e}"))
     }

@@ -409,22 +409,29 @@ fn definition_list() {
 // ════════════════════════════════════════════════════════════════
 
 #[test]
-fn mozilla_markdown_quality() {
-    let base = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/mozilla");
-    let mut dirs: Vec<_> = fs::read_dir(&base)
+fn markdown_quality_audit() {
+    let base = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures");
+    let mut files: Vec<_> = fs::read_dir(&base)
         .unwrap()
         .flatten()
-        .filter(|e| e.path().is_dir())
+        .filter(|e| {
+            e.path().extension().and_then(|x| x.to_str()) == Some("html")
+                && e.path()
+                    .file_name()
+                    .unwrap()
+                    .to_string_lossy()
+                    .starts_with("mozilla--")
+        })
         .map(|e| e.path())
         .collect();
-    dirs.sort();
+    files.sort();
 
     let mut total = 0;
     let mut failures = Vec::new();
 
-    for dir in &dirs {
-        let name = dir.file_name().unwrap().to_string_lossy().to_string();
-        let Ok(html) = fs::read_to_string(dir.join("source.html")) else {
+    for path in &files {
+        let name = path.file_stem().unwrap().to_string_lossy().to_string();
+        let Ok(html) = fs::read_to_string(path) else {
             continue;
         };
 
