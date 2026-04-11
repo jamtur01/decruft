@@ -137,7 +137,7 @@ fn oracle_obsidian_sync() {
         "general--obsidian.md-blog-verify-obsidian-sync-encryption",
         0.40,
     );
-} // actual: 0.457
+} // #14 actual: 0.457
 #[test]
 fn oracle_code_boilerplate() {
     check(
@@ -162,7 +162,7 @@ fn oracle_scp_wiki() {
 #[test]
 fn oracle_cp4space() {
     check("general--cp4space-jordan-algebra", 0.12);
-} // math actual: 0.154
+} // #10 math actual: 0.154
 #[test]
 fn oracle_stripe() {
     check("codeblocks--stripe", 0.22);
@@ -174,8 +174,8 @@ fn oracle_complex_tables() {
 #[test]
 fn oracle_partial_in_code() {
     check("issues--167-partial-selector-inside-code", 0.28);
-} //     actual: 0.333
+} // #11 actual: 0.333
 #[test]
 fn oracle_table_with_links() {
     check("scoring--table-with-links", 0.28);
-} //     actual: 0.333
+} // #12 actual: 0.333
