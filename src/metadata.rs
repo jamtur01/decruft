@@ -17,10 +17,14 @@ pub fn extract_metadata(
     let title = extract_title(html, schema, &site_name, &domain);
     let author = extract_author(html, schema);
     let published = extract_published(html, schema);
+    let modified = extract_modified(html, schema);
     let description = extract_description(html, schema);
     let image = extract_image(html, schema);
     let language = extract_language(html, schema);
     let favicon = extract_favicon(html, url);
+    let canonical_url = extract_canonical_url(html);
+    let keywords = extract_keywords(html);
+    let content_type = extract_content_type(html, schema);
 
     Metadata {
         title,
@@ -30,8 +34,12 @@ pub fn extract_metadata(
         image,
         language,
         published,
+        modified,
         author,
         site_name,
+        canonical_url,
+        keywords,
+        content_type,
     }
 }
 
@@ -52,6 +60,26 @@ fn get_meta_content(html: &Html, attr: &str, value: &str) -> Option<String> {
 
 /// Walk a dot-separated path on a single JSON object, returning a
 /// trimmed, non-empty string.
+/// Query Dublin Core meta tags. Checks all common naming variants:
+/// `DC.{field}`, `dc.{field}`, `dc:{field}`, `dcterm:{field}`,
+/// `DCTERMS.{field}`, `dcterms.{field}`.
+fn get_dc_content(html: &Html, field: &str) -> Option<String> {
+    let variants = [
+        format!("DC.{field}"),
+        format!("dc.{field}"),
+        format!("dc:{field}"),
+        format!("dcterm:{field}"),
+        format!("DCTERMS.{field}"),
+        format!("dcterms.{field}"),
+    ];
+    for name in &variants {
+        if let Some(v) = get_meta_content(html, "name", name) {
+            return Some(v);
+        }
+    }
+    None
+}
+
 fn walk_schema_path(value: &serde_json::Value, path: &str) -> Option<String> {
     let mut current = value;
     for key in path.split('.') {
@@ -98,8 +126,10 @@ fn extract_title(
         .or_else(|| get_meta_content(html, "name", "twitter:title"))
         .or_else(|| get_meta_content(html, "property", "twitter:title"))
         .or_else(|| schema_str(schema, "headline"))
+        .or_else(|| get_dc_content(html, "title"))
         .or_else(|| get_meta_content(html, "name", "title"))
-        .or_else(|| get_meta_content(html, "name", "sailthru.title"));
+        .or_else(|| get_meta_content(html, "name", "sailthru.title"))
+        .or_else(|| get_meta_content(html, "name", "parsely-title"));
 
     let html_title = title_element_text(html);
 
@@ -310,6 +340,8 @@ fn strip_last_breadcrumb_segment(title: &str) -> String {
 fn extract_author(html: &Html, schema: Option<&serde_json::Value>) -> String {
     if let Some(v) = get_meta_content(html, "property", "author")
         .or_else(|| get_meta_content(html, "name", "author"))
+        .or_else(|| get_meta_content(html, "property", "article:author"))
+        .or_else(|| get_meta_content(html, "property", "article:author_name"))
     {
         return v;
     }
@@ -336,7 +368,11 @@ fn extract_author(html: &Html, schema: Option<&serde_json::Value>) -> String {
         return v;
     }
 
-    if let Some(v) = get_meta_content(html, "name", "dc.creator") {
+    if let Some(v) = get_dc_content(html, "creator") {
+        return v;
+    }
+
+    if let Some(v) = get_meta_content(html, "name", "parsely-author") {
         return v;
     }
 
@@ -513,9 +549,27 @@ fn extract_published(html: &Html, schema: Option<&serde_json::Value>) -> String 
     schema_str(schema, "datePublished")
         .or_else(|| get_meta_content(html, "name", "publishDate"))
         .or_else(|| get_meta_content(html, "property", "article:published_time"))
+        .or_else(|| get_dc_content(html, "date"))
+        .or_else(|| get_meta_content(html, "name", "DCTERMS.created"))
+        .or_else(|| get_meta_content(html, "name", "DCTERMS.issued"))
+        .or_else(|| get_meta_content(html, "name", "parsely-pub-date"))
         .or_else(|| abbr_date_published(html))
         .or_else(|| get_meta_content(html, "name", "sailthru.date"))
         .or_else(|| first_time_element(html))
+        .unwrap_or_default()
+}
+
+// ------------------------------------------------------------------
+// Modified date
+// ------------------------------------------------------------------
+
+fn extract_modified(html: &Html, schema: Option<&serde_json::Value>) -> String {
+    schema_str(schema, "dateModified")
+        .or_else(|| get_meta_content(html, "property", "article:modified_time"))
+        .or_else(|| get_meta_content(html, "property", "og:updated_time"))
+        .or_else(|| get_meta_content(html, "name", "DCTERMS.modified"))
+        .or_else(|| get_meta_content(html, "name", "dcterms.modified"))
+        .or_else(|| get_meta_content(html, "http-equiv", "last-modified"))
         .unwrap_or_default()
 }
 
@@ -585,6 +639,7 @@ fn extract_site_name(html: &Html, schema: Option<&serde_json::Value>) -> String 
         .or_else(|| get_meta_content(html, "name", "copyright"))
         .or_else(|| schema_str(schema, "copyrightHolder.name"))
         .or_else(|| schema_str(schema, "isPartOf.name"))
+        .or_else(|| get_dc_content(html, "publisher"))
         .or_else(|| get_meta_content(html, "name", "application-name"))
         .and_then(|name| {
             if name.split_whitespace().count() > 6 {
@@ -646,6 +701,7 @@ fn schema_graph_website_name(schema: Option<&serde_json::Value>) -> Option<Strin
 fn extract_description(html: &Html, schema: Option<&serde_json::Value>) -> String {
     get_meta_content(html, "name", "description")
         .or_else(|| get_meta_content(html, "property", "og:description"))
+        .or_else(|| get_dc_content(html, "description"))
         .or_else(|| get_meta_content(html, "property", "twitter:description"))
         .or_else(|| get_meta_content(html, "name", "twitter:description"))
         .or_else(|| get_meta_content(html, "name", "sailthru.description"))
@@ -661,6 +717,9 @@ fn extract_image(html: &Html, schema: Option<&serde_json::Value>) -> String {
     get_meta_content(html, "property", "og:image")
         .or_else(|| get_meta_content(html, "property", "twitter:image"))
         .or_else(|| get_meta_content(html, "name", "twitter:image"))
+        .or_else(|| get_meta_content(html, "name", "twitter:image:src"))
+        .or_else(|| get_meta_content(html, "name", "parsely-image-url"))
+        .or_else(|| get_meta_content(html, "name", "thumbnail"))
         .or_else(|| schema_image(schema))
         .unwrap_or_default()
 }
@@ -690,6 +749,7 @@ fn extract_language(html: &Html, schema: Option<&serde_json::Value>) -> String {
     html_lang(html)
         .or_else(|| get_meta_content(html, "name", "content-language"))
         .or_else(|| get_meta_content(html, "http-equiv", "content-language"))
+        .or_else(|| get_dc_content(html, "language"))
         .or_else(|| get_meta_content(html, "property", "og:locale"))
         .or_else(|| schema_str(schema, "inLanguage"))
         .map(|s| normalize_bcp47(&s))
@@ -821,6 +881,90 @@ fn base_url(raw: &str) -> Option<String> {
         Some(port) => Some(format!("{scheme}://{host}:{port}")),
         None => Some(format!("{scheme}://{host}")),
     }
+}
+
+// ------------------------------------------------------------------
+// Canonical URL
+// ------------------------------------------------------------------
+
+fn extract_canonical_url(html: &Html) -> String {
+    // link[rel=canonical] is the strongest signal
+    if let Ok(sel) = Selector::parse("link[rel=\"canonical\"]") {
+        if let Some(el) = html.select(&sel).next() {
+            if let Some(href) = el.value().attr("href") {
+                let trimmed = href.trim();
+                if !trimmed.is_empty() {
+                    return trimmed.to_string();
+                }
+            }
+        }
+    }
+    get_meta_content(html, "property", "og:url").unwrap_or_default()
+}
+
+// ------------------------------------------------------------------
+// Keywords / Tags
+// ------------------------------------------------------------------
+
+fn extract_keywords(html: &Html) -> Vec<String> {
+    // Try multiple sources, take the first non-empty one
+    let raw = get_meta_content(html, "name", "keywords")
+        .or_else(|| get_dc_content(html, "subject"))
+        .or_else(|| get_meta_content(html, "name", "news_keywords"))
+        .or_else(|| get_meta_content(html, "name", "parsely-tags"));
+
+    if let Some(raw) = raw {
+        return raw
+            .split(',')
+            .map(|s| s.trim().to_string())
+            .filter(|s| !s.is_empty())
+            .collect();
+    }
+
+    // article:tag can appear multiple times
+    if let Ok(sel) = Selector::parse("meta[property=\"article:tag\"]") {
+        let tags: Vec<String> = html
+            .select(&sel)
+            .filter_map(|el| el.value().attr("content"))
+            .map(|s| s.trim().to_string())
+            .filter(|s| !s.is_empty())
+            .collect();
+        if !tags.is_empty() {
+            return tags;
+        }
+    }
+
+    Vec::new()
+}
+
+// ------------------------------------------------------------------
+// Content Type
+// ------------------------------------------------------------------
+
+fn extract_content_type(html: &Html, schema: Option<&serde_json::Value>) -> String {
+    get_meta_content(html, "property", "og:type")
+        .or_else(|| get_dc_content(html, "type"))
+        .or_else(|| schema_type(schema))
+        .unwrap_or_default()
+}
+
+/// Extract @type from schema.org data (e.g., "Article", "`NewsArticle`").
+fn schema_type(schema: Option<&serde_json::Value>) -> Option<String> {
+    let data = schema?;
+    if let Some(t) = data.get("@type").and_then(|v| v.as_str()) {
+        return Some(t.to_string());
+    }
+    if let serde_json::Value::Array(items) = data {
+        for item in items {
+            if let Some(t) = item.get("@type").and_then(|v| v.as_str()) {
+                // Skip generic types, prefer specific content types
+                if t != "WebSite" && t != "WebPage" && t != "BreadcrumbList" {
+                    return Some(t.to_string());
+                }
+            }
+        }
+    }
+    None
 }
 
 #[cfg(test)]
@@ -1059,5 +1203,271 @@ mod tests {
         let doc = Html::parse_document("<html><body></body></html>");
         let m = extract_metadata(&doc, None, Some(&schema));
         assert_eq!(m.site_name, "My Blog");
+    }
+}
+
+#[cfg(test)]
+mod dc_tests {
+    use super::*;
+    use scraper::Html;
+
+    #[test]
+    fn dc_title() {
+        let doc = Html::parse_document(
+            r#"<html><head><meta name="DC.title" content="Dublin Core Title"></head><body></body></html>"#,
+        );
+        let m = extract_metadata(&doc, None, None);
+        assert_eq!(m.title, "Dublin Core Title");
+    }
+
+    #[test]
+    fn dcterm_title() {
+        let doc = Html::parse_document(
+            r#"<html><head><meta name="dcterm:title" content="DCTerm Title"></head><body></body></html>"#,
+        );
+        let m = extract_metadata(&doc, None, None);
+        assert_eq!(m.title, "DCTerm Title");
+    }
+
+    #[test]
+    fn dc_creator_as_author() {
+        let doc = Html::parse_document(
+            r#"<html><head><meta name="DC.creator" content="Jane Doe"></head><body></body></html>"#,
+        );
+        let m = extract_metadata(&doc, None, None);
+        assert_eq!(m.author, "Jane Doe");
+    }
+
+    #[test]
+    fn dc_date_as_published() {
+        let doc = Html::parse_document(
+            r#"<html><head><meta name="DC.date" content="2025-06-15"></head><body></body></html>"#,
+        );
+        let m = extract_metadata(&doc, None, None);
+        assert_eq!(m.published, "2025-06-15");
+    }
+
+    #[test]
+    fn dcterms_created_as_published() {
+        let doc = Html::parse_document(
+            r#"<html><head><meta name="DCTERMS.created" content="2025-01-01T00:00:00Z"></head><body></body></html>"#,
+        );
+        let m = extract_metadata(&doc, None, None);
+        assert_eq!(m.published, "2025-01-01T00:00:00Z");
+    }
+
+    #[test]
+    fn dc_description() {
+        let doc = Html::parse_document(
+            r#"<html><head><meta name="DC.description" content="A Dublin Core description"></head><body></body></html>"#,
+        );
+        let m = extract_metadata(&doc, None, None);
+        assert_eq!(m.description, "A Dublin Core description");
+    }
+
+    #[test]
+    fn dc_language() {
+        let doc = Html::parse_document(
+            r#"<html><head><meta name="DC.language" content="en-US"></head><body></body></html>"#,
+        );
+        let m = extract_metadata(&doc, None, None);
+        assert_eq!(m.language, "en-US");
+    }
+
+    #[test]
+    fn og_takes_precedence_over_dc() {
+        let doc = Html::parse_document(
+            r#"<html><head>
+            <meta property="og:title" content="OG Title">
+            <meta name="DC.title" content="DC Title">
+            </head><body></body></html>"#,
+        );
+        let m = extract_metadata(&doc, None, None);
+        assert_eq!(m.title, "OG Title");
+    }
+
+    #[test]
+    fn parsely_author() {
+        let doc = Html::parse_document(
+            r#"<html><head><meta name="parsely-author" content="Parsely Author"></head><body></body></html>"#,
+        );
+        let m = extract_metadata(&doc, None, None);
+        assert_eq!(m.author, "Parsely Author");
+    }
+
+    #[test]
+    fn parsely_pub_date() {
+        let doc = Html::parse_document(
+            r#"<html><head><meta name="parsely-pub-date" content="2025-03-20"></head><body></body></html>"#,
+        );
+        let m = extract_metadata(&doc, None, None);
+        assert_eq!(m.published, "2025-03-20");
+    }
+}
+
+#[cfg(test)]
+mod modified_tests {
+    use super::*;
+    use scraper::Html;
+
+    #[test]
+    fn modified_from_article_modified_time() {
+        let doc = Html::parse_document(
+            r#"<html><head><meta property="article:modified_time" content="2025-09-01T12:00:00Z"></head><body></body></html>"#,
+        );
+        let m = extract_metadata(&doc, None, None);
+        assert_eq!(m.modified, "2025-09-01T12:00:00Z");
+    }
+
+    #[test]
+    fn modified_from_og_updated_time() {
+        let doc = Html::parse_document(
+            r#"<html><head><meta property="og:updated_time" content="2025-08-15"></head><body></body></html>"#,
+        );
+        let m = extract_metadata(&doc, None, None);
+        assert_eq!(m.modified, "2025-08-15");
+    }
+
+    #[test]
+    fn modified_from_dcterms() {
+        let doc = Html::parse_document(
+            r#"<html><head><meta name="DCTERMS.modified" content="2025-07-20"></head><body></body></html>"#,
+        );
+        let m = extract_metadata(&doc, None, None);
+        assert_eq!(m.modified, "2025-07-20");
+    }
+
+    #[test]
+    fn modified_from_schema_date_modified() {
+        let schema: serde_json::Value = serde_json::json!({
+            "@type": "Article",
+            "dateModified": "2025-06-10T08:00:00Z"
+        });
+        let doc = Html::parse_document("<html><body></body></html>");
+        let m = extract_metadata(&doc, None, Some(&schema));
+        assert_eq!(m.modified, "2025-06-10T08:00:00Z");
+    }
+
+    #[test]
+    fn modified_empty_when_absent() {
+        let doc = Html::parse_document("<html><body></body></html>");
+        let m = extract_metadata(&doc, None, None);
+        assert!(m.modified.is_empty());
+    }
+
+    #[test]
+    fn dc_publisher_as_site_name() {
+        let doc = Html::parse_document(
+            r#"<html><head><meta name="DC.publisher" content="Example Press"></head><body></body></html>"#,
+        );
+        let m = extract_metadata(&doc, None, None);
+        assert_eq!(m.site_name, "Example Press");
+    }
+}
+
+#[cfg(test)]
+mod new_fields_tests {
+    use super::*;
+    use scraper::Html;
+
+    #[test]
+    fn canonical_url_from_link_rel() {
+        let doc = Html::parse_document(
+            r#"<html><head><link rel="canonical" href="https://example.com/article"></head><body></body></html>"#,
+        );
+        let m = extract_metadata(&doc, None, None);
+        assert_eq!(m.canonical_url, "https://example.com/article");
+    }
+
+    #[test]
+    fn canonical_url_from_og_url() {
+        let doc = Html::parse_document(
+            r#"<html><head><meta property="og:url" content="https://example.com/page"></head><body></body></html>"#,
+        );
+        let m = extract_metadata(&doc, None, None);
+        assert_eq!(m.canonical_url, "https://example.com/page");
+    }
+
+    #[test]
+    fn keywords_from_meta() {
+        let doc = Html::parse_document(
+            r#"<html><head><meta name="keywords" content="rust, programming, web"></head><body></body></html>"#,
+        );
+        let m = extract_metadata(&doc, None, None);
+        assert_eq!(m.keywords, vec!["rust", "programming", "web"]);
+    }
+
+    #[test]
+    fn keywords_from_dc_subject() {
+        let doc = Html::parse_document(
+            r#"<html><head><meta name="DC.subject" content="science, biology"></head><body></body></html>"#,
+        );
+        let m = extract_metadata(&doc, None, None);
+        assert_eq!(m.keywords, vec!["science", "biology"]);
+    }
+
+    #[test]
+    fn keywords_from_article_tag() {
+        let doc = Html::parse_document(
+            r#"<html><head>
+            <meta property="article:tag" content="rust">
+            <meta property="article:tag" content="web">
+            </head><body></body></html>"#,
+        );
+        let m = extract_metadata(&doc, None, None);
+        assert_eq!(m.keywords, vec!["rust", "web"]);
+    }
+
+    #[test]
+    fn keywords_empty_when_absent() {
+        let doc = Html::parse_document("<html><body></body></html>");
+        let m = extract_metadata(&doc, None, None);
+        assert!(m.keywords.is_empty());
+    }
+
+    #[test]
+    fn content_type_from_og_type() {
+        let doc = Html::parse_document(
+            r#"<html><head><meta property="og:type" content="article"></head><body></body></html>"#,
+        );
+        let m = extract_metadata(&doc, None, None);
+        assert_eq!(m.content_type, "article");
+    }
+
+    #[test]
+    fn content_type_from_schema() {
+        let schema: serde_json::Value = serde_json::json!({"@type": "NewsArticle"});
+        let doc = Html::parse_document("<html><body></body></html>");
+        let m = extract_metadata(&doc, None, Some(&schema));
+        assert_eq!(m.content_type, "NewsArticle");
+    }
+
+    #[test]
+    fn content_type_skips_generic_schema_types() {
+        let schema: serde_json::Value = serde_json::json!([
+            {"@type": "WebSite", "name": "Example"},
+            {"@type": "Article", "headline": "Test"}
+        ]);
+        let doc = Html::parse_document("<html><body></body></html>");
+        let m = extract_metadata(&doc, None, Some(&schema));
+        assert_eq!(m.content_type, "Article");
+    }
+
+    #[test]
+    fn image_from_twitter_image_src() {
+        let doc = Html::parse_document(
+            r#"<html><head><meta name="twitter:image:src" content="https://img.example.com/photo.jpg"></head><body></body></html>"#,
+        );
+        let m = extract_metadata(&doc, None, None);
+        assert_eq!(m.image, "https://img.example.com/photo.jpg");
+    }
+
+    #[test]
+    fn author_from_article_author() {
+        let doc = Html::parse_document(
+            r#"<html><head><meta property="article:author" content="Jane Smith"></head><body></body></html>"#,
+        );
+        let m = extract_metadata(&doc, None, None);
+        assert_eq!(m.author, "Jane Smith");
     }
 }
