@@ -122,9 +122,9 @@ fn mozilla_suite_content_similarity() {
             }
         }
     }
-    // Allow up to 5 low-similarity fixtures (known issues with tables, math)
+    // Allow up to 6 low-similarity fixtures (known issues with tables, math)
     assert!(
-        low_sim.len() <= 8,
+        low_sim.len() <= 6,
         "too many low-similarity fixtures ({}): {low_sim:?}",
         low_sim.len()
     );
