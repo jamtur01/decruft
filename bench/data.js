@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1775856425627,
+  "lastUpdate": 1775923365879,
   "repoUrl": "https://github.com/jamtur01/decruft",
   "entries": {
     "decruft benchmarks": [
@@ -479,6 +479,66 @@ window.BENCHMARK_DATA = {
             "name": "large_page_no_scoring (1.1MB)",
             "value": 239900177,
             "range": "± 5478280",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "james@lovedthanlost.net",
+            "name": "James Turnbull",
+            "username": "jamtur01"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "6772b8b9ebb0ecee3e4988289bfb5063fbafd0ae",
+          "message": "Merge pull request #3 from jamtur01/fix/msrv\n\nAdd MSRV 1.85",
+          "timestamp": "2026-04-11T12:00:22-04:00",
+          "tree_id": "b60e7a899f83733913b7c2ec35ca7debfd1531fe",
+          "url": "https://github.com/jamtur01/decruft/commit/6772b8b9ebb0ecee3e4988289bfb5063fbafd0ae"
+        },
+        "date": 1775923365551,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "small_page (12KB blog)",
+            "value": 2620783,
+            "range": "± 21959",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "medium_page (317KB stephango)",
+            "value": 3671913,
+            "range": "± 68220",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "large_page (1.1MB wikipedia)",
+            "value": 387532507,
+            "range": "± 4302566",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "github_issue (267KB)",
+            "value": 3923975,
+            "range": "± 41147",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "markdown_output (12KB blog)",
+            "value": 2815840,
+            "range": "± 11939",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "large_page_no_scoring (1.1MB)",
+            "value": 243970089,
+            "range": "± 2836851",
             "unit": "ns/iter"
           }
         ]
