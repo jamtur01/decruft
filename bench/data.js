@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1775948231329,
+  "lastUpdate": 1775948671280,
   "repoUrl": "https://github.com/jamtur01/decruft",
   "entries": {
     "decruft benchmarks": [
@@ -839,6 +839,66 @@ window.BENCHMARK_DATA = {
             "name": "large_page_no_scoring (1.1MB)",
             "value": 247183469,
             "range": "± 1017934",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "james@lovedthanlost.net",
+            "name": "James Turnbull",
+            "username": "jamtur01"
+          },
+          "committer": {
+            "email": "james@lovedthanlost.net",
+            "name": "James Turnbull",
+            "username": "jamtur01"
+          },
+          "distinct": true,
+          "id": "f37fb83e94b54c91e6b6532f6fb30074e39451f6",
+          "message": "feat: 3-way comparison script (decruft vs defuddle vs readabilityrs)\n\nAdd readabilityrs as third column in compare_sites.sh. Includes a\nminimal CLI wrapper in tools/readabilityrs-cli/ that builds from the\npublished crate.\n\nIssues are gated on decruft vs defuddle only — readabilityrs word\ncounts are shown for reference but don't flag failures (it extracts\n3-7x more words than both decruft and defuddle on most pages).",
+          "timestamp": "2026-04-11T19:01:47-04:00",
+          "tree_id": "e7f6b7125e4a192bcfe2f6ea2c01006e8f029079",
+          "url": "https://github.com/jamtur01/decruft/commit/f37fb83e94b54c91e6b6532f6fb30074e39451f6"
+        },
+        "date": 1775948670633,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "small_page (12KB blog)",
+            "value": 2946257,
+            "range": "± 47300",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "medium_page (317KB stephango)",
+            "value": 3865855,
+            "range": "± 181368",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "large_page (1.1MB wikipedia)",
+            "value": 417276278,
+            "range": "± 14411448",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "github_issue (267KB)",
+            "value": 4225115,
+            "range": "± 48614",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "markdown_output (12KB blog)",
+            "value": 3182916,
+            "range": "± 81421",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "large_page_no_scoring (1.1MB)",
+            "value": 264124298,
+            "range": "± 3039625",
             "unit": "ns/iter"
           }
         ]
