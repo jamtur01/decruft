@@ -1,6 +1,7 @@
-//! Behavioral tests ported from defuddle's test suite.
+//! Pipeline behavior and option toggle tests.
 //!
-//! Each section maps to a defuddle test file:
+//! Tests that decruft's options, pipeline stages, and behavioral
+//! contracts work correctly. Ported from defuddle's test suite:
 //! - debug.test.ts      -> Debug options / Pipeline toggles / contentSelector
 //! - markdown.test.ts   -> Markdown conversion edge cases
 //! - schema-fallback.test.ts -> Schema.org text fallback + sanitization
