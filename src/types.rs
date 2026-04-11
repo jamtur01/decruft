@@ -78,6 +78,9 @@ pub struct DecruftResult {
     pub parse_time_ms: u64,
     /// Publication date.
     pub published: String,
+    /// Last modified date.
+    #[serde(skip_serializing_if = "String::is_empty")]
+    pub modified: String,
     /// Author name.
     pub author: String,
     /// Site name.
@@ -138,6 +141,7 @@ pub(crate) struct Metadata {
     pub image: String,
     pub language: String,
     pub published: String,
+    pub modified: String,
     pub author: String,
     pub site_name: String,
 }

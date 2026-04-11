@@ -572,6 +572,7 @@ fn build_result(
         language: meta.language,
         parse_time_ms,
         published: meta.published,
+        modified: meta.modified,
         author: meta.author,
         site: meta.site_name,
         word_count,

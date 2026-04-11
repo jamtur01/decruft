@@ -17,6 +17,7 @@ pub fn extract_metadata(
     let title = extract_title(html, schema, &site_name, &domain);
     let author = extract_author(html, schema);
     let published = extract_published(html, schema);
+    let modified = extract_modified(html, schema);
     let description = extract_description(html, schema);
     let image = extract_image(html, schema);
     let language = extract_language(html, schema);
@@ -30,6 +31,7 @@ pub fn extract_metadata(
         image,
         language,
         published,
+        modified,
         author,
         site_name,
     }
@@ -549,6 +551,20 @@ fn extract_published(html: &Html, schema: Option<&serde_json::Value>) -> String 
         .unwrap_or_default()
 }
 
+// ------------------------------------------------------------------
+// Modified date
+// ------------------------------------------------------------------
+
+fn extract_modified(html: &Html, schema: Option<&serde_json::Value>) -> String {
+    schema_str(schema, "dateModified")
+        .or_else(|| get_meta_content(html, "property", "article:modified_time"))
+        .or_else(|| get_meta_content(html, "property", "og:updated_time"))
+        .or_else(|| get_meta_content(html, "name", "DCTERMS.modified"))
+        .or_else(|| get_meta_content(html, "name", "dcterms.modified"))
+        .or_else(|| get_meta_content(html, "http-equiv", "last-modified"))
+        .unwrap_or_default()
+}
+
 /// Extract date from `abbr[itemprop="datePublished"]` -- check
 /// `datetime` attr first, then text content.
 fn abbr_date_published(html: &Html) -> Option<String> {
@@ -615,6 +631,7 @@ fn extract_site_name(html: &Html, schema: Option<&serde_json::Value>) -> String 
         .or_else(|| get_meta_content(html, "name", "copyright"))
         .or_else(|| schema_str(schema, "copyrightHolder.name"))
         .or_else(|| schema_str(schema, "isPartOf.name"))
+        .or_else(|| get_dc_content(html, "publisher"))
         .or_else(|| get_meta_content(html, "name", "application-name"))
         .and_then(|name| {
             if name.split_whitespace().count() > 6 {
@@ -1190,5 +1207,65 @@ mod dc_tests {
         );
         let m = extract_metadata(&doc, None, None);
         assert_eq!(m.published, "2025-03-20");
+    }
+}
+
+#[cfg(test)]
+mod modified_tests {
+    use super::*;
+    use scraper::Html;
+
+    #[test]
+    fn modified_from_article_modified_time() {
+        let doc = Html::parse_document(
+            r#"<html><head><meta property="article:modified_time" content="2025-09-01T12:00:00Z"></head><body></body></html>"#,
+        );
+        let m = extract_metadata(&doc, None, None);
+        assert_eq!(m.modified, "2025-09-01T12:00:00Z");
+    }
+
+    #[test]
+    fn modified_from_og_updated_time() {
+        let doc = Html::parse_document(
+            r#"<html><head><meta property="og:updated_time" content="2025-08-15"></head><body></body></html>"#,
+        );
+        let m = extract_metadata(&doc, None, None);
+        assert_eq!(m.modified, "2025-08-15");
+    }
+
+    #[test]
+    fn modified_from_dcterms() {
+        let doc = Html::parse_document(
+            r#"<html><head><meta name="DCTERMS.modified" content="2025-07-20"></head><body></body></html>"#,
+        );
+        let m = extract_metadata(&doc, None, None);
+        assert_eq!(m.modified, "2025-07-20");
+    }
+
+    #[test]
+    fn modified_from_schema_date_modified() {
+        let schema: serde_json::Value = serde_json::json!({
+            "@type": "Article",
+            "dateModified": "2025-06-10T08:00:00Z"
+        });
+        let doc = Html::parse_document("<html><body></body></html>");
+        let m = extract_metadata(&doc, None, Some(&schema));
+        assert_eq!(m.modified, "2025-06-10T08:00:00Z");
+    }
+
+    #[test]
+    fn modified_empty_when_absent() {
+        let doc = Html::parse_document("<html><body></body></html>");
+        let m = extract_metadata(&doc, None, None);
+        assert!(m.modified.is_empty());
+    }
+
+    #[test]
+    fn dc_publisher_as_site_name() {
+        let doc = Html::parse_document(
+            r#"<html><head><meta name="DC.publisher" content="Example Press"></head><body></body></html>"#,
+        );
+        let m = extract_metadata(&doc, None, None);
+        assert_eq!(m.site_name, "Example Press");
     }
 }
