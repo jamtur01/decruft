@@ -601,6 +601,8 @@ fn extract_published(html: &Html, schema: Option<&serde_json::Value>) -> String 
         .or_else(|| abbr_date_published(html))
         .or_else(|| get_meta_content(html, "name", "sailthru.date"))
         .or_else(|| first_time_element(html))
+        .or_else(|| first_relative_time_element(html))
+        .or_else(|| date_from_text_elements(html))
         .unwrap_or_default()
 }
 
@@ -670,6 +672,149 @@ fn first_time_element(html: &Html) -> Option<String> {
     }
 
     None
+}
+
+/// Extract datetime from `<relative-time>` elements (GitHub, etc.).
+fn first_relative_time_element(html: &Html) -> Option<String> {
+    let Ok(sel) = Selector::parse("relative-time[datetime]") else {
+        return None;
+    };
+    html.select(&sel)
+        .next()
+        .and_then(|el| el.value().attr("datetime"))
+        .map(|dt| dt.trim().to_string())
+        .filter(|s| !s.is_empty())
+}
+
+/// Extract a date from text content in the document.
+/// Searches common date-bearing elements for date patterns.
+fn date_from_text_elements(html: &Html) -> Option<String> {
+    use std::sync::LazyLock;
+    // "Month DD, YYYY", "DD Month YYYY", "YYYY-MM-DD"
+    static DATE_RE: LazyLock<regex::Regex> = LazyLock::new(|| {
+        regex::Regex::new(concat!(
+            r"(?:",
+            r"(?:January|February|March|April|May|June|July|August|",
+            r"September|October|November|December)\s+\d{1,2},?\s+\d{4}",
+            r"|",
+            r"\d{1,2}\s+(?:January|February|March|April|May|June|July|August|",
+            r"September|October|November|December)\s+\d{4}",
+            r"|",
+            r"\d{4}-\d{2}-\d{2}",
+            r")",
+        ))
+        .expect("date regex is valid")
+    });
+
+    // Ordered by reliability: explicit date containers first
+    let selectors = [
+        "li[id*=\"lastmod\"]",
+        "li[id*=\"date\"]",
+        "[class*=\"dateline\"]",
+        "h2",
+        "h3",
+        "h6",
+        "[class*=\"byline\"]",
+        "[class*=\"meta\"]",
+        "p",
+        "span",
+    ];
+    for sel_str in selectors {
+        let Ok(sel) = Selector::parse(sel_str) else {
+            continue;
+        };
+        for el in html.select(&sel).take(20) {
+            let text = dom::text_content(html, el.id());
+            let trimmed = text.trim();
+            if trimmed.len() > 300 {
+                continue;
+            }
+            if let Some(m) = DATE_RE.find(trimmed) {
+                return parse_date_match(m.as_str());
+            }
+        }
+    }
+    None
+}
+
+fn parse_date_match(s: &str) -> Option<String> {
+    // Already ISO: "YYYY-MM-DD"
+    if s.len() == 10 && s.as_bytes().first() == Some(&b'2') && s.contains('-') {
+        return Some(s.to_string());
+    }
+    // "Month DD, YYYY" or "Month DD YYYY"
+    if let Some(iso) = normalize_english_date(s) {
+        return Some(iso);
+    }
+    // "DD Month YYYY"
+    if let Some(iso) = normalize_dd_month_yyyy(s) {
+        return Some(iso);
+    }
+    None
+}
+
+/// Convert "Month DD, YYYY" or "Month DD YYYY" to "YYYY-MM-DD".
+fn normalize_english_date(s: &str) -> Option<String> {
+    let months = [
+        ("January", "01"),
+        ("February", "02"),
+        ("March", "03"),
+        ("April", "04"),
+        ("May", "05"),
+        ("June", "06"),
+        ("July", "07"),
+        ("August", "08"),
+        ("September", "09"),
+        ("October", "10"),
+        ("November", "11"),
+        ("December", "12"),
+    ];
+    for (name, num) in months {
+        if let Some(rest) = s.strip_prefix(name) {
+            let rest = rest.trim().trim_start_matches(',').trim();
+            let parts: Vec<&str> = rest.split_whitespace().collect();
+            if parts.len() >= 2 {
+                let day = parts[0].trim_end_matches(',');
+                let year = parts[1];
+                if let (Ok(d), Ok(y)) = (day.parse::<u32>(), year.parse::<u32>()) {
+                    if (1..=31).contains(&d) && (1900..=2100).contains(&y) {
+                        return Some(format!("{y}-{num}-{d:02}"));
+                    }
+                }
+            }
+        }
+    }
+    None
+}
+
+/// Convert "DD Month YYYY" to "YYYY-MM-DD".
+fn normalize_dd_month_yyyy(s: &str) -> Option<String> {
+    let months = [
+        ("January", "01"),
+        ("February", "02"),
+        ("March", "03"),
+        ("April", "04"),
+        ("May", "05"),
+        ("June", "06"),
+        ("July", "07"),
+        ("August", "08"),
+        ("September", "09"),
+        ("October", "10"),
+        ("November", "11"),
+        ("December", "12"),
+    ];
+    let parts: Vec<&str> = s.split_whitespace().collect();
+    if parts.len() < 3 {
+        return None;
+    }
+    let day: u32 = parts[0].parse().ok()?;
+    let month_name = parts[1];
+    let year: u32 = parts[2].trim_end_matches(',').parse().ok()?;
+    if !(1..=31).contains(&day) || !(1900..=2100).contains(&year) {
+        return None;
+    }
+    let month_num = months.iter().find(|(name, _)| *name == month_name)?.1;
+    Some(format!("{year}-{month_num}-{day:02}"))
 }
 
 // ------------------------------------------------------------------
