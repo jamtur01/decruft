@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1775928648492,
+  "lastUpdate": 1775930845504,
   "repoUrl": "https://github.com/jamtur01/decruft",
   "entries": {
     "decruft benchmarks": [
@@ -659,6 +659,66 @@ window.BENCHMARK_DATA = {
             "name": "large_page_no_scoring (1.1MB)",
             "value": 241951680,
             "range": "± 2124518",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "james@lovedthanlost.net",
+            "name": "James Turnbull",
+            "username": "jamtur01"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "17791f42412338c1cd05b69dd107be37b530b84c",
+          "message": "Merge pull request #15 from jamtur01/fix/content-removal-bugs\n\nFix content removal bugs (#7, #8, #10, #13)",
+          "timestamp": "2026-04-11T14:05:01-04:00",
+          "tree_id": "57c6abb95ae7e4d9d0acf546e239dd1d5a0c41c9",
+          "url": "https://github.com/jamtur01/decruft/commit/17791f42412338c1cd05b69dd107be37b530b84c"
+        },
+        "date": 1775930845094,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "small_page (12KB blog)",
+            "value": 2724976,
+            "range": "± 16038",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "medium_page (317KB stephango)",
+            "value": 3798843,
+            "range": "± 18800",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "large_page (1.1MB wikipedia)",
+            "value": 397507022,
+            "range": "± 5842868",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "github_issue (267KB)",
+            "value": 4150118,
+            "range": "± 80516",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "markdown_output (12KB blog)",
+            "value": 2951042,
+            "range": "± 29093",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "large_page_no_scoring (1.1MB)",
+            "value": 250679375,
+            "range": "± 2230874",
             "unit": "ns/iter"
           }
         ]
