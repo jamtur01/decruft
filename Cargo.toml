@@ -46,6 +46,7 @@ module_name_repetitions = "allow"
 similar_names = "allow"
 
 [dev-dependencies]
+regex-lite = "0.1"
 criterion = { version = "0.8.2", features = ["html_reports"] }
 
 [[bench]]
@@ -55,3 +56,4 @@ harness = false
 [package.metadata.docs.rs]
 all-features = true
 rustdoc-args = ["--cfg", "docsrs"]
+regex-lite = "0.1"
