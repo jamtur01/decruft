@@ -72,7 +72,7 @@ Following are some restrictions we place on the callback logic (lambda):
 
 ## Architecture
 
-![Async Task Framework (ATF) [Fig 1]](/cms/content/dam/dropbox/tech-blog/en-us/2020/11/atf/diagrams/Techblog-ATF-720x844px-1.png)
+![Async Task Framework (ATF) [Fig 1]](https://example.com/cms/content/dam/dropbox/tech-blog/en-us/2020/11/atf/diagrams/Techblog-ATF-720x844px-1.png)
 
 Async Task Framework (ATF) \[Fig 1\] 
 
@@ -221,7 +221,7 @@ assoc\_status= && next\_timestamp<=time.now()
 Below is the state machine that defines task state transitions:   
  
 
-![Task State Transitions [Fig 2]](/cms/content/dam/dropbox/tech-blog/en-us/2020/11/atf/diagrams/Techblog-ATF-720x225px-2.png) 
+![Task State Transitions [Fig 2]](https://example.com/cms/content/dam/dropbox/tech-blog/en-us/2020/11/atf/diagrams/Techblog-ATF-720x225px-2.png) 
 
 ## Achieving guarantees
 
@@ -276,4 +276,4 @@ Link copied
 *   Link copied
 
 *
-*   [![Share on Linkedin](/cms/etc.clientlibs/settings/wcm/designs/dropbox-tech-blog/clientlib-article-content/resources/linkedin.svg)](https://www.linkedin.com/shareArticle?mini=true&url=https://dropbox.tech/infrastructure/asynchronous-task-scheduling-at-dropbox&title=How%20we%20designed%20Dropbox%20ATF%3A%20an%20async%20task%20framework&source=https://dropbox.tech/infrastructure/asynchronous-task-scheduling-at-dropbox)
+*   [![Share on Linkedin](https://example.com/cms/etc.clientlibs/settings/wcm/designs/dropbox-tech-blog/clientlib-article-content/resources/linkedin.svg)](https://www.linkedin.com/shareArticle?mini=true&url=https://dropbox.tech/infrastructure/asynchronous-task-scheduling-at-dropbox&title=How%20we%20designed%20Dropbox%20ATF%3A%20an%20async%20task%20framework&source=https://dropbox.tech/infrastructure/asynchronous-task-scheduling-at-dropbox)

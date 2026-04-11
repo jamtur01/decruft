@@ -2,7 +2,7 @@
 
 ## Disruptive companies talk a good game about sharing. Uber's really just an under-regulated company making riches
 
-Topics: [uber](/topic/uber), [libertarians](/topic/libertarians), [Sydney](/topic/sydney), [Editor's Picks](/topic/editors_picks), [sharing economy](/topic/sharing_economy), 
+Topics: [uber](https://example.com/topic/uber), [libertarians](https://example.com/topic/libertarians), [Sydney](https://example.com/topic/sydney), [Editor's Picks](https://example.com/topic/editors_picks), [sharing economy](https://example.com/topic/sharing_economy), 
 
 [![The sharing economy is a lie: Uber, Ayn Rand and the truth about tech and libertarians](http://media.salon.com/2014/12/uber_rand_paul.jpg "The sharing economy is a lie: Uber, Ayn Rand and the truth about tech and libertarians")](http://media.salon.com/2014/12/uber_rand_paul.jpg "The sharing economy is a lie: Uber, Ayn Rand and the truth about tech and libertarians") Ayn Rand, Rand Paul (Credit: AP/Manuel Balce Ceneta/Photo montage by Salon) 
 
@@ -105,7 +105,7 @@ Next Article](http://www.salon.com/2015/01/31/satoshi_nakamoto%e2%80%99s_greates
 *   [](https://play.google.com/store/apps/developer?id=Salon)
 *   [](http://salon.tumblr.com/)
 *   [](http://pinterest.com/salonmedia/)
-*   [](/rss)
+*   [](https://example.com/rss)
 
 [![](http://media.salon.com/2012/10/buzzfeed_tech.png)](http://www.buzzfeed.com/tech "Buzzfeed Tech") 
 

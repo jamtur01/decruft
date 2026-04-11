@@ -20,7 +20,7 @@ Security forces in Tunisia stormed the country’s most prominent museum, freein
 
 March 18, 2015 Tunisian security forces secure the area after gunmen attacked the famed Bardo National Museum in Tunis, the capital. Fethi Belaid/AFP/Getty Images 
 
-[Buy Photo](#) 
+[Buy Photo](https://example.com/mozilla--wapo-1#) 
 
 Wait 1 second to continue.
 
@@ -80,7 +80,7 @@ Housed in a 19th-century palace, the museum where gunmen killed foreign tourists
 
 May 17, 2012 One of the many mosaics for which the Bardo National Museum in Tunis is famous. On March 18, 2015, gunmen attacked the museum and killed at least 19 people. Fethi Belaid/AFP/Getty Images 
 
-[Buy Photo](#) 
+[Buy Photo](https://example.com/mozilla--wapo-1#) 
 
 Wait 1 second to continue.
 

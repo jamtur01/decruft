@@ -1,4 +1,4 @@
-## [A trademark battle in the Arduino community](/Articles/637755/)
+## [A trademark battle in the Arduino community](https://example.com/Articles/637755/)
 
 The [Arduino](https://en.wikipedia.org/wiki/Arduino) has been one of the biggest success stories of the open-hardware movement, but that success does not protect it from internal conflict. In recent months, two of the project's founders have come into conflict about the direction of future efforts—and that conflict has turned into a legal dispute about who owns the rights to the Arduino trademark. 
 
@@ -34,13 +34,13 @@ One could argue that disputes of this sort are proof that even small projects st
 
 But, perhaps, once a project becomes profitable, there is simply no way to predict what might happen. Arduino LLC would seem to have a strong case for continual and rigorous use of the "Arduino" trademark, which is the salient point in US trademark law. It could still be a while before the courts rule on either side of that question, however. 
 
-## [Mapping and data mining with QGIS 2.8](/Articles/637533/)
+## [Mapping and data mining with QGIS 2.8](https://example.com/Articles/637533/)
 
 [QGIS](http://qgis.org/) is a free-software geographic information system (GIS) tool; it provides a unified interface in which users can import, edit, and analyze geographic-oriented information, and it can produce output as varied as printable maps or map-based web services. The project recently made its first update to be designated a long-term release (LTR), and that release is both poised for high-end usage and friendly to newcomers alike. 
 
 The new release is version 2.8, which was unveiled on March 2. An official [change log](http://qgis.org/en/site/forusers/visualchangelog28/index.html) is available on the QGIS site, while the release itself was announced primarily through blog posts (such as [this post](http://anitagraser.com/2015/03/02/qgis-2-8-ltr-has-landed/) by Anita Graser of the project's steering committee). Downloads are [available](http://qgis.org/en/site/forusers/download.html) for a variety of platforms, including packages for Ubuntu, Debian, Fedora, openSUSE, and several other distributions.
 
-[![[QGIS main interface]](/images/2015/03-qgis-map-sm.png)](/Articles/637747/)
+[![[QGIS main interface]](https://example.com/images/2015/03-qgis-map-sm.png)](https://example.com/Articles/637747/)
 
 As the name might suggest, QGIS is a Qt application; the latest release will, in fact, build on both Qt4 and Qt5, although the binaries released by the project come only in Qt4 form at present. 2.8 has been labeled a long-term release (LTR)—which, in this case, means that the project has committed to providing backported bug fixes for one full calendar year, and that the 2.8.x series is in permanent feature freeze. The goal, according to the change log, is to provide a stable version suitable for businesses and deployments in other large organizations. The change log itself points out that the development of quite a few new features was underwritten by various GIS companies or university groups, which suggests that taking care of these organizations' needs is reaping dividends for the project. 
 
@@ -54,7 +54,7 @@ But well-made maps are often the easiest way to illuminate facts about populatio
 
 The significant changes in QGIS 2.8 fall into several categories. There are updates to how QGIS handles the mathematical expressions and queries users can use to filter information out of a data set, improvements to the tools used to explore the on-screen map canvas, and enhancements to the "map composer" used to produce visual output. This is on top of plenty of other under-the-hood improvements, naturally.
 
-[![[QGIS query builder]](/images/2015/03-qgis-query-sm.png)](/Articles/637748/)
+[![[QGIS query builder]](https://example.com/images/2015/03-qgis-query-sm.png)](https://example.com/Articles/637748/)
 
 In the first category are several updates to the filtering tools used to mine a data set. Generally speaking, each independent data set is added to a QGIS project as its own layer, then transformed with filters to focus in on a specific portion of the original data. For instance, the land-usage statistics for a region might be one layer, while roads and buildings for the same region from OpenStreetMap might be two additional layers. Such filters can be created in several ways: there is a "query builder" that lets the user construct and test expressions on a data layer, then save the results, an SQL console for performing similar queries on a database, and spreadsheet-like editing tools for working directly on data tables. 
 
@@ -66,7 +66,7 @@ There have also been several improvements to the Python and Processing plugins. 
 
 #### Maps in, maps out
 
-[![[QGIS simplify tool]](/images/2015/03-qgis-simplify-sm.png)](/Articles/637749/)
+[![[QGIS simplify tool]](https://example.com/images/2015/03-qgis-simplify-sm.png)](https://example.com/Articles/637749/)
 
 The process of working with on-screen map data picked up some improvements in the new release as well. Perhaps the most fundamental is that each map layer added to the canvas is now handled in its own thread, so fewer hangs in the user interface are experienced when re-rendering a layer (as happens whenever the user changes the look of points or shapes in a layer). Since remote databases can also be layers, this multi-threaded approach is more resilient against connectivity problems, too. The interface also now supports temporary "scratch" layers that can be used to merge, filter, or simply experiment with a data set, but are not saved when the current project is saved. 
 
@@ -74,7 +74,7 @@ For working on the canvas itself, polygonal regions can now use raster images (t
 
 There is a completely overhauled "simplify" tool that is used to reduce the number of extraneous vertices of a vector layer (thus reducing its size). The old simplify tool provided only a relative "tolerance" setting that did not correspond directly to any units. With the new tool, users can set a simplification threshold in terms of the underlying map units, layer-specific units, pixels, and more—and, in addition, the tool reports how much the simplify operation has reduced the size of the data.
 
-[![[QGIS style editing]](/images/2015/03-qgis-style-sm.png)](/Articles/637751/)
+[![[QGIS style editing]](https://example.com/images/2015/03-qgis-style-sm.png)](https://example.com/Articles/637751/)
 
 There has also been an effort to present a uniform interface to one of the most important features of the map canvas: the ability to change the symbology used for an item based on some data attribute. The simplest example might be to change the line color of a road based on whether its road-type attribute is "highway," "service road," "residential," or so on. But the same feature is used to automatically highlight layer information based on the filtering and querying functionality discussed above. The new release allows many more map attributes to be controlled by these "data definition" settings, and provides a hard-to-miss button next to each attribute, through which a custom data definition can be set. 
 
@@ -86,9 +86,9 @@ There are, as usual, many more changes than there is room to discuss. Some parti
 
 QGIS is one of those rare free-software applications that is both powerful enough for high-end work and yet also straightforward to use for the simple tasks that might attract a newcomer to GIS in the first place. The 2.8 release, particularly with its project-wide commitment to long-term support, appears to be an update well worth checking out, whether one needs to create a simple, custom map or to mine a database for obscure geo-referenced meaning. 
 
-## [Development activity in LibreOffice and OpenOffice](/Articles/637735/)
+## [Development activity in LibreOffice and OpenOffice](https://example.com/Articles/637735/)
 
-The LibreOffice project was [announced](/Articles/407383/) with great fanfare in September 2010. Nearly one year later, the OpenOffice.org project (from which LibreOffice was forked) [was cut loose from Oracle](/Articles/446093/) and found a new home as an Apache project. It is fair to say that the rivalry between the two projects in the time since then has been strong. Predictions that one project or the other would fail have not been borne out, but that does not mean that the two projects are equally successful. A look at the two projects' development communities reveals some interesting differences.
+The LibreOffice project was [announced](https://example.com/Articles/407383/) with great fanfare in September 2010. Nearly one year later, the OpenOffice.org project (from which LibreOffice was forked) [was cut loose from Oracle](https://example.com/Articles/446093/) and found a new home as an Apache project. It is fair to say that the rivalry between the two projects in the time since then has been strong. Predictions that one project or the other would fail have not been borne out, but that does not mean that the two projects are equally successful. A look at the two projects' development communities reveals some interesting differences.
 
 #### Release histories
 
@@ -153,11 +153,11 @@ Development work on LibreOffice is thus concentrated in a small number of compan
 
 #### Some conclusions
 
-Last October, some [concerns](/Articles/637742/) were raised on the OpenOffice list about the health of that project's community. At the time, Rob Weir [shrugged them off](/Articles/637743/) as the result of a marketing effort by the LibreOffice crowd. There can be no doubt that the war of words between these two projects has gotten tiresome at times, but, looking at the above numbers, it is hard not to conclude that there is an issue that goes beyond marketing hype here. 
+Last October, some [concerns](https://example.com/Articles/637742/) were raised on the OpenOffice list about the health of that project's community. At the time, Rob Weir [shrugged them off](https://example.com/Articles/637743/) as the result of a marketing effort by the LibreOffice crowd. There can be no doubt that the war of words between these two projects has gotten tiresome at times, but, looking at the above numbers, it is hard not to conclude that there is an issue that goes beyond marketing hype here. 
 
 In the 4½ years since its founding, the LibreOffice project has put together a community with over 250 active developers. There is support from multiple companies and an impressive rate of patches going into the project's repository. The project's ability to sustain nearly monthly releases on two branches is a direct result of that community's work. Swearing at LibreOffice is one of your editor's favorite pastimes, but it seems clear that the project is on a solid footing with a healthy community. 
 
-OpenOffice, instead, is driven by four developers from a single company — a company that appears to have been deemphasizing OpenOffice work for some time. As a result, the project's commit rate is a fraction of what LibreOffice is able to sustain and releases are relatively rare. As of this writing, the [OpenOffice blog](https://blogs.apache.org/OOo/) shows no posts in 2015. In the October discussion, Rob [said](/Articles/637750/) that "the dogs may bark but the caravan moves on." That may be true, but, in this case, the caravan does not appear to be moving with any great speed. 
+OpenOffice, instead, is driven by four developers from a single company — a company that appears to have been deemphasizing OpenOffice work for some time. As a result, the project's commit rate is a fraction of what LibreOffice is able to sustain and releases are relatively rare. As of this writing, the [OpenOffice blog](https://blogs.apache.org/OOo/) shows no posts in 2015. In the October discussion, Rob [said](https://example.com/Articles/637750/) that "the dogs may bark but the caravan moves on." That may be true, but, in this case, the caravan does not appear to be moving with any great speed. 
 
 Anything can happen in the free-software development world; it is entirely possible that a reinvigorated OpenOffice.org may yet give LibreOffice a run for its money. But something will clearly have to change to bring that future around. As things stand now, it is hard not to conclude that LibreOffice has won the battle for developer participation. 
 
@@ -166,10 +166,10 @@ Anything can happen in the free-software development world; it is entirely possi
 
 ## Inside this week's LWN.net Weekly Edition
 
-*   [Security](/Articles/637395/): Toward secure package downloads; New vulnerabilities in drupal, mozilla, openssl, python-django ...
-*   [Kernel](/Articles/637396/): LSFMM coverage: NFS, defragmentation, epoll(), copy offload, and more.
-*   [Distributions](/Articles/637397/): A look at Debian's 2015 DPL candidates; Debian, Fedora, ...
-*   [Development](/Articles/637398/): A look at GlusterFS; LibreOffice Online; Open sourcing existing code; Secure Boot in Windows 10; ...
-*   [Announcements](/Articles/637399/): A Turing award for Michael Stonebraker, Sébastien Jodogne, ReGlue are Free Software Award winners, Kat Walsh joins FSF board of directors, Cyanogen, ...
+*   [Security](https://example.com/Articles/637395/): Toward secure package downloads; New vulnerabilities in drupal, mozilla, openssl, python-django ...
+*   [Kernel](https://example.com/Articles/637396/): LSFMM coverage: NFS, defragmentation, epoll(), copy offload, and more.
+*   [Distributions](https://example.com/Articles/637397/): A look at Debian's 2015 DPL candidates; Debian, Fedora, ...
+*   [Development](https://example.com/Articles/637398/): A look at GlusterFS; LibreOffice Online; Open sourcing existing code; Secure Boot in Windows 10; ...
+*   [Announcements](https://example.com/Articles/637399/): A Turing award for Michael Stonebraker, Sébastien Jodogne, ReGlue are Free Software Award winners, Kat Walsh joins FSF board of directors, Cyanogen, ...
 
-**Next page**: [Security>>](/Articles/637395/)
+**Next page**: [Security>>](https://example.com/Articles/637395/)

@@ -1,4 +1,4 @@
-[](/en-us/news/technology/oneplus-3t-vs-oneplus-3-whats-the-difference/ar-AAkmfI2) 
+[](https://example.com/en-us/news/technology/oneplus-3t-vs-oneplus-3-whats-the-difference/ar-AAkmfI2) 
 
  ![<span style=\"font-size:13px;\">Nintendo/Apple</span>](http://img-s-msn-com.akamaized.net/tenant/amp/entityid/AAkk5fh.img?h=820&w=1456&m=6&q=60&o=f&l=f&x=1162&y=540) © Provided by Business Insider Inc Nintendo/Apple Nintendo and Apple shocked the world earlier this year by announcing "Super Mario Run," the legendary gaming company's first foray into mobile gaming. It's a Mario game you can play on your phone with just one hand, so what's not to love?
 

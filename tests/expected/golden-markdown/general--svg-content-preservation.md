@@ -12,6 +12,6 @@ model = NeuralNetwork(layers=[1, 4, 1])
 
 This simple model can be trained to approximate many functions with sufficient layers and parameters.
 
-## Further Reading [](#further-reading)
+## Further Reading [](https://example.com/blog/neural-networks#further-reading)
 
 For more on neural networks, see the references section at the end of this article.

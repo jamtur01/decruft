@@ -22,13 +22,13 @@ Yet these historical skirmishes and financial flops are also the least interesti
 
 ## Architectural Pattern Languages
 
- [Pattern Languages](/pattern-languages) are sets of flexible, reusable solutions to common design problems.
+ [Pattern Languages](https://example.com/pattern-languages) are sets of flexible, reusable solutions to common design problems.
 
 They come from the land of architects: the software developers of the material world. Namely, the architect [Christopher Alexander](https://en.wikipedia.org/wiki/Christopher_Alexander) , whose philosophy of constructing vibrant and humane living space escaped the confines of urban planning and infused the world of software design in the late 1980’s.
 
 In their book [A Pattern Language](https://en.wikipedia.org/wiki/A_Pattern_Language) , Alexander defined 253 architectural patterns for designing cities, towns, and homes. These became the example patterns for writing patterns. Each one is composed of a context, problem, example, and solution.
 
-![A Pattern Language](/_astro/patterns.D8-ibnKY_Z2ngng6.webp) 
+![A Pattern Language](https://example.com/_astro/patterns.D8-ibnKY_Z2ngng6.webp) 
 
 For example, the design pattern **A Place to Wait** asks that we create comfortable accommodation and ambient activity whenever someone needs to wait; benches, cafes, reading rooms, miniature playgrounds, three-reel slot machines (if we happen to be in the Las Vegas airport). This solves the problem of huddles of people awkwardly hovering in liminal space; near doorways, taking up sidewalks, anxiously waiting for delayed flights or dental operations or immigration investigations without anything to distract them from uncertain fates.
 
@@ -76,7 +76,7 @@ In lieu of Xanadoc links, the modern web has landed on some fairly decent soluti
 
 Wikipedia's interface showing one of the hover previews that appear over links
 
-Hover previews have also become popular in the [Digital Gardening](/garden-history) community as a way to help visitors quickly navigate through collections of public notes and essays that are deeply interlinked. [Andy Matuschak](https://notes.andymatuschak.org/) and [Gwern Branwen](https://www.gwern.net/index) are two gardeners with good examples of how these work in action.
+Hover previews have also become popular in the [Digital Gardening](https://example.com/garden-history) community as a way to help visitors quickly navigate through collections of public notes and essays that are deeply interlinked. [Andy Matuschak](https://notes.andymatuschak.org/) and [Gwern Branwen](https://www.gwern.net/index) are two gardeners with good examples of how these work in action.
 
 ![Andy Matuschak's notes website featuring hover link previews](https://res.cloudinary.com/dg3gyk0gu/image/upload/c_scale,f_auto,q_auto:good,w_1000/v1592343501/maggieappleton.com/notes/Screenshot_2020-06-16_at_22.38.06.png) 
 
@@ -150,11 +150,11 @@ The interface of LiquidText with transpointing between sections of text
 
 ### 4\. Transclusion
 
-*   [Transclusion and Transcopyright Dreams](/transcopyright-dreams)
+*   [Transclusion and Transcopyright Dreams](https://example.com/transcopyright-dreams)
 
 ### 5\. Bi-Directional Links
 
-*   [A Short History of Bi-Directional Links](/bidirectionals)
+*   [A Short History of Bi-Directional Links](https://example.com/bidirectionals)
 
 ### 6\. Version Control
 
@@ -188,7 +188,7 @@ Roam block UIDs
 
 ### 9\. Annotation
 
- [Hypothesis]() 
+ [Hypothesis](https://example.com/footnotes--maggieappleton.com-xanadu-patterns) 
 
 ### 10\. Multiple Views and Spatial Arrangements
 

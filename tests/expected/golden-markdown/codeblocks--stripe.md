@@ -10,7 +10,7 @@ x402 is a protocol for internet payments. When a client requests a paid resource
 *   Crypto payins enabled for your account.
 *   Machine-to-machine payments for x402 enabled.
 
-[## Create your endpoint](#create-your-endpoint)
+[## Create your endpoint](https://example.com/codeblocks--stripe#create-your-endpoint)
 
 Add payment middleware to your endpoint so it can accept x402 payments. The middleware handles payment verification and settlement with Stripe per request to `/paid`.
 
@@ -33,7 +33,7 @@ app.use(
 );
 ``` 
 
-[## Test your endpoint](#test-your-endpoint)
+[## Test your endpoint](https://example.com/codeblocks--stripe#test-your-endpoint)
 
 Make a request to your server without an existing payment header, and you receive a `402` response with payment requirements.
 
@@ -43,6 +43,6 @@ Command Line
 curl http://localhost:3000/paid
 ``` 
 
-[## Run mainnet transactions](#run-mainnet)
+[## Run mainnet transactions](https://example.com/codeblocks--stripe#run-mainnet)
 
 To run mainnet transactions, integrate with the mainnet facilitator and configure your environment for production use.

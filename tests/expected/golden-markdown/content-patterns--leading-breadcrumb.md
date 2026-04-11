@@ -1,5 +1,5 @@
-*   [Home](/)
-*   [Posts](/archive)
+*   [Home](https://example.com/)
+*   [Posts](https://example.com/archive)
 *   I took a job in an unexpected industry
 
 Not a shadowing day or research interview — a real job.

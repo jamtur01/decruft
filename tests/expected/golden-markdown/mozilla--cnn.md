@@ -10,7 +10,7 @@ Powered by SmartAsset.com
 
 ![](https://smartasset.com/embed/retirementcalculatorc?&key=bdknf2rinbhwvdksm6zbmhf3twrv4oih&src=http%253A%252F%252Fmoney.cnn.com%252F2016%252F02%252F01%252Fnews%252Feconomy%252Fpoverty-inequality-united-states%252Findex.html&ref=&ver=1.1&rnd=fnfsvm)
 
-[Disclosures](#) [SmartAsset.com](https://smartasset.com) 
+[Disclosures](https://example.com/mozilla--cnn#) [SmartAsset.com](https://smartasset.com) 
 
 Among its key findings: the class you're born into matters much more in the U.S. than many of the other countries. 
 

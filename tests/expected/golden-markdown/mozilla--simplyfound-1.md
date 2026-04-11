@@ -20,7 +20,7 @@ In celebration of their 4th year anniversary, the foundation has released **Ra
 
 ![Image 3](https://d34hb2g9mvfppu.cloudfront.net/m/images/cache/images/2016/02/29/images_2_326_c32fa7688f70_lg.jpeg) 
 
-[](#snippet-326-image-carousel) [](#snippet-326-image-carousel) 
+[](https://example.com/mozilla--simplyfound-1#snippet-326-image-carousel) [](https://example.com/mozilla--simplyfound-1#snippet-326-image-carousel) 
 
 Raspberry Pi - Various Usage
 
@@ -36,4 +36,4 @@ Raspberry Pi 3 is now available via many online resellers.  At this time, you s
   
  You think you are ready? If so, request to become an approved author.  
   
-   \[ [Send Your Request](/approval/request) \]
+   \[ [Send Your Request](https://example.com/approval/request) \]

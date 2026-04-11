@@ -1,7 +1,7 @@
 <div class="content">
             <div class="section" id="evolve-shared-mutable-history">
                 <h1>
-                    <a class="headerlink" href="#evolve-shared-mutable-history" title="Permalink to this headline">¶</a>
+                    <a class="headerlink" title="Permalink to this headline" href="https://example.com/mozilla--mercurial#evolve-shared-mutable-history">¶</a>
                 </h1>
                 <div class="contents topic" id="contents">
                     <p class="topic-title first">
@@ -67,7 +67,7 @@
                     </ul>
                 </div>
                 <p>
-                    Once you have mastered the art of mutable history in a single repository (see the <a class="reference external" href="user-guide.html">user guide</a>), you can move up to the next level: <em>shared</em> mutable history. <tt class="docutils literal"><span class="pre">evolve</span></tt> lets you push and pull draft changesets between repositories along with their obsolescence markers. This opens up a number of interesting possibilities.
+                    Once you have mastered the art of mutable history in a single repository (see the <a class="reference external" href="https://example.com/user-guide.html">user guide</a>), you can move up to the next level: <em>shared</em> mutable history. <tt class="docutils literal"><span class="pre">evolve</span></tt> lets you push and pull draft changesets between repositories along with their obsolescence markers. This opens up a number of interesting possibilities.
                 </p>
                 <p>
                     The simplest scenario is a single developer working across two computers. Say you’re working on code that must be tested on a remote test server, probably in a rack somewhere, only accessible by SSH, and running an “enterprise-grade” (out-of-date) OS. But you probably prefer to write code locally: everything is setup the way you like it, and you can use your preferred editor, IDE, merge/diff tools, etc.
@@ -96,11 +96,11 @@
                 </p>
                 <div class="section" id="sharing-with-a-single-developer">
                     <h2>
-                        <a class="headerlink" href="#sharing-with-a-single-developer" title="Permalink to this headline">¶</a>
+                        <a class="headerlink" title="Permalink to this headline" href="https://example.com/mozilla--mercurial#sharing-with-a-single-developer">¶</a>
                     </h2>
                     <div class="section" id="publishing-and-non-publishing-repositories">
                         <h3>
-                            <a class="headerlink" href="#publishing-and-non-publishing-repositories" title="Permalink to this headline">¶</a>
+                            <a class="headerlink" title="Permalink to this headline" href="https://example.com/mozilla--mercurial#publishing-and-non-publishing-repositories">¶</a>
                         </h3>
                         <p>
                             The key to shared mutable history is to keep your changesets in <em>draft</em> phase as you pass them around. Recall that by default, <tt class="docutils literal"><span class="pre">hg</span> <span class="pre">push</span></tt> promotes changesets from <em>draft</em> to <em>public</em>, and public changesets are immutable. You can change this behaviour by reconfiguring the <em>remote</em> repository so that it is non-publishing. (Short version: set <tt class="docutils literal"><span class="pre">phases.publish</span></tt> to <tt class="docutils literal"><span class="pre">false</span></tt>. Long version follows.)
@@ -108,7 +108,7 @@
                     </div>
                     <div class="section" id="setting-up">
                         <h3>
-                            <a class="headerlink" href="#setting-up" title="Permalink to this headline">¶</a>
+                            <a class="headerlink" title="Permalink to this headline" href="https://example.com/mozilla--mercurial#setting-up">¶</a>
                         </h3>
                         <p>
                             We’ll work through an example with three local repositories, although in the real world they’d most likely be on three different computers. First, the <tt class="docutils literal"><span class="pre">public</span></tt> repository is where tested, polished changesets live, and it is where you synchronize with the rest of your team.
@@ -206,10 +206,10 @@ added 1 changesets with 1 changes to 1 files
                     </div>
                     <div class="section" id="example-1-amend-a-shared-changeset">
                         <h3>
-                            <a class="headerlink" href="#example-1-amend-a-shared-changeset" title="Permalink to this headline">¶</a>
+                            <a class="headerlink" title="Permalink to this headline" href="https://example.com/mozilla--mercurial#example-1-amend-a-shared-changeset">¶</a>
                         </h3>
                         <p>
-                            Everything you learned in the <a class="reference external" href="user-guide.html">user guide</a> applies to work done in <tt class="docutils literal"><span class="pre">dev-repo</span></tt>. You can commit, amend, uncommit, evolve, and so forth just as before.
+                            Everything you learned in the <a class="reference external" href="https://example.com/user-guide.html">user guide</a> applies to work done in <tt class="docutils literal"><span class="pre">dev-repo</span></tt>. You can commit, amend, uncommit, evolve, and so forth just as before.
                         </p>
                         <p>
                             Things get different when you push changesets to <tt class="docutils literal"><span class="pre">test-repo</span></tt>. Or rather, things stay the same, which <em>is</em> different: because we configured <tt class="docutils literal"><span class="pre">test-repo</span></tt> to be non-publishing, draft changesets stay draft when we push them to <tt class="docutils literal"><span class="pre">test-repo</span></tt>. Importantly, they’re also draft (mutable) in <tt class="docutils literal"><span class="pre">test-repo</span></tt>.
@@ -290,7 +290,7 @@ added 1 changesets with 1 changes to 1 files (+1 heads)
                     </div>
                     <div class="section" id="example-2-amend-again-locally">
                         <h3>
-                            <a class="headerlink" href="#example-2-amend-again-locally" title="Permalink to this headline">¶</a>
+                            <a class="headerlink" title="Permalink to this headline" href="https://example.com/mozilla--mercurial#example-2-amend-again-locally">¶</a>
                         </h3>
                         <p>
                             This process can repeat. Perhaps you figure out a more elegant fix to the bug, and want to mutate history so nobody ever knows you had a less-than-perfect idea. We’ll implement it locally in <tt class="docutils literal"><span class="pre">dev-repo</span></tt> and push to <tt class="docutils literal"><span class="pre">test-repo</span></tt>:
@@ -371,7 +371,7 @@ abort: cannot amend public changesets</code></pre>
                 </div>
                 <div class="section" id="sharing-with-multiple-developers-code-review">
                     <h2>
-                        <a class="headerlink" href="#sharing-with-multiple-developers-code-review" title="Permalink to this headline">¶</a>
+                        <a class="headerlink" title="Permalink to this headline" href="https://example.com/mozilla--mercurial#sharing-with-multiple-developers-code-review">¶</a>
                     </h2>
                     <p>
                         Now that you know how to share your own mutable history across multiple computers, you might be wondering if it makes sense to share mutable history with others. It does, but you have to be careful, stay alert, and <em>communicate</em> with your peers.
@@ -384,7 +384,7 @@ abort: cannot amend public changesets</code></pre>
                     </p>
                     <div class="section" id="id2">
                         <h3>
-                            <a class="headerlink" href="#id2" title="Permalink to this headline">¶</a>
+                            <a class="headerlink" title="Permalink to this headline" href="https://example.com/mozilla--mercurial#id2">¶</a>
                         </h3>
                         <p>
                             To demonstrate, let’s start with the <tt class="docutils literal"><span class="pre">public</span></tt> repository as we left it in the last example, with two immutable changesets (figure 5 above). We’ll clone a <tt class="docutils literal"><span class="pre">review</span></tt> repository from it, and then Alice and Bob will both clone from <tt class="docutils literal"><span class="pre">review</span></tt>.
@@ -433,7 +433,7 @@ evolve =</code></pre>
                     </div>
                     <div class="section" id="example-3-alice-commits-and-amends-a-draft-fix">
                         <h3>
-                            <a class="headerlink" href="#example-3-alice-commits-and-amends-a-draft-fix" title="Permalink to this headline">¶</a>
+                            <a class="headerlink" title="Permalink to this headline" href="https://example.com/mozilla--mercurial#example-3-alice-commits-and-amends-a-draft-fix">¶</a>
                         </h3>
                         <p>
                             We’ll follow Alice working on a bug fix. We’re going to use bookmarks to make it easier to understand multiple branch heads in the <tt class="docutils literal"><span class="pre">review</span></tt> repository, so Alice starts off by creating a bookmark and committing her first attempt at a fix:
@@ -490,7 +490,7 @@ updating bookmark bug15</code></pre>
                     </div>
                     <div class="section" id="example-4-bob-implements-and-publishes-a-new-feature">
                         <h3>
-                            <a class="headerlink" href="#example-4-bob-implements-and-publishes-a-new-feature" title="Permalink to this headline">¶</a>
+                            <a class="headerlink" title="Permalink to this headline" href="https://example.com/mozilla--mercurial#example-4-bob-implements-and-publishes-a-new-feature">¶</a>
                         </h3>
                         <p>
                             Meanwhile, Bob has been working on a new feature. Like Alice, he’ll use a bookmark to track his work, and he’ll push that bookmark to the <tt class="docutils literal"><span class="pre">review</span></tt> repository, so that reviewers know which changesets to review.
@@ -564,7 +564,7 @@ updating bookmark featureX</code></pre>
                     </div>
                     <div class="section" id="example-5-alice-integrates-and-publishes">
                         <h3>
-                            <a class="headerlink" href="#example-5-alice-integrates-and-publishes" title="Permalink to this headline">¶</a>
+                            <a class="headerlink" title="Permalink to this headline" href="https://example.com/mozilla--mercurial#example-5-alice-integrates-and-publishes">¶</a>
                         </h3>
                         <p>
                             Finally, Alice gets back from lunch and sees that the carrier pigeon with her second review has arrived (or maybe it’s in her email inbox). Alice’s reviewer approved her amended changeset, so she pushes it to <tt class="docutils literal"><span class="pre">public</span></tt>:
@@ -621,7 +621,7 @@ updating bookmark bug15</code></pre>
                 </div>
                 <div class="section" id="getting-into-trouble-with-shared-mutable-history">
                     <h2>
-                        <a class="headerlink" href="#getting-into-trouble-with-shared-mutable-history" title="Permalink to this headline">¶</a>
+                        <a class="headerlink" title="Permalink to this headline" href="https://example.com/mozilla--mercurial#getting-into-trouble-with-shared-mutable-history">¶</a>
                     </h2>
                     <p>
                         Mercurial with <tt class="docutils literal"><span class="pre">evolve</span></tt> is a powerful tool, and using powerful tools can have consequences. (You can cut yourself badly with a sharp knife, but every competent chef keeps several around. Ever try to chop onions with a spoon?)
@@ -634,7 +634,7 @@ updating bookmark bug15</code></pre>
                     </p>
                     <div class="section" id="id3">
                         <h3>
-                            <a class="headerlink" href="#id3" title="Permalink to this headline">¶</a>
+                            <a class="headerlink" title="Permalink to this headline" href="https://example.com/mozilla--mercurial#id3">¶</a>
                         </h3>
                         <p>
                             For these examples, we’re going to use a slightly different workflow: as before, Alice and Bob share a <tt class="docutils literal"><span class="pre">public</span></tt> repository. But this time there is no <tt class="docutils literal"><span class="pre">review</span></tt> repository. Instead, Alice and Bob put on their cowboy hats, throw good practice to the wind, and pull directly from each other’s working repositories.
@@ -688,7 +688,7 @@ publish = false</code></pre>
                     </div>
                     <div class="section" id="example-6-divergent-changesets">
                         <h3>
-                            <a class="headerlink" href="#example-6-divergent-changesets" title="Permalink to this headline">¶</a>
+                            <a class="headerlink" title="Permalink to this headline" href="https://example.com/mozilla--mercurial#example-6-divergent-changesets">¶</a>
                         </h3>
                         <p>
                             When an obsolete changeset has two successors, those successors are <em>divergent</em>. One way to get into such a situation is by failing to communicate with your teammates. Let’s see how that might happen.
@@ -778,7 +778,7 @@ base: [4] fix bug 24 (v1)
                     </div>
                     <div class="section" id="phase-divergence-when-a-rewritten-changeset-is-made-public">
                         <h3>
-                            <a class="headerlink" href="#phase-divergence-when-a-rewritten-changeset-is-made-public" title="Permalink to this headline">¶</a>
+                            <a class="headerlink" title="Permalink to this headline" href="https://example.com/mozilla--mercurial#phase-divergence-when-a-rewritten-changeset-is-made-public">¶</a>
                         </h3>
                         <p>
                             If Alice and Bob are collaborating on some mutable changesets, it’s possible to get into a situation where an otherwise worthwhile changeset cannot be pushed to the public repository; it is <em>phase-divergent</em> with another changeset that was made public first. Let’s demonstrate one way this could happen.
@@ -865,7 +865,7 @@ $ hg pull -q -u
                 </div>
                 <div class="section" id="conclusion">
                     <h2>
-                        <a class="headerlink" href="#conclusion" title="Permalink to this headline">¶</a>
+                        <a class="headerlink" title="Permalink to this headline" href="https://example.com/mozilla--mercurial#conclusion">¶</a>
                     </h2>
                     <p>
                         Mutable history is a powerful tool. Like a sharp knife, an experienced user can do wonderful things with it, much more wonderful than with a dull knife (never mind a rusty spoon). At the same time, an inattentive or careless user can do harm to himself or others. Mercurial with <tt class="docutils literal"><span class="pre">evolve</span></tt> goes to great lengths to limit the harm you can do by trying to handle all possible types of “troubled” changesets. Nevertheless, having a first-aid kit nearby does not mean you should stop being careful with sharp knives.

@@ -4,7 +4,7 @@ In this article, we explore the concept of *type classes* in Kotlin, a powerful 
 
 Tip
 
-Type classes are tough. If you need to become proficient in Kotlin **quickly** and with thousands of lines of code and a project under your belt, you'll love [Kotlin Essentials](/courses/kotlin-essentials). It's a jam-packed course on **everything** you'll ever need to work with Kotlin for any platform.
+Type classes are tough. If you need to become proficient in Kotlin **quickly** and with thousands of lines of code and a project under your belt, you'll love [Kotlin Essentials](https://rockthejvm.com/courses/kotlin-essentials). It's a jam-packed course on **everything** you'll ever need to work with Kotlin for any platform.
 
 ## Setting the Stage
 

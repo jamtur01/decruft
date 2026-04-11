@@ -1,13 +1,13 @@
-*   [Assess How Deep Is Your Content](#assess-how-deep-is-your-content)
-*   [Rewrite With Content Depth In Mind](#rewrite-with-content-depth-in-mind)
-*   [Yes, Content Depth and Breadth Overlap](#yes-content-depth-and-breadth-overlap)
-*   [Depth of Content = Quality + Frequency](#depth-of-content--quality--frequency)
+*   [Assess How Deep Is Your Content](https://example.com/mozilla--topicseed-1#assess-how-deep-is-your-content)
+*   [Rewrite With Content Depth In Mind](https://example.com/mozilla--topicseed-1#rewrite-with-content-depth-in-mind)
+*   [Yes, Content Depth and Breadth Overlap](https://example.com/mozilla--topicseed-1#yes-content-depth-and-breadth-overlap)
+*   [Depth of Content = Quality + Frequency](https://example.com/mozilla--topicseed-1#depth-of-content--quality--frequency)
 
 **Content depth** is an arbitrary score or rating of how comprehensive the coverage of a specific topic is within a piece of content. **Content breadth** is an arbitrary grading of how many related subjects are you covering within your content. 
 
 And this distinction is important to make and establish from the beginning. Effective [**topical authority**](https://topicseed.com/blog/what-is-topical-authority) can only be gained when you use both content depth and content breadth in your overall content strategy for rapid search engine optimization gains. However, because most content writers prefer to write a little bit about many things rather than write a lot about one thing, you end up with a too little substance spread very thin. 
 
-Content depth should be the urgent priority for your content marketing strategy, and clearly defined in your [content briefs](/blog/content-briefs). Start by dominating your own core topics, before venturing across the pond and write about linked subject matters. Otherwise, you are the opposite of an authority as the definition states that an authority is *“a person with extensive or specialized knowledge about a subject; an expert”.* Lastly, do not mistake article depth vs. article length: a blog post’s extreme wordcount has nothing to do with its content depth. 
+Content depth should be the urgent priority for your content marketing strategy, and clearly defined in your [content briefs](https://example.com/blog/content-briefs). Start by dominating your own core topics, before venturing across the pond and write about linked subject matters. Otherwise, you are the opposite of an authority as the definition states that an authority is *“a person with extensive or specialized knowledge about a subject; an expert”.* Lastly, do not mistake article depth vs. article length: a blog post’s extreme wordcount has nothing to do with its content depth. 
 
 ## Assess How Deep Is Your Content
 
@@ -27,7 +27,7 @@ As explained above, make sure you do not force yourself to write a much longer a
 
 All content writers know that when you open Google Docs, WordPress, or your text editor of choice, you will inevitably count your focus keywords’ frequency. Although I understand (yet question) the value of keywords in modern SEO, do not become obsessed with reaching a magic number for your keywords. No reader coming from Google is out there counting how often your keywords are appearing. And search engine algorithms will penalize you for writing for robots, rather than humans. 
 
-With the massive rise of voice searches, [users tend to use full questions for their search queries](/blog/featured-snippets-using-questions). What used to be `top bottled water brands` is now `OK google, what is the best bottled-water brand in Texas`? The point being, [**keywords are losing traction**](https://topicseed.com/blog/keyword-search-volume-overrated) to leave space for a more natural language understanding of a blog post’s textual content, and meaning. 
+With the massive rise of voice searches, [users tend to use full questions for their search queries](https://example.com/blog/featured-snippets-using-questions). What used to be `top bottled water brands` is now `OK google, what is the best bottled-water brand in Texas`? The point being, [**keywords are losing traction**](https://topicseed.com/blog/keyword-search-volume-overrated) to leave space for a more natural language understanding of a blog post’s textual content, and meaning. 
 
 ## Yes, Content Depth and Breadth Overlap
 

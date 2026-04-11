@@ -2,10 +2,10 @@
 
 Here is an architecture diagram:
 
- ![Architecture diagram.](/images/architecture.png?imwidth=3840)
+ ![Architecture diagram.](https://www.example.com/images/architecture.png?imwidth=3840)
 
 And here is a second diagram:
 
- ![Flow diagram.](/images/flow.png?imwidth=3840)
+ ![Flow diagram.](https://www.example.com/images/flow.png?imwidth=3840)
 
 That concludes our overview.

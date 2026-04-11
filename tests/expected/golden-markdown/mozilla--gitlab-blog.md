@@ -1,4 +1,4 @@
-[Blog](/blog/) [Insights](/blog/categories/insights/)
+[Blog](https://example.com/blog/) [Insights](https://example.com/blog/categories/insights/)
 
 # 3 surprising findings from our 2024 Global DevSecOps Survey
 
@@ -24,7 +24,7 @@ Another respondent highlighted AI’s opportunities to help teams address toolch
 
 Along with the increase in the number of tools teams use, we noted a significant increase in developer onboarding times in this year’s survey. In 2024, 70% of respondents told us it takes developers in their organization more than a month to onboard and become productive, up from 66% in 2023. 
 
-While it’s not surprising that AI-powered [chat assistants](%E2%80%8B%E2%80%8Bhttps://about.gitlab.com/blog/2024/04/18/gitlab-duo-chat-now-generally-available/) and [code suggestions](https://about.gitlab.com/blog/2024/06/11/top-tips-for-efficient-ai-powered-code-suggestions-with-gitlab-duo/), can help developers onboard faster, the effect we observed in our survey was dramatic: Respondents who use AI for software development were much more likely to say that developer onboarding typically takes less than a month. 
+While it’s not surprising that AI-powered [chat assistants](https://example.com/%E2%80%8B%E2%80%8Bhttps://about.gitlab.com/blog/2024/04/18/gitlab-duo-chat-now-generally-available/) and [code suggestions](https://about.gitlab.com/blog/2024/06/11/top-tips-for-efficient-ai-powered-code-suggestions-with-gitlab-duo/), can help developers onboard faster, the effect we observed in our survey was dramatic: Respondents who use AI for software development were much more likely to say that developer onboarding typically takes less than a month. 
 
 Despite AI’s clear benefits for developer experience, respondents expressed several concerns about its rapid adoption. Over half (55%) of respondents said introducing AI into the software development lifecycle is risky, and 49% said they fear AI will replace their current role within the next five years. 
 

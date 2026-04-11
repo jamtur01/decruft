@@ -1,6 +1,6 @@
 [You're Invited: Meet the Socket Team at a Security Conference](https://socket.dev/blog/other-event-2026) 
 
-[Blog](/blog)
+[Blog](https://socket.dev/blog)
 
 # Introducing Socket Firewall
 

@@ -1,12 +1,12 @@
 # Le projet de loi sur le renseignement massivement approuvé à l'Assemblée
 
-Le Monde | 04.05.2015 à 13h36 • Mis à jour le 05.05.2015 à 20h13 | Par [Martin Untersinger](/journaliste/martin-untersinger/) (avec Damien Leloup et Morgane Tual) 
+Le Monde | 04.05.2015 à 13h36 • Mis à jour le 05.05.2015 à 20h13 | Par [Martin Untersinger](https://example.com/journaliste/martin-untersinger/) (avec Damien Leloup et Morgane Tual) 
 
 ![](//www.dailymotion.com/embed/video/x2p552m?syndication=131181)
 
 Les députés ont, sans surprise, adopté à une large majorité (438 contre 86 et 42 abstentions) le projet de loi sur le renseignement défendu par le gouvernement lors d’un vote solennel, mardi 5 mai. Il sera désormais examiné par le Sénat, puis le Conseil constitutionnel, prochainement saisi par 75 députés. Dans un souci d'apaisement, François Hollande avait annoncé par avance qu'il saisirait les Sages.
 
-**Revivez [le direct du vote à l’Assemblée avec vos questions.](/pixels/live/2015/05/05/suivez-le-vote-de-la-loi-renseignement-en-direct_4628012_4408996.html)**
+**Revivez [le direct du vote à l’Assemblée avec vos questions.](https://example.com/pixels/live/2015/05/05/suivez-le-vote-de-la-loi-renseignement-en-direct_4628012_4408996.html)**
 
 Ont voté contre : 10 députés socialistes (sur 288), 35 UMP (sur 198), 11 écologistes (sur 18), 11 UDI (sur 30), 12 députés Front de gauche (sur 15) et 7 non-inscrits (sur 9). [Le détail est disponible sur le site de l'Assemblée nationale.](http://www2.assemblee-nationale.fr/scrutins/detail/%28legislature%29/14/%28num%29/1109)
 
@@ -38,7 +38,7 @@ En pratique, les services de renseignement pourraient installer chez les FAI une
 
 La Commission nationale informatique et libertés(CNIL), qui critique fortement cette disposition. La CNIL soulève notamment que l’anonymat de ces données est très relatif, puisqu’il peut être levé.
 
-Lire aussi : [Les critiques de la CNIL contre le projet de loi sur le renseignement](/pixels/article/2015/03/18/les-critiques-de-la-cnil-contre-le-projet-de-loi-sur-le-renseignement_4595839_4408996.html) 
+Lire aussi : [Les critiques de la CNIL contre le projet de loi sur le renseignement](https://example.com/pixels/article/2015/03/18/les-critiques-de-la-cnil-contre-le-projet-de-loi-sur-le-renseignement_4595839_4408996.html) 
 
 Le dispositif introduit une forme de « pêche au chalut » – un brassage très large des données des Français à la recherche de quelques individus. Le gouvernement se défend de toute similarité avec les dispositifs mis en place par la NSA américaine, arguant notamment que les données ne seront pas conservées et que cette activité sera contrôlée par une toute nouvelle commission aux moyens largement renforcés. Il s’agit cependant d’un dispositif très large, puisqu’il concernera tous les fournisseurs d’accès à Internet, et donc tous les internautes français.
 
@@ -52,7 +52,7 @@ Pour repérer ces personnes, la loi permettra d’étendre la surveillance élec
 
 Les services pourront également procéder, après un avis de la CNCTR, à la pose de micros dans une pièce ou de mouchards sur un objet (voiture par exemple), ou à l’intérieur d’un ordinateur. L’utilisation des IMSI-catchers (fausses antennes qui permettent d’intercepter des conversations téléphoniques) est également légalisée, pour les services de renseignement, dans certains cas. Le nombre maximal de ces appareils sera fixé par arrêté du premier ministre après l’avis de la CNCTR.
 
-**Lire : [Que sont les IMSI-catchers, ces valises qui espionnent les téléphones portables ?](/pixels/article/2015/03/31/que-sont-les-imsi-catchers-ces-valises-qui-espionnent-les-telephones-portables_4605827_4408996.html)**
+**Lire : [Que sont les IMSI-catchers, ces valises qui espionnent les téléphones portables ?](https://example.com/pixels/article/2015/03/31/que-sont-les-imsi-catchers-ces-valises-qui-espionnent-les-telephones-portables_4605827_4408996.html)**
 
 La loi introduit également des mesures de surveillance internationale : concrètement, les procédures de contrôle seront allégées lorsqu’un des « bouts » de la communication sera situé à l’étranger (concrètement, un Français qui parle avec un individu situé à l’étranger). Cependant, comme l’a souligné l’Arcep (l’Autorité de régulation des communications électroniques et des postes), sollicitée pour le versant technique de cette mesure, il est parfois difficile de s’assurer qu’une communication, même passant par l’étranger, ne concerne pas deux Français.
 

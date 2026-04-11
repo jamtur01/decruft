@@ -19,7 +19,7 @@ To follow along with the article and experiment with actual data online check ou
 
 * * *
 
-## [Detecting Anomalies](#detecting-anomalies)
+## [Detecting Anomalies](https://example.com/mozilla--toc-missing#detecting-anomalies)
 
 Anomaly in a data series is a significant deviation from some reasonable value. Looking at this series of numbers for example, which number stands out? 
 
@@ -111,7 +111,7 @@ n  │ is_anomaly
 
 Using the query we found that the value 12 is outside the range of acceptable values, and identified it as an anomaly. 
 
-### [Understanding Z-Score](#understanding-z-score)
+### [Understanding Z-Score](https://example.com/mozilla--toc-missing#understanding-z-score)
 
 Another way to represent a range of acceptable values is using a z-score. [z-score, or Standard Score](https://en.wikipedia.org/wiki/Standard_score), is the number of standard deviations from the mean. In the previous section, our acceptable range was one standard deviation from the mean, or in other words, a z-score in the range ±1: 
 
@@ -190,7 +190,7 @@ n  │         zscore          │ is_anomaly
 
 Using z-score, we also identified 12 as an anomaly in this series. 
 
-### [Optimizing Z-Score](#optimizing-z-score)
+### [Optimizing Z-Score](https://example.com/mozilla--toc-missing#optimizing-z-score)
 
 So far we used one standard deviation from the mean, or a z-score of ±1 to identify anomalies. Changing the z-score threshold can affect our results. For example, let's see what anomalies we identify when the z-score is greater than 0.5 and when it's greater than 3: 
 
@@ -244,7 +244,7 @@ The quality of our results are directly related to the parameters we set for the
 
 * * *
 
-## [Analyzing a Server Log](#analyzing-a-server-log)
+## [Analyzing a Server Log](https://example.com/mozilla--toc-missing#analyzing-a-server-log)
 
 Application servers such as nginx, Apache and IIS write a lot of useful information to access logs. The data in these logs can be extremely useful in identifying anomalies. 
 
@@ -255,7 +255,7 @@ We are going to analyze logs of a web application, so the data we are most inter
 *   **A sudden increase in 404 status code**: You may have an SEO problem. Did you move some pages and forgot to set up redirects? Is there some script kiddy running a scan on your site?
 *   **A sudden increase in 200 status code**: You either have some significant legit traffic coming in, or you are under a DOS attack. Either way, you probably want to check where it's coming from.
 
-### [Preparing the Data](#preparing-the-data)
+### [Preparing the Data](https://example.com/mozilla--toc-missing#preparing-the-data)
 
 Parsing and processing logs is outside the scope of this article, so let's assume we did that and we have a table that looks like this: 
 
@@ -339,7 +339,7 @@ First we generate an axis using a cartesian join between the status codes we wan
 
 After generating the axis, we left join the actual data into it to get a complete series for each status code. The resulting data has no gaps, and is ready for analysis. 
 
-### [Getting a Sense of the Data](#getting-a-sense-of-the-data)
+### [Getting a Sense of the Data](https://example.com/mozilla--toc-missing#getting-a-sense-of-the-data)
 
 To get a sense of the data, let's draw a stacked bar chart by status: 
 
@@ -353,7 +353,7 @@ We also spot right away that at ~11:30 there was a significant increase in 500 e
 
 It's entirely possible that there were other problems during that time, we just can't spot them with a naked eye. 
 
-### [Identifying Anomalies](#identifying-anomalies)
+### [Identifying Anomalies](https://example.com/mozilla--toc-missing#identifying-anomalies)
 
 In anomaly detection systems, we usually want to identify if we have an anomaly *right now*, and send an alert. 
 
@@ -385,7 +385,7 @@ status_code │ last_value │      mean_entries      │     stddev_entries
         400 │         24 │ 0.73333333333333333333 │     3.4388935285299212
 ```
 
-To get the last value in a GROUP BY in addition to the mean and standard deviation [we used a little array trick](/sql-group-by-first-last-value). 
+To get the last value in a GROUP BY in addition to the mean and standard deviation [we used a little array trick](https://example.com/sql-group-by-first-last-value). 
 
 Next, we calculate the z-score for the last value for each status code: 
 
@@ -419,7 +419,7 @@ status_code │ last_value │ mean_entries │ stddev_entries │  zscore
         400 │         24 │ 0.733        │ 3.4388         │  6.765
 ```
 
-We calculated the z-score by finding the number of standard deviations between the last value and the mean. To [avoid a "division by zero" error](/sql-dos-and-donts#guard-against-division-by-zero-errors) we transform the denominator to NULL if it's zero. 
+We calculated the z-score by finding the number of standard deviations between the last value and the mean. To [avoid a "division by zero" error](https://example.com/sql-dos-and-donts#guard-against-division-by-zero-errors) we transform the denominator to NULL if it's zero. 
 
 Looking at the z-scores we got, we can spot that status code 400 got a very high z-score of 6. In the past minute we returned a 400 status code 24 times, which is significantly higher than the average of 0.73 in the past hour. 
 
@@ -466,13 +466,13 @@ What our naked eye missed in the chart and in the raw data, was found by the que
 
 * * *
 
-## [Backtesting](#backtesting)
+## [Backtesting](https://example.com/mozilla--toc-missing#backtesting)
 
 In the previous section we identified an anomaly. We found an increase in 400 status code because the z-score was 6. But how do we set the threshold for the z-score? Is a z-score of 3 an anomaly? What about 2, or 1? 
 
 To find thresholds that fit our needs, we can run simulations on past data with different values, and evaluate the results. This is often called backtesting. 
 
-### [Finding Past Anomalies](#finding-past-anomalies)
+### [Finding Past Anomalies](https://example.com/mozilla--toc-missing#finding-past-anomalies)
 
 The first thing we need to do is to calculate the mean and the standard deviation for each status code up until every row, just as if it’s the current value. This is a classic job for a [window function](https://www.postgresql.org/docs/current/tutorial-window.html): 
 
@@ -664,7 +664,7 @@ status_code │         period         │ entries │       zscore       │ al
 
 We decided to classify values with z-score greater than 3 as anomalies. 3 is usually the magic number you’ll see in textbooks, but don’t get sentimental about it because you can definitely change it to get better results. 
 
-### [Adding Thresholds](#adding-thresholds)
+### [Adding Thresholds](https://example.com/mozilla--toc-missing#adding-thresholds)
 
 In the last query we detected a large number of "anomalies" with just one entry. This is very common in errors that don't happen very often. In our case, every once in a while we get a 400 status code, but because it doesn't happen very often, the standard deviation is very low so that even a single error can be considered way above the acceptable value. 
 
@@ -738,7 +738,7 @@ status_code │         period         │ entries │       zscore       │ al
 
 After eliminating potential anomalies with less than 10 entries we get much fewer, and probably more relevant results. 
 
-### [Eliminating Repeating Alerts](#eliminating-repeating-alerts)
+### [Eliminating Repeating Alerts](https://example.com/mozilla--toc-missing#eliminating-repeating-alerts)
 
 In the previous section we eliminated potential anomalies with less than 10 entries. Using thresholds we were able to remove some non interesting anomalies. 
 
@@ -841,7 +841,7 @@ A hidden anomaly in status code 404
 
 The query can now be used to fire alerts when it encounters an anomaly. 
 
-### [Experiment With Different Values](#experiment-with-different-values)
+### [Experiment With Different Values](https://example.com/mozilla--toc-missing#experiment-with-different-values)
 
 In the process so far we’ve used several constants in our calculations: 
 
@@ -883,11 +883,11 @@ A good alerting system is a system that produces true alerts, at a reasonable ti
 
 * * *
 
-## [Improving Accuracy](#improving-accuracy)
+## [Improving Accuracy](https://example.com/mozilla--toc-missing#improving-accuracy)
 
 Using a z-score for detecting anomalies is an easy way to get started with anomaly detection and see results right away. But, this method is not always the best choice, and if you don't get good alerts using this method, there are some improvements and other methods you can try using just SQL. 
 
-### [Use Weighted Mean](#use-weighted-mean)
+### [Use Weighted Mean](https://example.com/mozilla--toc-missing#use-weighted-mean)
 
 Our system uses a mean to determine a reasonable value, and a lookback period to determine how long back to calculate that mean over. In our case, we calculated the mean based on data from 1 hour ago. 
 
@@ -923,7 +923,7 @@ In the results you can see the difference between the mean and the weighted mean
 
 A weighted average is a very [common indicator used by stock traders](https://www.investopedia.com/ask/answers/071414/whats-difference-between-moving-average-and-weighted-moving-average.asp). We used a linear weighted average, but there are also exponential weighted averages and others you can try. 
 
-### [Use Median](#use-median)
+### [Use Median](https://example.com/mozilla--toc-missing#use-median)
 
 In statistics, a mean is considered not robust because it is influenced by extreme values. Given our use case, the measure we are using to identify extreme values, is affected by those values we are trying to identify. 
 
@@ -964,13 +964,13 @@ If we change the value of 12 to 120, the median will not be affected at all:
 
 This is why a median is considered more robust than mean. 
 
-### [Use MAD](#use-mad)
+### [Use MAD](https://example.com/mozilla--toc-missing#use-mad)
 
 [Median absolute deviation (MAD)](https://en.wikipedia.org/wiki/Median_absolute_deviation) is another way of finding anomalies in a series. MAD is considered better than z-score for real life data. 
 
 MAD is calculated by finding the median of the deviations from the series median. Just for comparison, the standard deviation is the root square of the average square distance from the mean. 
 
-### [Use Different Measures](#use-different-measures)
+### [Use Different Measures](https://example.com/mozilla--toc-missing#use-different-measures)
 
 We used the number of entries per minute as an indicator. However, depending on the use case, there might be other things you can measure that can yield better results. For example: 
 
@@ -979,7 +979,7 @@ We used the number of entries per minute as an indicator. However, depending on 
 
 * * *
 
-## [Conclusion](#conclusion)
+## [Conclusion](https://example.com/mozilla--toc-missing#conclusion)
 
 The method presented above is a very simple method to detect anomalies and produce actionable alerts that can potentially save you a lot of grief. There are many tools out there that provide similar functionally, but they require either tight integration or $$$. The main appeal of this approach is that you can get started with tools you probably already have, some SQL and a scheduled task! 
 

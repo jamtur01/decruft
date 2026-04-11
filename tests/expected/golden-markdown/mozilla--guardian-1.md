@@ -4,7 +4,7 @@ Seven decades later, Parata, 75, has now overseen more than 500 strandings and i
 
 “Man’s greed in the ocean is hurting the whales,” says Parata, a fierce and uncompromising elder of the Ngātiwai tribe of eastern Northland. 
 
-[![Hori Parata at his Pātaua farm, the place where he was born and grew up.](https://i.guim.co.uk/img/media/05cb692c634cd90e5411aab92ca3e649474ff786/0_0_4800_3200/master/4800.jpg?width=300&quality=85&auto=format&fit=max&s=575838a657b26493e956c7f84b058080)](#img-2) 
+[![Hori Parata at his Pātaua farm, the place where he was born and grew up.](https://i.guim.co.uk/img/media/05cb692c634cd90e5411aab92ca3e649474ff786/0_0_4800_3200/master/4800.jpg?width=300&quality=85&auto=format&fit=max&s=575838a657b26493e956c7f84b058080)](https://example.com/mozilla--guardian-1#img-2) 
 
  
 
@@ -14,7 +14,7 @@ Seven decades later, Parata, 75, has now overseen more than 500 strandings and i
 
 Whale experts regard New Zealand – or Aotearoa as it is called by Māori – as the whale stranding capital of the world, with more than 5,000 incidents recorded since 1840, and an average of 300 individual animals beaching themselves each year. 
 
-[![Kauri (Tekaurinui Robert) Parata, watched by his father Hori Parata, carves a traditional Maōri design at their home in Whangārei. Kauri is a member of the Manu Taupunga group that is the organising arm of the whale-body recovery operation started by his father, Hori Parata](https://i.guim.co.uk/img/media/98c683a7df9c83b2c13de2d93ca1825199ed5150/0_0_4800_3166/master/4800.jpg?width=300&quality=85&auto=format&fit=max&s=2f198e1958f140f3ac664a3fdd87177c)](#img-3) 
+[![Kauri (Tekaurinui Robert) Parata, watched by his father Hori Parata, carves a traditional Maōri design at their home in Whangārei. Kauri is a member of the Manu Taupunga group that is the organising arm of the whale-body recovery operation started by his father, Hori Parata](https://i.guim.co.uk/img/media/98c683a7df9c83b2c13de2d93ca1825199ed5150/0_0_4800_3166/master/4800.jpg?width=300&quality=85&auto=format&fit=max&s=2f198e1958f140f3ac664a3fdd87177c)](https://example.com/mozilla--guardian-1#img-3) 
 
  
 
@@ -24,15 +24,15 @@ Concrete information on why whales strand remains elusive, but “sickness, navi
 
 Climate change is to blame too, [scientists think](https://www.radionz.co.nz/news/national/377272/new-zealand-beached-whales-why-are-so-many-getting-stranded), with warming ocean temperatures moving whales’ prey closer to the shore and forcing them to pursue their food into shallow waters. 
 
-[![A bin of small whale bones.](https://i.guim.co.uk/img/media/0447972cf47ca67882fcfc648edf7e574b0853bc/0_0_4800_3200/master/4800.jpg?width=300&quality=85&auto=format&fit=max&s=718132fd888108a18383c24a8425523b)](#img-4) 
+[![A bin of small whale bones.](https://i.guim.co.uk/img/media/0447972cf47ca67882fcfc648edf7e574b0853bc/0_0_4800_3200/master/4800.jpg?width=300&quality=85&auto=format&fit=max&s=718132fd888108a18383c24a8425523b)](https://example.com/mozilla--guardian-1#img-4) 
 
  
 
-[![The baleen recovered from a stranded Pygmy Right Whale.](https://i.guim.co.uk/img/media/416800b8d06039780c3e6de28564e6f277b4e7b7/0_0_4800_3200/master/4800.jpg?width=300&quality=85&auto=format&fit=max&s=c5a53178ebbe54490c97fad6b5e032c4)](#img-5) 
+[![The baleen recovered from a stranded Pygmy Right Whale.](https://i.guim.co.uk/img/media/416800b8d06039780c3e6de28564e6f277b4e7b7/0_0_4800_3200/master/4800.jpg?width=300&quality=85&auto=format&fit=max&s=c5a53178ebbe54490c97fad6b5e032c4)](https://example.com/mozilla--guardian-1#img-5) 
 
  
 
-[![Squid beaks, from the stomach of a Sperm Whale.](https://i.guim.co.uk/img/media/8c207197c0a9e6f407dcddfded5f868a142c9cab/0_0_4800_3200/master/4800.jpg?width=300&quality=85&auto=format&fit=max&s=0dd659ae339b1aea9a99ed7f6f8eadeb)](#img-6) 
+[![Squid beaks, from the stomach of a Sperm Whale.](https://i.guim.co.uk/img/media/8c207197c0a9e6f407dcddfded5f868a142c9cab/0_0_4800_3200/master/4800.jpg?width=300&quality=85&auto=format&fit=max&s=0dd659ae339b1aea9a99ed7f6f8eadeb)](https://example.com/mozilla--guardian-1#img-6) 
 
  
 
@@ -56,7 +56,7 @@ There are marked tribal differences across New Zealand and while some tribes wor
 
 Then the tribe moves in en masse and holds a *karakia* (prayer), names each animal and sets to work removing their bones, blubber, eyes and teeth for cultural purposes. 
 
-[![Buck Cullen with his daughter Kaiarahi (10 months) in his back yard where he is storing a pair of massive Sperm Whale jawbones. Buck is a integral member of the whale recovery team, alongside Hori Parata.](https://i.guim.co.uk/img/media/0d13adeb0790af5c5fa317ce477c323d0e1c773c/0_0_4800_2334/master/4800.jpg?width=300&quality=85&auto=format&fit=max&s=41b88ee343b9be76688b88443c7a8958)](#img-7) 
+[![Buck Cullen with his daughter Kaiarahi (10 months) in his back yard where he is storing a pair of massive Sperm Whale jawbones. Buck is a integral member of the whale recovery team, alongside Hori Parata.](https://i.guim.co.uk/img/media/0d13adeb0790af5c5fa317ce477c323d0e1c773c/0_0_4800_2334/master/4800.jpg?width=300&quality=85&auto=format&fit=max&s=41b88ee343b9be76688b88443c7a8958)](https://example.com/mozilla--guardian-1#img-7) 
 
  
 
@@ -66,7 +66,7 @@ But indigenous elders say they aren’t being listened to when they tell the gov
 
 Earlier this year in South Taranaki, a mass stranding that was described as [“unprecedented”](https://www.stuff.co.nz/national/104249829/unprecedented-whale-strandings-reaches-11-in-total-on-taranaki-beach) left the local Māori tribe scrambling. Security was brought in when thieves attacked a sperm whale with an axe, trying to remove valuable teeth from its jaw. 
 
-[![12 Parāoa Whales (Sperm Whales) recently stranded on the South Taranaki coast of Kaupokonui, on a scale not seen on their coast in recent memory.](https://i.guim.co.uk/img/media/4973b41f53b8ade499f99a305b01157eca659ca5/0_0_1200_900/master/1200.jpg?width=300&quality=85&auto=format&fit=max&s=7c255bf6f8a27c56365a86813cdd1517)](#img-8) 
+[![12 Parāoa Whales (Sperm Whales) recently stranded on the South Taranaki coast of Kaupokonui, on a scale not seen on their coast in recent memory.](https://i.guim.co.uk/img/media/4973b41f53b8ade499f99a305b01157eca659ca5/0_0_1200_900/master/1200.jpg?width=300&quality=85&auto=format&fit=max&s=7c255bf6f8a27c56365a86813cdd1517)](https://example.com/mozilla--guardian-1#img-8) 
 
  
 
@@ -76,7 +76,7 @@ Parata and his 22-year-old son, Te Kaurinui Robert Parata, were called in to ass
 
 He says mass strandings are getting more local and international attention and money from donations, but traditional knowledge is being dismissed as overly spiritual. 
 
-[![Kauri (Tekaurinui Robert) Parata, of the New Zealand Māori tribe Ngāti Wai, in front of the carving shed at Hihiaua Cultural Centre in Whangarei](https://i.guim.co.uk/img/media/d1941b6a6908314fab28f44da222a4c892213341/0_0_4800_3120/master/4800.jpg?width=300&quality=85&auto=format&fit=max&s=76a26a289728e3d625e57d32eced57d8)](#img-9) 
+[![Kauri (Tekaurinui Robert) Parata, of the New Zealand Māori tribe Ngāti Wai, in front of the carving shed at Hihiaua Cultural Centre in Whangarei](https://i.guim.co.uk/img/media/d1941b6a6908314fab28f44da222a4c892213341/0_0_4800_3120/master/4800.jpg?width=300&quality=85&auto=format&fit=max&s=76a26a289728e3d625e57d32eced57d8)](https://example.com/mozilla--guardian-1#img-9) 
 
  
 
@@ -88,11 +88,11 @@ Māori harvest rights over dead whales have only been officially recognised sinc
 
 “Our own ancestors wouldn’t say to go down there and hug the whales. That’s a modern thing,” says Te Kaurinui. 
 
-[![The Pou in front of the carving shed at Hihiaua Cultural centre](https://i.guim.co.uk/img/media/14b462f5d9489def554e0f9f436f13aec332f7b8/0_0_4278_4800/master/4278.jpg?width=300&quality=85&auto=format&fit=max&s=a45ec7578a392eec201d2f6920b609a0)](#img-10) 
+[![The Pou in front of the carving shed at Hihiaua Cultural centre](https://i.guim.co.uk/img/media/14b462f5d9489def554e0f9f436f13aec332f7b8/0_0_4278_4800/master/4278.jpg?width=300&quality=85&auto=format&fit=max&s=a45ec7578a392eec201d2f6920b609a0)](https://example.com/mozilla--guardian-1#img-10) 
 
  
 
-[![Kauri (Tekaurinui Robert) Parata, holds three whale teeth recovered from a beached whale. The middle tooth shows the marks where a poacher had attempted to hack it out with an axe before the recovery group arrived. Kauri is a member of the Manu Taupunga group that is the organising arm of the whale-body recovery operation started by his father, Hori Parata.](https://i.guim.co.uk/img/media/e2cf54c36f17c6894844ea0cdd4346288a002da9/915_0_3172_3189/master/3172.jpg?width=300&quality=85&auto=format&fit=max&s=0bd8e9f51bdf79a6e0a15ed176cfb57d)](#img-11) 
+[![Kauri (Tekaurinui Robert) Parata, holds three whale teeth recovered from a beached whale. The middle tooth shows the marks where a poacher had attempted to hack it out with an axe before the recovery group arrived. Kauri is a member of the Manu Taupunga group that is the organising arm of the whale-body recovery operation started by his father, Hori Parata.](https://i.guim.co.uk/img/media/e2cf54c36f17c6894844ea0cdd4346288a002da9/915_0_3172_3189/master/3172.jpg?width=300&quality=85&auto=format&fit=max&s=0bd8e9f51bdf79a6e0a15ed176cfb57d)](https://example.com/mozilla--guardian-1#img-11) 
 
  
 
@@ -102,7 +102,7 @@ Parata and his family believe whale oil and byproducts could be used to try to c
 
 “People dismiss us when we tell them our spiritual understanding of whales – why they are beaching, why they are hurting,” says Te Kaurinui. 
 
-[![Whangārei Harbour from Tamaterau, looking south through Mangrove sprouts coming up through the harbourside silt.](https://i.guim.co.uk/img/media/b5f3736b2ba2ef4df364258b0efcaba26f571d6e/0_0_4800_3073/master/4800.jpg?width=300&quality=85&auto=format&fit=max&s=7fcadc35b3a44ebafe3c469c6e89241d)](#img-12) 
+[![Whangārei Harbour from Tamaterau, looking south through Mangrove sprouts coming up through the harbourside silt.](https://i.guim.co.uk/img/media/b5f3736b2ba2ef4df364258b0efcaba26f571d6e/0_0_4800_3073/master/4800.jpg?width=300&quality=85&auto=format&fit=max&s=7fcadc35b3a44ebafe3c469c6e89241d)](https://example.com/mozilla--guardian-1#img-12) 
 
  
 
@@ -114,13 +114,13 @@ Kaitaia conservation department ranger Jamie Werner of Ngātiwai recently attend
 
 “I arrived at the beach and we leapfrogged between the animals. They were calling out to each other and reassuring each other,” says Werner. “It was a shock. We’re working to adapt but the ocean is changing so fast.” 
 
-[![The skull of a Brydes whale, in the storage container at Hihiaua Cultural Centre, Whangārei.](https://i.guim.co.uk/img/media/d5aaf60e3a427f278747acf0c3e7ba39b39ef923/0_0_4800_3200/master/4800.jpg?width=300&quality=85&auto=format&fit=max&s=1b74b488aedb864287ff160f86d74c9d)](#img-13) 
+[![The skull of a Brydes whale, in the storage container at Hihiaua Cultural Centre, Whangārei.](https://i.guim.co.uk/img/media/d5aaf60e3a427f278747acf0c3e7ba39b39ef923/0_0_4800_3200/master/4800.jpg?width=300&quality=85&auto=format&fit=max&s=1b74b488aedb864287ff160f86d74c9d)](https://example.com/mozilla--guardian-1#img-13) 
 
  
 
 *   Above, the skull of a bryde’s whale; right, a large-calibre bullet of the type that the New Zealand Department of Conservation uses for euthanasing stranded whales that are beyond rescue
 
-[![A large calibre bullet of the type that the New Zealand Department of Conservation (DOC) uses for euthanasing stranded whales that are beyond rescue.](https://i.guim.co.uk/img/media/3766106f73e858d5b140ae3cdd2eef84060180cd/0_0_4800_3200/master/4800.jpg?width=300&quality=85&auto=format&fit=max&s=d2f5bb7c3c3642ac8733ca40509f6e20)](#img-14) 
+[![A large calibre bullet of the type that the New Zealand Department of Conservation (DOC) uses for euthanasing stranded whales that are beyond rescue.](https://i.guim.co.uk/img/media/3766106f73e858d5b140ae3cdd2eef84060180cd/0_0_4800_3200/master/4800.jpg?width=300&quality=85&auto=format&fit=max&s=d2f5bb7c3c3642ac8733ca40509f6e20)](https://example.com/mozilla--guardian-1#img-14) 
 
  
 

@@ -1,6 +1,6 @@
 Emscripten has always focused first and foremost on compiling to the Web and other JavaScript environments like Node.js. But as WebAssembly starts to be used *without* JavaScript, new use cases are appearing, and so we've been working on support for emitting [**standalone Wasm**](https://github.com/emscripten-core/emscripten/wiki/WebAssembly-Standalone) files from Emscripten, that do not depend on the Emscripten JS runtime! This post explains why that's interesting. 
 
-## Using standalone mode in Emscripten [#](#using-standalone-mode-in-emscripten)
+## Using standalone mode in Emscripten [#](https://example.com/mozilla--v8-blog#using-standalone-mode-in-emscripten)
 
 First, let's see what you can do with this new feature! Similar to [this post](https://hacks.mozilla.org/2018/01/shrinking-webassembly-and-javascript-code-sizes-in-emscripten/) let's start with a "hello world" type program that exports a single function that adds two numbers: 
 
@@ -43,7 +43,7 @@ and one more function, `_start`,
 
 `_start` is part of the [WASI](https://github.com/WebAssembly/WASI) spec, and Emscripten's standalone mode emits it so that we can run in WASI runtimes. (Normally `_start` would do global initialization, but here we just don't need any so it's empty.) 
 
-### Write your own JavaScript loader [#](#write-your-own-javascript-loader)
+### Write your own JavaScript loader [#](https://example.com/mozilla--v8-blog#write-your-own-javascript-loader)
 
 One nice thing about a standalone Wasm file like this is that you can write custom JavaScript to load and run it, which can be very minimal depending on your use case. For example, we can do this in Node.js: 
 
@@ -58,7 +58,7 @@ WebAssembly.instantiate(binary).then(({ instance }) => {
 
 Just 4 lines! Running that prints `42` as expected. Note that while this example is very simplistic, there are cases where you simply don't need much JavaScript, and may be able to do better than Emscripten's default JavaScript runtime (which supports a bunch of environments and options). A real-world example of that is in [zeux's meshoptimizer](https://github.com/zeux/meshoptimizer/blob/bdc3006532dd29b03d83dc819e5fa7683815b88e/js/meshopt_decoder.js) - just 57 lines, including memory management, growth, etc.! 
 
-### Running in Wasm runtimes [#](#running-in-wasm-runtimes)
+### Running in Wasm runtimes [#](https://example.com/mozilla--v8-blog#running-in-wasm-runtimes)
 
 Another nice thing about standalone Wasm files is that you can run them in Wasm runtimes like [wasmer](https://wasmer.io), [wasmtime](https://github.com/bytecodealliance/wasmtime), or [WAVM](https://github.com/WAVM/WAVM). For example, consider this hello world: 
 
@@ -86,7 +86,7 @@ hello, world!
 
 Emscripten uses WASI APIs as much as possible, so programs like this end up using 100% WASI and can run in WASI-supporting runtimes (see notes later on what programs require more than WASI). 
 
-### Building Wasm plugins [#](#building-wasm-plugins)
+### Building Wasm plugins [#](https://example.com/mozilla--v8-blog#building-wasm-plugins)
 
 Aside from the Web and the server, an exciting area for Wasm is **plugins**. For example, an image editor might have Wasm plugins that can perform filters and other operations on the image. For that type of use case you want a standalone Wasm binary, just like in the examples so far, but where it also has a proper API for the embedding application. 
 
@@ -94,7 +94,7 @@ Plugins are sometimes related to dynamic libraries, as dynamic libraries are one
 
 Okay, so far so good: Emscripten can either emit JavaScript + WebAssembly as it always did, and now it can also emit just WebAssembly by itself, which lets you run it in places that don't have JavaScript like Wasm runtimes, or you can write your own custom JavaScript loader code, etc. Now let's talk about the background and the technical details! 
 
-## WebAssembly's two standard APIs [#](#webassembly's-two-standard-apis)
+## WebAssembly's two standard APIs [#](https://example.com/mozilla--v8-blog#webassembly's-two-standard-apis)
 
 WebAssembly can only access the APIs it receives as imports - the core Wasm spec has no concrete API details. Given the current trajectory of Wasm, it looks like there will be 3 main categories of APIs that people import and use: 
 
@@ -106,7 +106,7 @@ WebAssembly is in the interesting position of having [two standardized sets of A
 
 However, there is more than the Web and the server, in particular there are also Wasm plugins. For one thing, plugins can run inside an application that may be on the Web (just like [JS plugins](https://www.figma.com/blog/an-update-on-plugin-security/#a-technology-change)) or off the Web; for another, regardless of where the embedding application is, a plugin environment is not a Web nor a server environment. So it's not immediately obvious which sets of APIs will be used - it may depend on the code being ported, the Wasm runtime being embedded, etc. 
 
-## Let's unify as much as possible [#](#let's-unify-as-much-as-possible)
+## Let's unify as much as possible [#](https://example.com/mozilla--v8-blog#let's-unify-as-much-as-possible)
 
 One concrete way Emscripten hopes to help here is that by using WASI APIs as much as possible we can avoid **unnecessary** API differences. As mentioned earlier, on the Web Emscripten code accesses Web APIs indirectly, through JavaScript, so where that JavaScript API could look like WASI, we'd be removing an unnecessary API difference, and that same binary can also run on the server. In other words, if Wasm wants to log some info, it needs to call into JS, something like this: 
 
@@ -134,7 +134,7 @@ emcc -O3 add.c -o add.js -s STANDALONE_WASM
 
 That emits `add.js` and `add.wasm`. The Wasm file is standalone just like earlier when we only emitted a Wasm file by itself (`STANDALONE_WASM` was set automatically when we said `-o add.wasm`), but now in addition there is a JS file that can load and run it. The JS is useful for running it on the Web if you don't want to write your own JS for that. 
 
-## Do we need *non*-standalone Wasm? [#](#do-we-need-non-standalone-wasm%3F)
+## Do we need *non*-standalone Wasm? [#](https://example.com/mozilla--v8-blog#do-we-need-non-standalone-wasm%3F)
 
 Why does the `STANDALONE_WASM` flag exist? In theory Emscripten could always set `STANDALONE_WASM`, which would be simpler. But standalone Wasm files can't depend on JS, and that has some downsides: 
 
@@ -144,7 +144,7 @@ Why does the `STANDALONE_WASM` flag exist? In theory Emscripten could always set
 
 If you want to run both on the Web and elsewhere, and you want 100% optimal code size and startup times, you should make two separate builds, one with `-s STANDALONE` and one without. That's very easy as it's just flipping one flag! 
 
-## Necessary API differences [#](#necessary-api-differences)
+## Necessary API differences [#](https://example.com/mozilla--v8-blog#necessary-api-differences)
 
 We saw that Emscripten uses WASI APIs as much as possible to avoid **unnecessary** API differences. Are there any **necessary** ones? Sadly, yes - some WASI APIs require tradeoffs. For example: 
 
@@ -158,7 +158,7 @@ If it would be useful for users we can add a `PURE_WASI` option which would sacr
 
 However, even if WASI does improve, there is no avoiding the fact that Wasm has two standardized APIs as mentioned earlier. In the future I expect Emscripten will call Web APIs directly using interface types, because that will be more compact than calling a WASI-looking JS API that then calls a Web API (as in the `musl_writev` example from before). We could have a polyfill or a translation layer of some sort to help here, but we wouldn't want to use it unnecessarily, so we will need separate builds for Web and WASI environments. (This is somewhat unfortunate; in theory this could have been avoided if WASI were a superset of Web APIs, but obviously that would have meant compromises on the server side.) 
 
-## Current status [#](#current-status)
+## Current status [#](https://example.com/mozilla--v8-blog#current-status)
 
 Quite a lot works already! The main limitations are: 
 

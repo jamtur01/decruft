@@ -34,6 +34,6 @@ Seeing neon lighting tamed in the context of a gallery display fits comfortably 
 
 ##### [Sarah Archer](https://www.citylab.com/authors/sarah-archer/)
 
-[](/) 
+[](https://example.com/) 
 
-[](/) 
+[](https://example.com/) 

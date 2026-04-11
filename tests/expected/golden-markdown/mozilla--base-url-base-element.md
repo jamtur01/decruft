@@ -4,17 +4,17 @@ Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor 
 
 Links
 
-[link](foo/bar/baz.html)
+[link](https://example.com/foo/bar/baz.html)
 
-[link](./foo/bar/baz.html)
+[link](https://example.com/foo/bar/baz.html)
 
-[link](/foo/bar/baz.html)
+[link](https://example.com/foo/bar/baz.html)
 
-[link](#foo)
+[link](https://example.com/mozilla--base-url-base-element#foo)
 
-[link](baz.html#foo)
+[link](https://example.com/baz.html#foo)
 
-[link](/foo/bar/baz.html#foo)
+[link](https://example.com/foo/bar/baz.html#foo)
 
 [link](http://test/foo/bar/baz.html)
 
@@ -22,11 +22,11 @@ Links
 
 Images
 
-![](foo/bar/baz.png)
+![](https://example.com/foo/bar/baz.png)
 
-![](./foo/bar/baz.png)
+![](https://example.com/foo/bar/baz.png)
 
-![](/foo/bar/baz.png)
+![](https://example.com/foo/bar/baz.png)
 
 ![](http://test/foo/bar/baz.png)
 

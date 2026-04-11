@@ -28,8 +28,8 @@ My aim is to have fewer but better things. These are some of the questions I ask
 
 *   Will it be as useful to me in the future as it is now?
 *   Is it made of durable and maintainable materials?
-*   Does it have a timeless [style](/style) and aesthetic?
-*   Does it age well, wear well, build a [wabi-sabi](/scars) patina?
+*   Does it have a timeless [style](https://example.com/style) and aesthetic?
+*   Does it age well, wear well, build a [wabi-sabi](https://example.com/scars) patina?
 *   Does it retain its resale value? Would someone else want to own it?
 *   Can it be disassembled and repaired?
 *   Does it have replaceable, non-proprietary parts that are easy to acquire?
@@ -86,7 +86,7 @@ You can choose to incorporate externalities into the cost that you are paying in
 
 ### Cost per lesson
 
-Knowledge has a cost. Sometimes that cost is monetary, sometimes that cost is time, sometimes that cost is [pain](/pain). Sometimes it’s all three.
+Knowledge has a cost. Sometimes that cost is monetary, sometimes that cost is time, sometimes that cost is [pain](https://example.com/pain). Sometimes it’s all three.
 
 You might learn more about investing by purchasing a handful of shares in public companies than going to graduate school. You might learn more about making movies by trying to film one on your phone than going to film school.
 

@@ -8,10 +8,10 @@ The mosaics that once covered every surface have largely perished, yet enough fr
 
 Later modifications have altered nearly every example, yet the essential structure endures, recognisable beneath centuries of accretion.[^4]
 
-[^1]: [1](#FnAnchor_1) For a full account of the form and symbolical meaning of the Basilica, see *Christian Art*, vol. i. p. 12.
+[^1]: [1](https://example.com/footnotes--named-anchor#FnAnchor_1) For a full account of the form and symbolical meaning of the Basilica, see *Christian Art*, vol. i. p. 12.
 
-[^2]: [2](#FnAnchor_2) The measures are given in the appendix. The orientation was not invariably to the east; examples exist facing north and west.
+[^2]: [2](https://example.com/footnotes--named-anchor#FnAnchor_2) The measures are given in the appendix. The orientation was not invariably to the east; examples exist facing north and west.
 
-[^3]: [3](#FnAnchor_3) A sketch of the surviving apse mosaic has been published in the folio work on Byzantine ornament.
+[^3]: [3](https://example.com/footnotes--named-anchor#FnAnchor_3) A sketch of the surviving apse mosaic has been published in the folio work on Byzantine ornament.
 
-[^4]: [4](#FnAnchor_4) Historical Essay on Architecture (third edition), chap. ix. p. 95.
+[^4]: [4](https://example.com/footnotes--named-anchor#FnAnchor_4) Historical Essay on Architecture (third edition), chap. ix. p. 95.

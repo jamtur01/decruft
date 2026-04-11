@@ -52,6 +52,6 @@ Mark di Stefano is a breaking news reporter for BuzzFeed News and is based in Sy
 
 Contact Mark Di Stefano at [mark.distefano@buzzfeed.com](mailto:mark.distefano@buzzfeed.com) 
 
-*   [![](http://s3-static-ak.buzzfed.com/static/2015-04/27/7/campaign_images/webdr15/this-is-why-streaking-during-a-rugby-match-is-nev-2-21907-1430135173-1_wide.jpg)](/richardhjames/this-is-why-streaking-during-a-rugby-match-is-never-a-good-i)
+*   [![](http://s3-static-ak.buzzfed.com/static/2015-04/27/7/campaign_images/webdr15/this-is-why-streaking-during-a-rugby-match-is-nev-2-21907-1430135173-1_wide.jpg)](https://example.com/richardhjames/this-is-why-streaking-during-a-rugby-match-is-never-a-good-i)
 
-    [Next On BuzzFeed News ›](/news) [### This Is Why Streaking During A Rugby Match Is Never...](/richardhjames/this-is-why-streaking-during-a-rugby-match-is-never-a-good-i)
+    [Next On BuzzFeed News ›](https://example.com/news) [### This Is Why Streaking During A Rugby Match Is Never...](https://example.com/richardhjames/this-is-why-streaking-during-a-rugby-match-is-never-a-good-i)

@@ -5,7 +5,7 @@
 ## "Bartleby the Scrivener: A Story of Wall-Street " (1853)   
  Herman Melville
 
-## [![To the story text without notes](<hmhome.gif >)](<http://www.vcu.edu/engweb/webtexts/bartleby.html
+## [![To the story text without notes](https://example.com/hmhome.gif)](<http://www.vcu.edu/engweb/webtexts/bartleby.html
         >)
 
 ### Prepared by [Ann Woodlief,](<http://www.vcu.edu/engweb >) Virginia Commonwealth University

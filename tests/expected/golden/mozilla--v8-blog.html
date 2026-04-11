@@ -5,7 +5,7 @@
                         Emscripten has always focused first and foremost on compiling to the Web and other JavaScript environments like Node.js. But as WebAssembly starts to be used <em>without</em> JavaScript, new use cases are appearing, and so we've been working on support for emitting <a href="https://github.com/emscripten-core/emscripten/wiki/WebAssembly-Standalone"><strong>standalone Wasm</strong></a> files from Emscripten, that do not depend on the Emscripten JS runtime! This post explains why that's interesting.
                     </p>
                     <h2 id="using-standalone-mode-in-emscripten">
-                        Using standalone mode in Emscripten <a class="bookmark" href="#using-standalone-mode-in-emscripten">#</a>
+                        Using standalone mode in Emscripten <a class="bookmark" href="https://example.com/mozilla--v8-blog#using-standalone-mode-in-emscripten">#</a>
                     </h2>
                     <p>
                         First, let's see what you can do with this new feature! Similar to <a href="https://hacks.mozilla.org/2018/01/shrinking-webassembly-and-javascript-code-sizes-in-emscripten/">this post</a> let's start with a "hello world" type program that exports a single function that adds two numbers:
@@ -43,7 +43,7 @@ int add(int x, int y) {
                         <code>_start</code> is part of the <a href="https://github.com/WebAssembly/WASI">WASI</a> spec, and Emscripten's standalone mode emits it so that we can run in WASI runtimes. (Normally <code>_start</code> would do global initialization, but here we just don't need any so it's empty.)
                     </p>
                     <h3 id="write-your-own-javascript-loader">
-                        Write your own JavaScript loader <a class="bookmark" href="#write-your-own-javascript-loader">#</a>
+                        Write your own JavaScript loader <a class="bookmark" href="https://example.com/mozilla--v8-blog#write-your-own-javascript-loader">#</a>
                     </h3>
                     <p>
                         One nice thing about a standalone Wasm file like this is that you can write custom JavaScript to load and run it, which can be very minimal depending on your use case. For example, we can do this in Node.js:
@@ -58,7 +58,7 @@ WebAssembly.instantiate(binary).then(({ instance }) =&gt; {
                         Just 4 lines! Running that prints <code>42</code> as expected. Note that while this example is very simplistic, there are cases where you simply don't need much JavaScript, and may be able to do better than Emscripten's default JavaScript runtime (which supports a bunch of environments and options). A real-world example of that is in <a href="https://github.com/zeux/meshoptimizer/blob/bdc3006532dd29b03d83dc819e5fa7683815b88e/js/meshopt_decoder.js">zeux's meshoptimizer</a> - just 57 lines, including memory management, growth, etc.!
                     </p>
                     <h3 id="running-in-wasm-runtimes">
-                        Running in Wasm runtimes <a class="bookmark" href="#running-in-wasm-runtimes">#</a>
+                        Running in Wasm runtimes <a class="bookmark" href="https://example.com/mozilla--v8-blog#running-in-wasm-runtimes">#</a>
                     </h3>
                     <p>
                         Another nice thing about standalone Wasm files is that you can run them in Wasm runtimes like <a href="https://wasmer.io">wasmer</a>, <a href="https://github.com/bytecodealliance/wasmtime">wasmtime</a>, or <a href="https://github.com/WAVM/WAVM">WAVM</a>. For example, consider this hello world:
@@ -84,7 +84,7 @@ hello, world!</code></pre>
                         Emscripten uses WASI APIs as much as possible, so programs like this end up using 100% WASI and can run in WASI-supporting runtimes (see notes later on what programs require more than WASI).
                     </p>
                     <h3 id="building-wasm-plugins">
-                        Building Wasm plugins <a class="bookmark" href="#building-wasm-plugins">#</a>
+                        Building Wasm plugins <a class="bookmark" href="https://example.com/mozilla--v8-blog#building-wasm-plugins">#</a>
                     </h3>
                     <p>
                         Aside from the Web and the server, an exciting area for Wasm is <strong>plugins</strong>. For example, an image editor might have Wasm plugins that can perform filters and other operations on the image. For that type of use case you want a standalone Wasm binary, just like in the examples so far, but where it also has a proper API for the embedding application.
@@ -96,7 +96,7 @@ hello, world!</code></pre>
                         Okay, so far so good: Emscripten can either emit JavaScript + WebAssembly as it always did, and now it can also emit just WebAssembly by itself, which lets you run it in places that don't have JavaScript like Wasm runtimes, or you can write your own custom JavaScript loader code, etc. Now let's talk about the background and the technical details!
                     </p>
                     <h2 id="webassembly's-two-standard-apis">
-                        WebAssembly's two standard APIs <a class="bookmark" href="#webassembly's-two-standard-apis">#</a>
+                        WebAssembly's two standard APIs <a class="bookmark" href="https://example.com/mozilla--v8-blog#webassembly's-two-standard-apis">#</a>
                     </h2>
                     <p>
                         WebAssembly can only access the APIs it receives as imports - the core Wasm spec has no concrete API details. Given the current trajectory of Wasm, it looks like there will be 3 main categories of APIs that people import and use:
@@ -119,7 +119,7 @@ hello, world!</code></pre>
                         However, there is more than the Web and the server, in particular there are also Wasm plugins. For one thing, plugins can run inside an application that may be on the Web (just like <a href="https://www.figma.com/blog/an-update-on-plugin-security/#a-technology-change">JS plugins</a>) or off the Web; for another, regardless of where the embedding application is, a plugin environment is not a Web nor a server environment. So it's not immediately obvious which sets of APIs will be used - it may depend on the code being ported, the Wasm runtime being embedded, etc.
                     </p>
                     <h2 id="let's-unify-as-much-as-possible">
-                        Let's unify as much as possible <a class="bookmark" href="#let's-unify-as-much-as-possible">#</a>
+                        Let's unify as much as possible <a class="bookmark" href="https://example.com/mozilla--v8-blog#let's-unify-as-much-as-possible">#</a>
                     </h2>
                     <p>
                         One concrete way Emscripten hopes to help here is that by using WASI APIs as much as possible we can avoid <strong>unnecessary</strong> API differences. As mentioned earlier, on the Web Emscripten code accesses Web APIs indirectly, through JavaScript, so where that JavaScript API could look like WASI, we'd be removing an unnecessary API difference, and that same binary can also run on the server. In other words, if Wasm wants to log some info, it needs to call into JS, something like this:
@@ -146,7 +146,7 @@ hello, world!</code></pre>
                         That emits <code>add.js</code> and <code>add.wasm</code>. The Wasm file is standalone just like earlier when we only emitted a Wasm file by itself (<code>STANDALONE_WASM</code> was set automatically when we said <code>-o add.wasm</code>), but now in addition there is a JS file that can load and run it. The JS is useful for running it on the Web if you don't want to write your own JS for that.
                     </p>
                     <h2 id="do-we-need-non-standalone-wasm%3F">
-                        Do we need <em>non</em>-standalone Wasm? <a class="bookmark" href="#do-we-need-non-standalone-wasm%3F">#</a>
+                        Do we need <em>non</em>-standalone Wasm? <a class="bookmark" href="https://example.com/mozilla--v8-blog#do-we-need-non-standalone-wasm%3F">#</a>
                     </h2>
                     <p>
                         Why does the <code>STANDALONE_WASM</code> flag exist? In theory Emscripten could always set <code>STANDALONE_WASM</code>, which would be simpler. But standalone Wasm files can't depend on JS, and that has some downsides:
@@ -163,7 +163,7 @@ hello, world!</code></pre>
                         If you want to run both on the Web and elsewhere, and you want 100% optimal code size and startup times, you should make two separate builds, one with <code>-s STANDALONE</code> and one without. That's very easy as it's just flipping one flag!
                     </p>
                     <h2 id="necessary-api-differences">
-                        Necessary API differences <a class="bookmark" href="#necessary-api-differences">#</a>
+                        Necessary API differences <a class="bookmark" href="https://example.com/mozilla--v8-blog#necessary-api-differences">#</a>
                     </h2>
                     <p>
                         We saw that Emscripten uses WASI APIs as much as possible to avoid <strong>unnecessary</strong> API differences. Are there any <strong>necessary</strong> ones? Sadly, yes - some WASI APIs require tradeoffs. For example:
@@ -186,7 +186,7 @@ hello, world!</code></pre>
                         However, even if WASI does improve, there is no avoiding the fact that Wasm has two standardized APIs as mentioned earlier. In the future I expect Emscripten will call Web APIs directly using interface types, because that will be more compact than calling a WASI-looking JS API that then calls a Web API (as in the <code>musl_writev</code> example from before). We could have a polyfill or a translation layer of some sort to help here, but we wouldn't want to use it unnecessarily, so we will need separate builds for Web and WASI environments. (This is somewhat unfortunate; in theory this could have been avoided if WASI were a superset of Web APIs, but obviously that would have meant compromises on the server side.)
                     </p>
                     <h2 id="current-status">
-                        Current status <a class="bookmark" href="#current-status">#</a>
+                        Current status <a class="bookmark" href="https://example.com/mozilla--v8-blog#current-status">#</a>
                     </h2>
                     <p>
                         Quite a lot works already! The main limitations are:

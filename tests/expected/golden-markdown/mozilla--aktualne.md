@@ -36,7 +36,7 @@ Zatímco v minulé sezoně Souček častokrát zastínil svého kolegu Rice, let
 
 [![Declan Rice po vítězství na Aston Ville.](//cdn.xsd.cz/resize/45c8c36d01e530bd83206c44f1fd341b_resize=560,403_.jpg?hash=d19aad3d8d0905964352d35120e0b5fd) 
 
-Declan Rice po vítězství na Aston Ville. | Foto: Reuters](/aston-villa-west-ham-premier-league/r~a1838afa3af511ec8fa20cc47ab5f122/r~8fa032ba3add11ec8a900cc47ab5f122/) 
+Declan Rice po vítězství na Aston Ville. | Foto: Reuters](https://example.com/aston-villa-west-ham-premier-league/r~a1838afa3af511ec8fa20cc47ab5f122/r~8fa032ba3add11ec8a900cc47ab5f122/) 
 
  
 

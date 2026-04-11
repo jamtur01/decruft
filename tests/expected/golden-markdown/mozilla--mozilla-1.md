@@ -16,9 +16,9 @@ Get fast and easy access to the features you use most in the new menu. Open the 
 
 ## More ways to customize
 
-*   [Themes](#themes)
-*   [Add-ons](#add-ons)
-*   [Awesome Bar](#awesome-bar)
+*   [Themes](https://example.com/mozilla--mozilla-1#themes)
+*   [Add-ons](https://example.com/mozilla--mozilla-1#add-ons)
+*   [Awesome Bar](https://example.com/mozilla--mozilla-1#awesome-bar)
 
 ## Keep your Firefox in Sync
 

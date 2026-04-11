@@ -7,7 +7,7 @@ Many of us have noticed that we seem to get our best ideas when we're in the sho
 
 A large body of neuroscientific [studies](http://journals.sagepub.com/doi/abs/10.1177/0956797612446024) has pointed out that the brain does a lot of work in its spare time, the so-called idle state - wherein the brain does not appear to be thinking about anything at all - and that this is the time when it works at its hardest to find solutions to complex problems. 
 
-With time and advances in [neuroscience](/articles/248680.php "What is neuroscience?"), it has become more and more clear to researchers that Freud *was* right and the mind, as well as the brain, do work unconsciously. In fact, it would be safe to say that what is consciously known to us is just the tip of a much larger iceberg, deeply submerged in unconscious waters. 
+With time and advances in [neuroscience](https://example.com/articles/248680.php "What is neuroscience?"), it has become more and more clear to researchers that Freud *was* right and the mind, as well as the brain, do work unconsciously. In fact, it would be safe to say that what is consciously known to us is just the tip of a much larger iceberg, deeply submerged in unconscious waters. 
 
 But the exact moment at which information becomes known to us - or when the "tip of the iceberg" pierces through the water, and the unconscious becomes conscious - has been somewhat of a mystery, from a neuroscientific point of view. 
 
@@ -59,6 +59,6 @@ In other words, the study shows that the conscious awareness of the "a-ha!" mome
 
 The findings provide unique insights into the biology of consciousness, say the researchers, and they bring us closer to understanding the biological basis of decisions, ethics, and, generally, the human mind. 
 
-[Neurology / Neuroscience](/categories/neurology "Neurology / Neuroscience News") 
+[Neurology / Neuroscience](https://example.com/categories/neurology "Neurology / Neuroscience News") 
 
-[Biology / Biochemistry](/categories/biology-biochemistry "Biology / Biochemistry News") [Psychology / Psychiatry](/categories/psychology-psychiatry "Psychology / Psychiatry News")
+[Biology / Biochemistry](https://example.com/categories/biology-biochemistry "Biology / Biochemistry News") [Psychology / Psychiatry](https://example.com/categories/psychology-psychiatry "Psychology / Psychiatry News")

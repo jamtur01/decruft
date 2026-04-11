@@ -1,10 +1,10 @@
 ![Super Supportive](https://www.royalroadcdn.com/public/covers-large/63759-super-supportive.jpg?time=1691780497) 
 
-[## Super Supportive](/fiction/63759/super-supportive)
+[## Super Supportive](https://example.com/fiction/63759/super-supportive)
 
  by
 
-### [Sleyca](/profile/338123)
+### [Sleyca](https://example.com/profile/338123)
 
 # ONE HUNDRED TWO: What kind of wordchain?
 

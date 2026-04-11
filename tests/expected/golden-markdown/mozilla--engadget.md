@@ -12,9 +12,9 @@ Excellent
 
 Key
 
-[Microsoft](/products/microsoft/) 
+[Microsoft](https://example.com/products/microsoft/) 
 
-[Xbox](/products/microsoft/xbox/one/x) 
+[Xbox](https://example.com/products/microsoft/xbox/one/x) 
 
 from $610.00 
 

@@ -67,18 +67,18 @@ Then Ven. Mahā Moggallāna went to the Blessed One and, on arrival, having bowe
 
 That is what the Blessed One said. Gratified, Ven. Mahā Moggallāna delighted in the Blessed One’s words.
 
-See also: [SN 27:1–10](/suttas/SN/SN27_1.html); [SN 46:26](/suttas/SN/SN46_26.html); [Sn 5:8](/suttas/KN/StNp/StNp5_8.html)
+See also: [SN 27:1–10](https://example.com/suttas/SN/SN27_1.html); [SN 46:26](https://example.com/suttas/SN/SN46_26.html); [Sn 5:8](https://example.com/suttas/KN/StNp/StNp5_8.html)
 
-[^1]: According to [AN 7:58](/suttas/AN/AN7_58.html), this is the question that Ven. Mahā Moggallāna asked the Buddha before he attained arahantship. The Buddha’s answer here is the same as he gave in that discourse. So it’s appropriate that Moggallāna, on hearing the Buddha give this answer to Sakka, should be curious as to how thoroughly Sakka understood the meaning. If he had truly taken it to heart, he would have attained arahantship just as Moggallāna had.
+[^1]: According to [AN 7:58](https://example.com/suttas/AN/AN7_58.html), this is the question that Ven. Mahā Moggallāna asked the Buddha before he attained arahantship. The Buddha’s answer here is the same as he gave in that discourse. So it’s appropriate that Moggallāna, on hearing the Buddha give this answer to Sakka, should be curious as to how thoroughly Sakka understood the meaning. If he had truly taken it to heart, he would have attained arahantship just as Moggallāna had.
 
-[^2]: The Commentary identifies “all dhammas” here as three sorts of fabricated dhammas: the five aggregates, the twelve sense media, and the eighteen properties (the twelve sense media plus the consciousness appropriate to each sense organ). This, however, misses the point that “all dhammas” in other contexts include not only fabricated dhammas but also unfabricated dhammas. ([Iti 90](/suttas/KN/Iti/iti90.html); [Dhp 277–279](/suttas/KN/Dhp/Ch20.html#dhp277)).
+[^2]: The Commentary identifies “all dhammas” here as three sorts of fabricated dhammas: the five aggregates, the twelve sense media, and the eighteen properties (the twelve sense media plus the consciousness appropriate to each sense organ). This, however, misses the point that “all dhammas” in other contexts include not only fabricated dhammas but also unfabricated dhammas. ([Iti 90](https://example.com/suttas/KN/Iti/iti90.html); [Dhp 277–279](https://example.com/suttas/KN/Dhp/Ch20.html#dhp277)).
 
-[^3]: The sequence here—“focused on inconstancy, focused on dispassion, focused on cessation, focused on relinquishing”—follows the same pattern as the last four steps in the Buddha’s description of mindfulness of breathing. See [MN 118](/suttas/MN/MN118.html).
+[^3]: The sequence here—“focused on inconstancy, focused on dispassion, focused on cessation, focused on relinquishing”—follows the same pattern as the last four steps in the Buddha’s description of mindfulness of breathing. See [MN 118](https://example.com/suttas/MN/MN118.html).
 
 [^4]: “Owl,” Sakka’s clan name.
 
 [^5]: One of the Four Great Kings. Vessavaṇṇa is the king of the north, ruling over the yakkhas.
 
-[^6]: According to [DN 21](/suttas/DN/DN21.html), Sakka is a stream-enterer. However, [SN 55:40](/suttas/SN/SN55_40.html) describes how a stream-enterer can still be heedless. [MN 70](/suttas/MN/MN70.html) describes the practices that a stream-enterer still has to do with heedfulness.
+[^6]: According to [DN 21](https://example.com/suttas/DN/DN21.html), Sakka is a stream-enterer. However, [SN 55:40](https://example.com/suttas/SN/SN55_40.html) describes how a stream-enterer can still be heedless. [MN 70](https://example.com/suttas/MN/MN70.html) describes the practices that a stream-enterer still has to do with heedfulness.
 
 [^7]: The Commentary says that Sakka is Ven. Mahā Moggallāna’s fellow in the holy life in the sense that he is a stream-enterer. It calls this kind of holy life a “path holy life *(magga-brahmacariya).”*

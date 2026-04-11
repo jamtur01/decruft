@@ -6,7 +6,7 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor i
 
 ## Single \<img>
 
-![An image](florian-giorgio-P1U7-ZgKeOM-unsplash.jpg) 
+![An image](https://example.com/florian-giorgio-P1U7-ZgKeOM-unsplash.jpg) 
 
 Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. 
 

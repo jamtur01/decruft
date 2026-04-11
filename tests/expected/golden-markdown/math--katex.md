@@ -1,6 +1,6 @@
 # KaTeX and MathJax Comparison Demo
 
-Page by Murray Bourne, [IntMath.com](/). Last updated: 29 Apr 2020
+Page by Murray Bourne, [IntMath.com](https://example.com/). Last updated: 29 Apr 2020
 
 ### Repeating fractions
 

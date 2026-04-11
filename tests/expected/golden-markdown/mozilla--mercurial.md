@@ -1,4 +1,4 @@
-# [¶](#evolve-shared-mutable-history "Permalink to this headline")
+# [¶](https://example.com/mozilla--mercurial#evolve-shared-mutable-history "Permalink to this headline")
 
 Contents 
 
@@ -8,7 +8,7 @@ Contents
         *
     *   *
 
-Once you have mastered the art of mutable history in a single repository (see the [user guide](user-guide.html)), you can move up to the next level: *shared* mutable history. evolve lets you push and pull draft changesets between repositories along with their obsolescence markers. This opens up a number of interesting possibilities. 
+Once you have mastered the art of mutable history in a single repository (see the [user guide](https://example.com/user-guide.html)), you can move up to the next level: *shared* mutable history. evolve lets you push and pull draft changesets between repositories along with their obsolescence markers. This opens up a number of interesting possibilities. 
 
 The simplest scenario is a single developer working across two computers. Say you’re working on code that must be tested on a remote test server, probably in a rack somewhere, only accessible by SSH, and running an “enterprise-grade” (out-of-date) OS. But you probably prefer to write code locally: everything is setup the way you like it, and you can use your preferred editor, IDE, merge/diff tools, etc. 
 
@@ -23,13 +23,13 @@ Using Mercurial with evolve to share mutable history solves these problems. As w
 
 A less common scenario is multiple developers sharing mutable history, typically for code review. We’ll cover this scenario later. First, we will cover single-user sharing. 
 
-## [¶](#sharing-with-a-single-developer "Permalink to this headline")
+## [¶](https://example.com/mozilla--mercurial#sharing-with-a-single-developer "Permalink to this headline")
 
-### [¶](#publishing-and-non-publishing-repositories "Permalink to this headline")
+### [¶](https://example.com/mozilla--mercurial#publishing-and-non-publishing-repositories "Permalink to this headline")
 
 The key to shared mutable history is to keep your changesets in *draft* phase as you pass them around. Recall that by default, hg push promotes changesets from *draft* to *public*, and public changesets are immutable. You can change this behaviour by reconfiguring the *remote* repository so that it is non-publishing. (Short version: set phases.publish to false. Long version follows.) 
 
-### [¶](#setting-up "Permalink to this headline")
+### [¶](https://example.com/mozilla--mercurial#setting-up "Permalink to this headline")
 
 We’ll work through an example with three local repositories, although in the real world they’d most likely be on three different computers. First, the public repository is where tested, polished changesets live, and it is where you synchronize with the rest of your team. 
 
@@ -105,9 +105,9 @@ added 1 changesets with 1 changes to 1 files
 1 files updated, 0 files merged, 0 files removed, 0 files unresolved
 ```
 
-### [¶](#example-1-amend-a-shared-changeset "Permalink to this headline")
+### [¶](https://example.com/mozilla--mercurial#example-1-amend-a-shared-changeset "Permalink to this headline")
 
-Everything you learned in the [user guide](user-guide.html) applies to work done in dev-repo. You can commit, amend, uncommit, evolve, and so forth just as before. 
+Everything you learned in the [user guide](https://example.com/user-guide.html) applies to work done in dev-repo. You can commit, amend, uncommit, evolve, and so forth just as before. 
 
 Things get different when you push changesets to test-repo. Or rather, things stay the same, which *is* different: because we configured test-repo to be non-publishing, draft changesets stay draft when we push them to test-repo. Importantly, they’re also draft (mutable) in test-repo. 
 
@@ -161,7 +161,7 @@ As seen in figure 3, this transfers the new changeset *and* the obsolescence mar
 
 Because of this deliberately incomplete synchronization, revision numbers in test-repo and dev-repo are no longer consistent. We *must* use changeset IDs. 
 
-### [¶](#example-2-amend-again-locally "Permalink to this headline")
+### [¶](https://example.com/mozilla--mercurial#example-2-amend-again-locally "Permalink to this headline")
 
 This process can repeat. Perhaps you figure out a more elegant fix to the bug, and want to mutate history so nobody ever knows you had a less-than-perfect idea. We’ll implement it locally in dev-repo and push to test-repo: 
 
@@ -217,7 +217,7 @@ abort: cannot amend public changesets
 
 This is, after all, the whole point of Mercurial’s phases: to prevent rewriting history that has already been published. 
 
-## [¶](#sharing-with-multiple-developers-code-review "Permalink to this headline")
+## [¶](https://example.com/mozilla--mercurial#sharing-with-multiple-developers-code-review "Permalink to this headline")
 
 Now that you know how to share your own mutable history across multiple computers, you might be wondering if it makes sense to share mutable history with others. It does, but you have to be careful, stay alert, and *communicate* with your peers. 
 
@@ -225,7 +225,7 @@ Code review is a good use case for sharing mutable history across multiple devel
 
 Incidentally, the reviewers here can be anyone: maybe Bob and Alice review each other’s work; maybe the same third party reviews both; or maybe they pick different experts to review their work on different parts of a large codebase. Similarly, it doesn’t matter if reviews are conducted in person, by email, or by carrier pigeon. Code review is outside of the scope of Mercurial, so all we’re looking at here is the mechanics of committing, amending, pushing, and pulling. 
 
-### [¶](#id2 "Permalink to this headline")
+### [¶](https://example.com/mozilla--mercurial#id2 "Permalink to this headline")
 
 To demonstrate, let’s start with the public repository as we left it in the last example, with two immutable changesets (figure 5 above). We’ll clone a review repository from it, and then Alice and Bob will both clone from review. 
 
@@ -262,7 +262,7 @@ $ hg -R bob config --edit --local
 
 and add the same text. 
 
-### [¶](#example-3-alice-commits-and-amends-a-draft-fix "Permalink to this headline")
+### [¶](https://example.com/mozilla--mercurial#example-3-alice-commits-and-amends-a-draft-fix "Permalink to this headline")
 
 We’ll follow Alice working on a bug fix. We’re going to use bookmarks to make it easier to understand multiple branch heads in the review repository, so Alice starts off by creating a bookmark and committing her first attempt at a fix: 
 
@@ -303,7 +303,7 @@ Figure 6 shows the state of the review repository at this point.
 
 After a busy morning of bug fixing, Alice stops for lunch. Let’s see what Bob has been up to. 
 
-### [¶](#example-4-bob-implements-and-publishes-a-new-feature "Permalink to this headline")
+### [¶](https://example.com/mozilla--mercurial#example-4-bob-implements-and-publishes-a-new-feature "Permalink to this headline")
 
 Meanwhile, Bob has been working on a new feature. Like Alice, he’ll use a bookmark to track his work, and he’ll push that bookmark to the review repository, so that reviewers know which changesets to review. 
 
@@ -359,7 +359,7 @@ Figure 7 shows the result of Bob’s work in both review and public.
 
 Incidentally, it’s important that Bob push to public *before* review. If he pushed to review first, then revision 6:540b would still be in *draft* phase in review, but it would be *public* in both Bob’s local repository and the public repository. That could lead to confusion at some point, which is easily avoided by pushing first to public. 
 
-### [¶](#example-5-alice-integrates-and-publishes "Permalink to this headline")
+### [¶](https://example.com/mozilla--mercurial#example-5-alice-integrates-and-publishes "Permalink to this headline")
 
 Finally, Alice gets back from lunch and sees that the carrier pigeon with her second review has arrived (or maybe it’s in her email inbox). Alice’s reviewer approved her amended changeset, so she pushes it to public: 
 
@@ -402,7 +402,7 @@ The result, in both review and public repositories, is shown in figure 8.
 
 > \[figure SG08: review shows v1 and v2 of Alice’s fix, then v1, v2, v3 of Bob’s feature, finally Alice’s fix rebased onto Bob’s. public just shows the final public version of each changeset\]
 
-## [¶](#getting-into-trouble-with-shared-mutable-history "Permalink to this headline")
+## [¶](https://example.com/mozilla--mercurial#getting-into-trouble-with-shared-mutable-history "Permalink to this headline")
 
 Mercurial with evolve is a powerful tool, and using powerful tools can have consequences. (You can cut yourself badly with a sharp knife, but every competent chef keeps several around. Ever try to chop onions with a spoon?) 
 
@@ -410,7 +410,7 @@ In the user guide, we saw examples of *unstbale* changesets, which are the most 
 
 Two other types of troubles can happen: *divergent* and *bumped* changesets. Both are more likely with shared mutable history, especially mutable history shared by multiple developers. 
 
-### [¶](#id3 "Permalink to this headline")
+### [¶](https://example.com/mozilla--mercurial#id3 "Permalink to this headline")
 
 For these examples, we’re going to use a slightly different workflow: as before, Alice and Bob share a public repository. But this time there is no review repository. Instead, Alice and Bob put on their cowboy hats, throw good practice to the wind, and pull directly from each other’s working repositories. 
 
@@ -451,7 +451,7 @@ $ hg -R bob config --edit --local
 
 and add the same text. 
 
-### [¶](#example-6-divergent-changesets "Permalink to this headline")
+### [¶](https://example.com/mozilla--mercurial#example-6-divergent-changesets "Permalink to this headline")
 
 When an obsolete changeset has two successors, those successors are *divergent*. One way to get into such a situation is by failing to communicate with your teammates. Let’s see how that might happen. 
 
@@ -516,7 +516,7 @@ We carefully dodged a merge conflict by specifying a merge tool (internal:other)
 
 \*\* STOP HERE: WORK IN PROGRESS \*\* 
 
-### [¶](#phase-divergence-when-a-rewritten-changeset-is-made-public "Permalink to this headline")
+### [¶](https://example.com/mozilla--mercurial#phase-divergence-when-a-rewritten-changeset-is-made-public "Permalink to this headline")
 
 If Alice and Bob are collaborating on some mutable changesets, it’s possible to get into a situation where an otherwise worthwhile changeset cannot be pushed to the public repository; it is *phase-divergent* with another changeset that was made public first. Let’s demonstrate one way this could happen. 
 
@@ -576,7 +576,7 @@ Figure 8 illustrates Bob’s repository after evolving away the bumped changeset
 
 > \[figure SG08: 5:227d is new, formerly bumped changeset 4:fe88 now hidden\]
 
-## [¶](#conclusion "Permalink to this headline")
+## [¶](https://example.com/mozilla--mercurial#conclusion "Permalink to this headline")
 
 Mutable history is a powerful tool. Like a sharp knife, an experienced user can do wonderful things with it, much more wonderful than with a dull knife (never mind a rusty spoon). At the same time, an inattentive or careless user can do harm to himself or others. Mercurial with evolve goes to great lengths to limit the harm you can do by trying to handle all possible types of “troubled” changesets. Nevertheless, having a first-aid kit nearby does not mean you should stop being careful with sharp knives. 
 

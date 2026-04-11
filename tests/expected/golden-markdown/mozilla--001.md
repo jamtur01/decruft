@@ -1,4 +1,4 @@
-**So finally you're [testing your frontend JavaScript code](/code/2013/testing-frontend-javascript-code-using-mocha-chai-and-sinon/)? Great! The more you write tests, the more confident you are with your code… but how much precisely? That's where [code coverage](http://en.wikipedia.org/wiki/Code_coverage) might help.** 
+**So finally you're [testing your frontend JavaScript code](https://example.com/code/2013/testing-frontend-javascript-code-using-mocha-chai-and-sinon/)? Great! The more you write tests, the more confident you are with your code… but how much precisely? That's where [code coverage](http://en.wikipedia.org/wiki/Code_coverage) might help.** 
 
 The idea behind code coverage is to record which parts of your code (functions, statements, conditionals and so on) have been executed by your test suite, to compute metrics out of these data and usually to provide tools for navigating and inspecting them.
 
@@ -17,7 +17,7 @@ Its use is dead easy, adding Blanket support to your Mocha test suite is just ma
 
 Source files: [blanket.js](https://raw.github.com/alex-seville/blanket/master/dist/qunit/blanket.min.js), [mocha-blanket.js](https://raw.github.com/alex-seville/blanket/master/src/adapters/mocha-blanket.js) 
 
-As an example, let's reuse the silly `Cow` example we used [in a previous episode](/code/2013/testing-frontend-javascript-code-using-mocha-chai-and-sinon/):
+As an example, let's reuse the silly `Cow` example we used [in a previous episode](https://example.com/code/2013/testing-frontend-javascript-code-using-mocha-chai-and-sinon/):
 
 ```
 // cow.js
@@ -99,7 +99,7 @@ Let's create the HTML test file for it, featuring Blanket and its adapter for Mo
 
 Running the tests now gives us something like this:
 
-![screenshot](/static/code/2013/blanket-coverage.png) 
+![screenshot](https://example.com/static/code/2013/blanket-coverage.png) 
 
 As you can see, the report at the bottom highlights that we haven't actually tested the case where an error is raised in case a target name is missing. We've been informed of that, nothing more, nothing less. We simply know we're missing a test here. Isn't this cool? I think so!
 

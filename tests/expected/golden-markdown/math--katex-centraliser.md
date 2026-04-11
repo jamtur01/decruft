@@ -1,5 +1,5 @@
   
- Time taken by KaTeX to render formulæ : 8 ms [PDF version](centraliser.pdf)  
+ Time taken by KaTeX to render formulæ : 8 ms [PDF version](https://example.com/centraliser.pdf)  
   
 
 #### Theorem

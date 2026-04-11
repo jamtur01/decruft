@@ -1,4 +1,4 @@
-[← back](../index.html)
+[← back](https://example.com/index.html)
 
 # An Article About Sorting
 

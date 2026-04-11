@@ -14,7 +14,7 @@ Testing externally visible behavior as a user would see it.
 
 An application (usually web-based) that provides a summary view of a service’s core metrics. A dashboard may have filters, selectors, and so on, but is prebuilt to expose the metrics most important to its users. The dashboard might also display team information such as ticket queue length, a list of high-priority bugs, the current on-call engineer for a given area of responsibility, or recent pushes. 
 
-A notification intended to be read by a human and that is pushed to a system such as a bug or ticket queue, an email alias, or a pager. Respectively, these alerts are classified as *tickets*, *email alerts*,[22](#id-LvQuvtYS7UvI8h4) and *pages*. 
+A notification intended to be read by a human and that is pushed to a system such as a bug or ticket queue, an email alias, or a pager. Respectively, these alerts are classified as *tickets*, *email alerts*,[22](https://example.com/mozilla--google-sre-book-1#id-LvQuvtYS7UvI8h4) and *pages*. 
 
 A defect in a software or human system that, if repaired, instills confidence that this event won’t happen again in the same way. A given incident might have multiple root causes: for example, perhaps it was caused by a combination of insufficient process automation, software that crashed on bogus input, *and* insufficient testing of the script used to generate the configuration. Each of these factors might stand alone as a root cause, and each should be repaired. 
 
@@ -35,7 +35,7 @@ Are queries faster with Acme Bucket of Bytes 2.72 versus Ajax DB 3.14? How much 
 
 Something is broken, and somebody needs to fix it right now! Or, something might break soon, so somebody should look soon. 
 
-Dashboards should answer basic questions about your service, and normally include some form of the four golden signals (discussed in [The Four Golden Signals](#xref_monitoring_golden-signals)). 
+Dashboards should answer basic questions about your service, and normally include some form of the four golden signals (discussed in [The Four Golden Signals](https://example.com/mozilla--google-sre-book-1#xref_monitoring_golden-signals)). 
 
 Our latency just shot up; what else happened around the same time? 
 
@@ -61,7 +61,7 @@ Similarly, to keep noise low and signal high, the elements of your monitoring sy
 
 Your monitoring system should address two questions: what’s broken, and why? 
 
-The "what’s broken" indicates the symptom; the "why" indicates a (possibly intermediate) cause. [Table 6-1](#table_monitoring_symptoms) lists some hypothetical symptoms and corresponding causes. 
+The "what’s broken" indicates the symptom; the "why" indicates a (possibly intermediate) cause. [Table 6-1](https://example.com/mozilla--google-sre-book-1#table_monitoring_symptoms) lists some hypothetical symptoms and corresponding causes. 
 
 Table 6-1. Example symptoms and causes
 | **Symptom**                                                | **Cause**                                                                                                       |
@@ -103,7 +103,7 @@ If you measure all four golden signals and page a human when one signal is probl
 
 ## Worrying About Your Tail (or, Instrumentation and Performance)
 
-When building a monitoring system from scratch, it’s tempting to design a system based upon the mean of some quantity: the mean latency, the mean CPU usage of your nodes, or the mean fullness of your databases. The danger presented by the latter two cases is obvious: CPUs and databases can easily be utilized in a very imbalanced way. The same holds for latency. If you run a web service with an average latency of 100 ms at 1,000 requests per second, 1% of requests might easily take 5 seconds.[23](#id-QQLuAIXFxCz) If your users depend on several such web services to render their page, the 99th percentile of one backend can easily become the median response of your frontend. 
+When building a monitoring system from scratch, it’s tempting to design a system based upon the mean of some quantity: the mean latency, the mean CPU usage of your nodes, or the mean fullness of your databases. The danger presented by the latter two cases is obvious: CPUs and databases can easily be utilized in a very imbalanced way. The same holds for latency. If you run a web service with an average latency of 100 ms at 1,000 requests per second, 1% of requests might easily take 5 seconds.[23](https://example.com/mozilla--google-sre-book-1#id-QQLuAIXFxCz) If your users depend on several such web services to render their page, the 99th percentile of one backend can easily become the median response of your frontend. 
 
 The simplest way to differentiate between a slow average and a very slow "tail" of requests is to collect request counts bucketed by latencies (suitable for rendering a histogram), rather than actual latencies: how many requests did I serve that took between 0 ms and 10 ms, between 10 ms and 30 ms, between 30 ms and 100 ms, between 100 ms and 300 ms, and so on? Distributing the histogram boundaries approximately exponentially (in this case by factors of roughly 3) is often an easy way to visualize the distribution of your requests. 
 
@@ -145,9 +145,9 @@ In Google’s experience, basic collection and aggregation of metrics, paired wi
 
 The principles discussed in this chapter can be tied together into a philosophy on monitoring and alerting that’s widely endorsed and followed within Google SRE teams. While this monitoring philosophy is a bit aspirational, it’s a good starting point for writing or reviewing a new alert, and it can help your organization ask the right questions, regardless of the size of your organization or the complexity of your service or system. 
 
-When creating rules for monitoring and alerting, asking the following questions can help you avoid false positives and pager burnout:[24](#id-a82udF8IBfx) 
+When creating rules for monitoring and alerting, asking the following questions can help you avoid false positives and pager burnout:[24](https://example.com/mozilla--google-sre-book-1#id-a82udF8IBfx) 
 
-*   Does this rule detect *an otherwise undetected condition* that is urgent, actionable, and actively or imminently user-visible?[25](#id-0vYuEFpSjSMtLfG)
+*   Does this rule detect *an otherwise undetected condition* that is urgent, actionable, and actively or imminently user-visible?[25](https://example.com/mozilla--google-sre-book-1#id-0vYuEFpSjSMtLfG)
 *   Will I ever be able to ignore this alert, knowing it’s benign? When and why will I be able to ignore this alert, and how can I avoid this scenario?
 *   Does this alert definitely indicate that users are being negatively affected? Are there detectable cases in which users aren’t being negatively impacted, such as drained traffic or test deployments, that should be filtered out?
 *   Can I take action in response to this alert? Is that action urgent, or could it wait until morning? Could the action be safely automated? Will that action be a long-term fix, or just a short-term workaround?
@@ -168,7 +168,7 @@ In modern production systems, monitoring systems track an ever-evolving system w
 
 It’s important that decisions about monitoring be made with long-term goals in mind. Every page that happens today distracts a human from improving the system for tomorrow, so there is often a case for taking a short-term hit to availability or performance in order to improve the long-term outlook for the system. Let’s take a look at two case studies that illustrate this trade-off. 
 
-Google’s internal infrastructure is typically offered and measured against a service level objective (SLO; see [Service Level Objectives](/sre/sre-book/chapters/service-level-objectives)). Many years ago, the Bigtable service’s SLO was based on a synthetic well-behaved client’s mean performance. Because of problems in Bigtable and lower layers of the storage stack, the mean performance was driven by a "large" tail: the worst 5% of requests were often significantly slower than the rest. 
+Google’s internal infrastructure is typically offered and measured against a service level objective (SLO; see [Service Level Objectives](https://example.com/sre/sre-book/chapters/service-level-objectives)). Many years ago, the Bigtable service’s SLO was based on a synthetic well-behaved client’s mean performance. Because of problems in Bigtable and lower layers of the storage stack, the mean performance was driven by a "large" tail: the worst 5% of requests were often significantly slower than the rest. 
 
 Email alerts were triggered as the SLO approached, and paging alerts were triggered when the SLO was exceeded. Both types of alerts were firing voluminously, consuming unacceptable amounts of engineering time: the team spent significant amounts of time triaging the alerts to find the few that were really actionable, and we often missed the problems that actually affected users, because so few of them did. Many of the pages were non-urgent, due to well-understood problems in the infrastructure, and had either rote responses or received no response. 
 
@@ -194,10 +194,10 @@ A healthy monitoring and alerting pipeline is simple and easy to reason about. I
 
 Over the long haul, achieving a successful on-call rotation and product includes choosing to alert on symptoms or imminent real problems, adapting your targets to goals that are actually achievable, and making sure that your monitoring supports rapid diagnosis. 
 
-[22](#id-LvQuvtYS7UvI8h4-marker)Sometimes known as "alert spam," as they are rarely read or acted on. 
+[22](https://example.com/mozilla--google-sre-book-1#id-LvQuvtYS7UvI8h4-marker)Sometimes known as "alert spam," as they are rarely read or acted on. 
 
-[23](#id-QQLuAIXFxCz-marker)If 1% of your requests are 50x the average, it means that the rest of your requests are about twice as fast as the average. But if you’re not measuring your distribution, the idea that most of your requests are near the mean is just hopeful thinking. 
+[23](https://example.com/mozilla--google-sre-book-1#id-QQLuAIXFxCz-marker)If 1% of your requests are 50x the average, it means that the rest of your requests are about twice as fast as the average. But if you’re not measuring your distribution, the idea that most of your requests are near the mean is just hopeful thinking. 
 
-[24](#id-a82udF8IBfx-marker)See *Applying Cardiac Alarm Management Techniques to Your On-Call* [\[Hol14\]](/sre/sre-book/chapters/bibliography#Hol14) for an example of alert fatigue in another context. 
+[24](https://example.com/mozilla--google-sre-book-1#id-a82udF8IBfx-marker)See *Applying Cardiac Alarm Management Techniques to Your On-Call* [\[Hol14\]](https://example.com/sre/sre-book/chapters/bibliography#Hol14) for an example of alert fatigue in another context. 
 
-[25](#id-0vYuEFpSjSMtLfG-marker)Zero-redundancy (*N* + 0) situations count as imminent, as do "nearly full" parts of your service! For more details about the concept of redundancy, see [*https://en.wikipedia.org/wiki/N%2B1\_redundancy*](https://en.wikipedia.org/wiki/N%2B1_redundancy).
+[25](https://example.com/mozilla--google-sre-book-1#id-0vYuEFpSjSMtLfG-marker)Zero-redundancy (*N* + 0) situations count as imminent, as do "nearly full" parts of your service! For more details about the concept of redundancy, see [*https://en.wikipedia.org/wiki/N%2B1\_redundancy*](https://en.wikipedia.org/wiki/N%2B1_redundancy).

@@ -1,10 +1,4 @@
-[Heinrich](/arscontexta)
-
-[@arscontexta](/arscontexta)
-
-[![Image](https://pbs.twimg.com/media/G-_GGKzXkAAHz_w?format=jpg&name=medium)](/arscontexta/article/2013045749580259680/media/2013045367739224064)
-
-[1.1M](/arscontexta/status/2013045749580259680/analytics)
+![Image](https://pbs.twimg.com/media/G-_GGKzXkAAHz_w?format=jpg&name=large)
 
 ive spent the last year building an operating system for thinking with ai. claude code runs my obsidian vaults
 
@@ -36,7 +30,7 @@ a vault is a folder of markdown files that link to each other:
 
 markdown
 
-```
+```markdown
 my-vault/
 ├── 00_inbox/           # capture zone, zero friction
 ├── 01_thinking/        # your notes and synthesis
@@ -57,6 +51,8 @@ my-vault/
 files connect using \[\[wiki links\]\] which build a network of ideas
 
 when you write \[\[quality is the hard part\]\] in one note, it creates a clickable link to another note with that title
+
+the agent can follow these links to jump between related ideas, discovering connections you forgot existed
 
 ## how to write good notes
 
@@ -150,9 +146,8 @@ here is a snippet from the claude md to emphasize on this:
 
 markdown
 
-```
+```markdown
 depth over breadth. quality over speed. tokens are free.
-
 this is not about efficiency. this is about excellence. when you pick a task, you are committing to understanding it completely and leaving behind work that future agents can build on.
 ```
 
@@ -164,20 +159,15 @@ thats impossible with thousands of notes. so my system has layers that let the a
 
 json
 
-```
-"hooks": {
-    "SessionStart": [{
-        "hooks": [{
-            "type": "command",
-            "command": "tree -L 3 -a -I '.git|.obsidian' --noreport"
-        }]
-    }]
-}
+```json
+"hooks": {    "SessionStart": [{        "hooks": [{            "type": "command",            "command": "tree -L 3 -a -I '.git|.obsidian' --noreport"        }]    }]}
 ```
 
 1.  claude sees the folder structure. a hook automatically shows what folders and files exist at session start
 
 2.  an index file that lists every note with a one sentence description. claude can scan 50 notes in seconds without opening them
+
+3.  topic pages (MOCs) that link to related notes these act like tables of contents for each subject
 
 they also contain notes that claude leaves for itself about what it learned while traversing the graph, leaving breadcrumbs for future sessions
 
@@ -211,9 +201,8 @@ every new capture triggers a search for related notes. claude adds links with co
 
 markdown
 
-```
-vault/
-├── 00_inbox/           # capture zone
+```markdown
+vault/├── 00_inbox/           # capture zone
 ├── 01_thinking/        # your notes and topic pages
 │   ├── knowledge-work.md    # example topic page
 │   └── notes/               # individual notes
@@ -263,5 +252,3 @@ the human role evolves from writer to editor and from creator to curator
 if you want to see how this evolves, follow along. im open sourcing my notes soon
 
 heinrich
-
-[View quotes](/arscontexta/status/2013045749580259680/quotes)

@@ -6,7 +6,7 @@ Hello, welcome to my website!
 
 *   [Project One](https://example.com/project-one) - a cool project
 *   [Project Two](https://example.com/project-two) - another project
-*   [Local Page](/local-page.html)
+*   [Local Page](https://example.com/local-page.html)
 
 ## Contact
 

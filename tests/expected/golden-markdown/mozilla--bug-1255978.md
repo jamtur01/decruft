@@ -86,9 +86,9 @@ Zeev Sharon said that the old rule of thumb is that for every $1000 invested in 
 
 # Read more
 
-*   [Man rents out flatmate's room on Airbnb - without telling him](/news/world/americas/man-rents-out-flatmates-room-on-airbnb--without-telling-him-10484670.html?origin=internalSearch)
-*   [Upmarket holiday company goes bust on eve of bank holiday](/travel/news-and-advice/exclusive-escapes-upmarket-holiday-company-goes-bust-on-the-eve-of-bank-holiday-weekend-10476653.html?origin=internalSearch)
-*   [It’s possible for a city to have too many tourists](/voices/comment/as-barcelona-has-found-its-possible-for-a-city-to-have-too-many-tourists-10452542.html?origin=internalSearch)
+*   [Man rents out flatmate's room on Airbnb - without telling him](https://example.com/news/world/americas/man-rents-out-flatmates-room-on-airbnb--without-telling-him-10484670.html?origin=internalSearch)
+*   [Upmarket holiday company goes bust on eve of bank holiday](https://example.com/travel/news-and-advice/exclusive-escapes-upmarket-holiday-company-goes-bust-on-the-eve-of-bank-holiday-weekend-10476653.html?origin=internalSearch)
+*   [It’s possible for a city to have too many tourists](https://example.com/voices/comment/as-barcelona-has-found-its-possible-for-a-city-to-have-too-many-tourists-10452542.html?origin=internalSearch)
 
 ### 5\. Beware the wall-mounted hairdryer
 
@@ -385,20 +385,20 @@ Towels should always be cleaned between stays
 Forrest Jones made a discovery when he was helping out with the housekeepers. “You know where you almost always find a hand towel in any recently-vacated hotel room that was occupied by a guy? On the floor, next to the bed, about halfway down, maybe a little toward the foot of the bed. Same spot in the floor, next to almost every bed occupied by a man, in every room. I'll leave the rest to your imagination,” he said.
 
 *   More about:
-*   [Hotels](/topic/Hotels)
-*   [Hygiene](/topic/Hygiene)
+*   [Hotels](https://example.com/topic/Hotels)
+*   [Hygiene](https://example.com/topic/Hygiene)
 
-![](/sites/all/themes/ines_themes/independent_theme/img/facebook.png)
+![](https://example.com/sites/all/themes/ines_themes/independent_theme/img/facebook.png)
 
-![](/sites/all/themes/ines_themes/independent_theme/img/twitter.png)
+![](https://example.com/sites/all/themes/ines_themes/independent_theme/img/twitter.png)
 
-![](/sites/all/themes/ines_themes/independent_theme/img/whatsapp.png)
+![](https://example.com/sites/all/themes/ines_themes/independent_theme/img/whatsapp.png)
 
-![](/sites/all/themes/ines_themes/independent_theme/img/email.png)
+![](https://example.com/sites/all/themes/ines_themes/independent_theme/img/email.png)
 
-![](/sites/all/themes/ines_themes/ines_theme/img/blank.gif)
+![](https://example.com/sites/all/themes/ines_themes/ines_theme/img/blank.gif)
 
-[Reuse content](/syndication/reuse-permision-form?url=http://www.independent.co.uk/news/business/news/seven-secrets-that-hotel-owners-dont-want-you-to-know-10506160.html) 
+[Reuse content](https://example.com/syndication/reuse-permision-form?url=http://www.independent.co.uk/news/business/news/seven-secrets-that-hotel-owners-dont-want-you-to-know-10506160.html) 
 
 [Babbel](https://go.babbel.com/engmag-a153-vid-bv-millionusers-cd-xo-tb/1_eng_tab_cd?utm_source=taboola&utm_medium=CON&utm_campaign=cd_engall_gen_cxo_millionusers&utm_term=eslmedia-theindependent&utm_content=1%2C000%2C000+are+using+this+app+to+learn+a+new+language "1,000,000 are using this app to learn a new language") 
 
@@ -472,4 +472,4 @@ Undo
 
 Undo
 
-[![](/sites/all/themes/ines_themes/independent_theme/img/signposts/indy-news.jpg)](/profile?icn=_IND_news_UAS)
+[![](https://example.com/sites/all/themes/ines_themes/independent_theme/img/signposts/indy-news.jpg)](https://example.com/profile?icn=_IND_news_UAS)

@@ -18,7 +18,7 @@ Memory leak in action
 
 A good way to debug memory leak is a memory dump and/or memory sampling but this is not the subject. 
 
-(for more details about V8 and its garbage collector you can read my previous article [here](/voodoo-engineering/nodejs-internals-v8-garbage-collector-a6eca82540ec)) 
+(for more details about V8 and its garbage collector you can read my previous article [here](https://example.com/voodoo-engineering/nodejs-internals-v8-garbage-collector-a6eca82540ec)) 
 
 > Stay focused on the CPU!
 
@@ -207,5 +207,5 @@ I will write another article about using CPU profiling and the inspector on prod
 
 *   [https://nodejs.org/api/inspector.html](https://nodejs.org/api/inspector.html)
 *   [https://chromedevtools.github.io/devtools-protocol/v8](https://chromedevtools.github.io/devtools-protocol/v8)
-*   [https://medium.com/netflix-techblog/node-js-in-flames-ddd073803aa4](/netflix-techblog/node-js-in-flames-ddd073803aa4)
+*   [https://medium.com/netflix-techblog/node-js-in-flames-ddd073803aa4](https://example.com/netflix-techblog/node-js-in-flames-ddd073803aa4)
 *   [https://www.npmjs.com/package/inspector-api](https://www.npmjs.com/package/inspector-api)
