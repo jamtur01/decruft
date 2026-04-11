@@ -861,6 +861,24 @@ fn convert_to_markdown(html: &str) -> Option<String> {
         .ok()
         .map(|s| fix_bang_image_collision(s.as_str()))
         .map(|s| unescape_latex_delimiters(&s))
+        .map(|s| clean_bare_bullets(&s))
+}
+
+/// Remove bare bullet lines (a lone `-`, `+`, or `*` with no text)
+/// that htmd produces for certain empty or nested-only list items.
+fn clean_bare_bullets(md: &str) -> String {
+    let mut out = Vec::new();
+    let lines: Vec<&str> = md.lines().collect();
+    for (i, line) in lines.iter().enumerate() {
+        let trimmed = line.trim();
+        if (trimmed == "-" || trimmed == "+" || trimmed == "*")
+            && lines.get(i + 1).is_none_or(|next| next.trim().is_empty())
+        {
+            continue;
+        }
+        out.push(*line);
+    }
+    out.join("\n")
 }
 
 /// Handle `<sup>` elements: convert canonical footnote refs to `[^N]`.

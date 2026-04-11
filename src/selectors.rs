@@ -371,7 +371,6 @@ const PARTIAL_PATTERNS: &[&str] = &[
     "entry-author-info",
     "entry-categories",
     "entry-date",
-    "entry-title",
     "entry-utility",
     "-error",
     "error-",
