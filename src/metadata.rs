@@ -545,24 +545,45 @@ fn itemprop_author(html: &Html) -> Option<String> {
 }
 
 fn class_author(html: &Html) -> Option<String> {
-    let Ok(sel) = Selector::parse(".author") else {
-        return None;
-    };
-    let mut names = Vec::new();
-    for el in html.select(&sel) {
-        let text = dom::text_content(html, el.id());
-        let trimmed = text.trim().to_string();
-        if !trimmed.is_empty() {
-            names.push(trimmed);
-        }
-        if names.len() >= 3 {
-            break;
+    // Prefer [rel="author"] or [itemprop="author"] over bare .author
+    let selectors = ["[rel=\"author\"]", "[itemprop=\"author\"]", ".author"];
+    for sel_str in selectors {
+        let Ok(sel) = Selector::parse(sel_str) else {
+            continue;
+        };
+        for el in html.select(&sel) {
+            // Skip .author inside comment/mention/reply containers
+            if is_inside_comment_section(html, el.id()) {
+                continue;
+            }
+            let text = dom::text_content(html, el.id());
+            let trimmed = text.trim().to_string();
+            if !trimmed.is_empty() && trimmed.split_whitespace().count() <= 6 {
+                return Some(trimmed);
+            }
         }
     }
-    if names.is_empty() {
-        return None;
+    None
+}
+
+fn is_inside_comment_section(html: &Html, node_id: ego_tree::NodeId) -> bool {
+    let mut current = node_id;
+    loop {
+        if let Some(class) = dom::get_attr(html, current, "class") {
+            let lower = class.to_lowercase();
+            if lower.contains("comment")
+                || lower.contains("mention")
+                || lower.contains("repli")
+                || lower.contains("backlink")
+            {
+                return true;
+            }
+        }
+        let Some(parent) = dom::parent_element(html, current) else {
+            return false;
+        };
+        current = parent;
     }
-    Some(names.join(", "))
 }
 
 // ------------------------------------------------------------------

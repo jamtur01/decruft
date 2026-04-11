@@ -780,9 +780,7 @@ fn apply_extractor_metadata(
     if let Some(a) = &extracted.author {
         meta.author.clone_from(a);
     }
-    if let Some(s) = &extracted.site
-        && meta.site_name.is_empty()
-    {
+    if let Some(s) = &extracted.site {
         meta.site_name.clone_from(s);
     }
     if let Some(p) = &extracted.published

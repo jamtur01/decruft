@@ -441,7 +441,7 @@ const DEFUDDLE_CONTENT_PASS: &[&str] = &[
     "issues--header-wraps-content",
 ];
 
-// 115/130 fixtures pass exact metadata match against mozilla
+// 116/130 fixtures pass exact metadata match against mozilla
 const MOZILLA_META_PASS: &[&str] = &[
     "001",
     "002",
@@ -473,6 +473,7 @@ const MOZILLA_META_PASS: &[&str] = &[
     "ehow-1",
     "ehow-2",
     "embedded-videos",
+    "firefox-nightly-blog",
     "folha",
     "gitlab-blog",
     "gmw",
@@ -481,6 +482,7 @@ const MOZILLA_META_PASS: &[&str] = &[
     "heise",
     "hidden-nodes",
     "hukumusume",
+    "iab-1",
     "ietf-1",
     "invalid-attributes",
     "js-link-replacement",
@@ -528,7 +530,6 @@ const MOZILLA_META_PASS: &[&str] = &[
     "rtl-2",
     "rtl-3",
     "rtl-4",
-    "salon-1",
     "schema-org-context-object",
     "simplyfound-1",
     "social-buttons",

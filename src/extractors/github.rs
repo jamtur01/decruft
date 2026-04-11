@@ -119,7 +119,7 @@ fn extract_repo_info(url: Option<&str>) -> (String, String) {
 // --- Issue extraction ---
 
 fn extract_issue(html: &Html, url: Option<&str>, include_replies: bool) -> ExtractorResult {
-    let (owner, repo) = extract_repo_info(url);
+    let (_owner, _repo) = extract_repo_info(url);
     let title = extract_title(html);
     let (body, author) = extract_issue_body(html);
     let comments = if include_replies {
@@ -137,7 +137,7 @@ fn extract_issue(html: &Html, url: Option<&str>, include_replies: bool) -> Extra
         } else {
             Some(author)
         },
-        site: Some(format!("GitHub - {owner}/{repo}")),
+        site: Some("GitHub".to_string()),
         published: None,
         image: None,
         description: None,
@@ -273,7 +273,7 @@ fn extract_relative_time(html: &Html, container_id: ego_tree::NodeId) -> String 
 // --- PR extraction ---
 
 fn extract_pr(html: &Html, url: Option<&str>, include_replies: bool) -> ExtractorResult {
-    let (owner, repo) = extract_repo_info(url);
+    let (_owner, _repo) = extract_repo_info(url);
     let title = extract_title(html);
     let (body, author) = extract_pr_body(html);
     let comments = if include_replies {
@@ -291,7 +291,7 @@ fn extract_pr(html: &Html, url: Option<&str>, include_replies: bool) -> Extracto
         } else {
             Some(author)
         },
-        site: Some(format!("GitHub - {owner}/{repo}")),
+        site: Some("GitHub".to_string()),
         published: None,
         image: None,
         description: None,
@@ -431,7 +431,7 @@ fn try_api_fetch(url: Option<&str>, include_replies: bool) -> Option<ExtractorRe
         } else {
             Some(author)
         },
-        site: Some(format!("GitHub - {owner}/{repo}")),
+        site: Some("GitHub".to_string()),
         published: if published.is_empty() {
             None
         } else {
@@ -668,7 +668,7 @@ mod tests {
         if let Some(r) = result {
             assert!(r.title.is_some());
             assert!(r.author.is_some());
-            assert!(r.site.unwrap().contains("rust-lang/rust"));
+            assert_eq!(r.site.as_deref(), Some("GitHub"));
         }
         // Don't fail if network is unavailable
     }
@@ -684,7 +684,7 @@ mod tests {
 
         assert!(result.title.unwrap().contains("Pull Request #42"));
         assert_eq!(result.author.as_deref(), Some("author-one"));
-        assert!(result.site.unwrap().contains("test-owner/test-repo"));
+        assert_eq!(result.site.as_deref(), Some("GitHub"));
         // PR body should contain the summary
         assert!(result.content.contains("Summary"));
         assert!(result.content.contains("regression"));
