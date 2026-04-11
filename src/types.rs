@@ -78,10 +78,22 @@ pub struct DecruftResult {
     pub parse_time_ms: u64,
     /// Publication date.
     pub published: String,
+    /// Last modified date.
+    #[serde(skip_serializing_if = "String::is_empty")]
+    pub modified: String,
     /// Author name.
     pub author: String,
     /// Site name.
     pub site: String,
+    /// Canonical URL of the page.
+    #[serde(skip_serializing_if = "String::is_empty")]
+    pub canonical_url: String,
+    /// Keywords/tags associated with the content.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub keywords: Vec<String>,
+    /// Content type (e.g., "article", "website", "video").
+    #[serde(skip_serializing_if = "String::is_empty")]
+    pub content_type: String,
     /// Markdown version of content (when `markdown` or `separate_markdown` is enabled).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub content_markdown: Option<String>,
@@ -138,6 +150,10 @@ pub(crate) struct Metadata {
     pub image: String,
     pub language: String,
     pub published: String,
+    pub modified: String,
     pub author: String,
     pub site_name: String,
+    pub canonical_url: String,
+    pub keywords: Vec<String>,
+    pub content_type: String,
 }
