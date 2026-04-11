@@ -12,10 +12,10 @@ pub fn extract_metadata(
     url: Option<&str>,
     schema: Option<&serde_json::Value>,
 ) -> Metadata {
-    let site_name = extract_site_name(html, schema);
+    let author = extract_author(html, schema);
+    let site_name = extract_site_name(html, schema, &author);
     let domain = extract_domain(url);
     let title = extract_title(html, schema, &site_name, &domain);
-    let author = extract_author(html, schema);
     let published = extract_published(html, schema);
     let modified = extract_modified(html, schema);
     let description = extract_description(html, schema);
@@ -631,7 +631,7 @@ fn first_time_element(html: &Html) -> Option<String> {
 // Site name
 // ------------------------------------------------------------------
 
-fn extract_site_name(html: &Html, schema: Option<&serde_json::Value>) -> String {
+fn extract_site_name(html: &Html, schema: Option<&serde_json::Value>, author: &str) -> String {
     schema_str(schema, "publisher.name")
         .or_else(|| get_meta_content(html, "property", "og:site_name"))
         .or_else(|| schema_graph_website_name(schema))
@@ -641,6 +641,18 @@ fn extract_site_name(html: &Html, schema: Option<&serde_json::Value>) -> String 
         .or_else(|| schema_str(schema, "isPartOf.name"))
         .or_else(|| get_dc_content(html, "publisher"))
         .or_else(|| get_meta_content(html, "name", "application-name"))
+        // Fallback: use author name as site name (matches defuddle behavior)
+        .or_else(|| {
+            if !author.is_empty()
+                && author.split_whitespace().count() <= 4
+                && !author.contains(',')
+                && !author.contains("http")
+            {
+                Some(author.to_string())
+            } else {
+                None
+            }
+        })
         .and_then(|name| {
             if name.split_whitespace().count() > 6 {
                 None
