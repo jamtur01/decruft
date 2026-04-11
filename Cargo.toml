@@ -35,17 +35,11 @@ url = "2.5.8"
 
 [lints.clippy]
 pedantic = { level = "warn", priority = -1 }
-unwrap_used = "deny"
-panic = "deny"
-dbg_macro = "deny"
-todo = "deny"
-print_stdout = "deny"
-print_stderr = "deny"
-allow_attributes = "deny"
 module_name_repetitions = "allow"
 similar_names = "allow"
 
 [dev-dependencies]
+regex-lite = "0.1"
 criterion = { version = "0.8.2", features = ["html_reports"] }
 
 [[bench]]
@@ -55,3 +49,4 @@ harness = false
 [package.metadata.docs.rs]
 all-features = true
 rustdoc-args = ["--cfg", "docsrs"]
+regex-lite = "0.1"

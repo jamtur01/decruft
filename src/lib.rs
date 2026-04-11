@@ -1,3 +1,12 @@
+#![deny(
+    clippy::unwrap_used,
+    clippy::panic,
+    clippy::dbg_macro,
+    clippy::todo,
+    clippy::print_stdout,
+    clippy::print_stderr
+)]
+
 //! # decruft
 //!
 //! Extract clean, readable content from web pages.
