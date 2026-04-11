@@ -652,7 +652,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "real network call"]
     fn api_fetch_live_issue() {
         let url = "https://github.com/rust-lang/rust/issues/1";
         let result = try_api_fetch(Some(url), false);

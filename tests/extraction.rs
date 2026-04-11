@@ -425,6 +425,44 @@ fn appendix_preserved() {
     );
 }
 
+// ── Bug fix regressions ─────────────────────────────────────────
+
+#[test]
+fn stripe_code_blocks_preserved() {
+    // #8: "dropdown" partial pattern was stripping CodeTabGroup containers
+    let html = load_defuddle("codeblocks--stripe.html");
+    check_content(
+        &html,
+        "https://stripe.com/docs",
+        &["paymentMiddleware", "curl"],
+        &[],
+    );
+}
+
+#[test]
+fn scp_wiki_footnotes_preserved() {
+    // #7: "footer" partial pattern was stripping footnotes-footer containers
+    let html = load_defuddle("general--scp-wiki.wikidot.com-scp-9935.html");
+    check_content(
+        &html,
+        "https://scp-wiki.wikidot.com/scp-9935",
+        &["No relation to the Washington Nationals"],
+        &[],
+    );
+}
+
+#[test]
+fn cp4space_title_and_bibliography_preserved() {
+    // #10: "entry-title" partial removed article heading; trailing links removed bibliography
+    let html = load_defuddle("general--cp4space-jordan-algebra.html");
+    check_content(
+        &html,
+        "https://cp4space.hatsya.com/2020/10/28/the-exceptional-jordan-algebra/",
+        &["exceptional Jordan algebra", "John Baez"],
+        &[],
+    );
+}
+
 // ── Edge cases ──────────────────────────────────────────────────
 
 #[test]

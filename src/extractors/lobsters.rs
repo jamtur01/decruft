@@ -421,7 +421,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "real network call"]
     fn api_fetch_live() {
         let url = "https://lobste.rs/s/abc123";
         let result = try_api_fetch(Some(url), false);

@@ -345,7 +345,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "real network call"]
     fn oembed_on_live_tweet() {
         let result = try_oembed("https://x.com/elikiris/status/1925627023102992830");
         if let Some(r) = result {

@@ -39,11 +39,37 @@
 									<p>Add payment middleware to your endpoint so it can accept x402 payments. The middleware handles payment verification and settlement with Stripe per request to <code>/paid</code>.</p>
 
 									<!-- Code tab group with dropdown class (previously caused removal) -->
-									<div class="CodeTabGroup Box-root" id="codetab_abc123">
+									
 										<!-- Language selector listbox (should be removed) -->
 										
-										
-									</div>
+										<div class="CodeTabGroup-content-dropdown-select ControlledContentGroup-content">
+											<span>
+												
+													
+														<div>
+															<!-- Pre with div wrapper inside (block element inside pre) -->
+															<pre><code>import { paymentMiddleware } from "@x402/hono";
+import { x402ResourceServer, HTTPFacilitatorClient } from "@x402/core/server";
+
+app.use(
+  paymentMiddleware(
+    {
+      "GET /paid": {
+        price: "$0.001",
+        network: "base-sepolia",
+        config: { description: "Access to paid content" }
+      }
+    },
+    facilitatorClient,
+    resourceServer
+  )
+);</code></pre>
+														</div>
+													
+												
+											</span>
+										</div>
+									
 								</div>
 							</div>
 
@@ -62,9 +88,25 @@
 								<div class="Section-content Box-root">
 									<p>Make a request to your server without an existing payment header, and you receive a <code>402</code> response with payment requirements.</p>
 
-									<div class="CodeTabGroup Box-root" id="codetab_def456">
-										
-									</div>
+									
+										<div class="CodeTabGroup-content-dropdown-select ControlledContentGroup-content">
+											<span>
+												
+													<div class="CodeBlock CodeBlock-numbered Box-root Box-background--blue800">
+														<!-- Code block header with filename label (should be removed) -->
+														
+															
+																<div>Command Line</div>
+															
+														
+														<div>
+															<pre><code>curl http://localhost:3000/paid</code></pre>
+														</div>
+													</div>
+												
+											</span>
+										</div>
+									
 								</div>
 							</div>
 
