@@ -1,3 +1,8 @@
+## v0.1.3
+
+- feat: release 0.1.3
+- build: exclude test fixtures from published crate
+- Update CHANGELOG for v0.1.2
 # Changelog
 
 ## v0.1.2
