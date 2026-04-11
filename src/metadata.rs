@@ -653,6 +653,8 @@ fn extract_site_name(html: &Html, schema: Option<&serde_json::Value>, author: &s
                 None
             }
         })
+        // Fallback: infer from <title> element's last segment after separator
+        .or_else(|| site_name_from_title(html))
         .and_then(|name| {
             if name.split_whitespace().count() > 6 {
                 None
@@ -661,6 +663,35 @@ fn extract_site_name(html: &Html, schema: Option<&serde_json::Value>, author: &s
             }
         })
         .unwrap_or_default()
+}
+
+/// Extract site name from `<title>` element's last separator-delimited
+/// segment. e.g., "Article Title - Wikipedia" → "Wikipedia".
+/// Only returns if the last segment is short (≤4 words) and the title
+/// segment before it is longer (indicating it's the article title).
+fn site_name_from_title(html: &Html) -> Option<String> {
+    let title = title_element_text(html)?;
+    // Only use unambiguous separators for site name inference
+    // (skip " · ", " / ", " -- " which are used within titles)
+    for sep in &[" | ", " - "] {
+        let Some(idx) = title.rfind(sep) else {
+            continue;
+        };
+        let before = title[..idx].trim();
+        let after = title[idx + sep.len()..].trim();
+        if after.is_empty() || before.is_empty() {
+            continue;
+        }
+        // Last segment ≤4 words, before must be ≥2 words (a real article title)
+        // and at least as long as the suffix
+        if after.split_whitespace().count() <= 4
+            && before.split_whitespace().count() >= 2
+            && before.len() >= after.len()
+        {
+            return Some(after.to_string());
+        }
+    }
+    None
 }
 
 /// Search a single schema object's `@graph` for `@type: "WebSite"`
@@ -997,15 +1028,16 @@ mod tests {
     }
 
     #[test]
-    fn title_preserved_when_no_site_name() {
+    fn title_suffix_inferred_as_site_name() {
         let doc = Html::parse_document(
             r"<html><head>
             <title>Article Name | Site Name</title>
             </head><body></body></html>",
         );
         let m = extract_metadata(&doc, None, None);
-        // Without a known site name, the full title is preserved
-        assert_eq!(m.title, "Article Name | Site Name");
+        // Site name inferred from title suffix, title stripped
+        assert_eq!(m.title, "Article Name");
+        assert_eq!(m.site_name, "Site Name");
     }
 
     #[test]
