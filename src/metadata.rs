@@ -738,19 +738,25 @@ fn date_from_text_elements(html: &Html) -> Option<String> {
 }
 
 fn parse_date_match(s: &str) -> Option<String> {
-    // Already ISO: "YYYY-MM-DD"
-    if s.len() == 10 && s.as_bytes().first() == Some(&b'2') && s.contains('-') {
-        return Some(s.to_string());
+    // ISO: "YYYY-MM-DD"
+    if s.len() == 10 {
+        let b = s.as_bytes();
+        if b.get(4) == Some(&b'-') && b.get(7) == Some(&b'-') {
+            let year: u32 = s.get(0..4)?.parse().ok()?;
+            let month: u32 = s.get(5..7)?.parse().ok()?;
+            let day: u32 = s.get(8..10)?.parse().ok()?;
+            if (1900..=2100).contains(&year) && (1..=12).contains(&month) && (1..=31).contains(&day)
+            {
+                return Some(s.to_string());
+            }
+        }
     }
     // "Month DD, YYYY" or "Month DD YYYY"
     if let Some(iso) = normalize_english_date(s) {
         return Some(iso);
     }
     // "DD Month YYYY"
-    if let Some(iso) = normalize_dd_month_yyyy(s) {
-        return Some(iso);
-    }
-    None
+    normalize_dd_month_yyyy(s)
 }
 
 /// Convert "Month DD, YYYY" or "Month DD YYYY" to "YYYY-MM-DD".
