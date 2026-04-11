@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1775930845504,
+  "lastUpdate": 1775945196797,
   "repoUrl": "https://github.com/jamtur01/decruft",
   "entries": {
     "decruft benchmarks": [
@@ -719,6 +719,66 @@ window.BENCHMARK_DATA = {
             "name": "large_page_no_scoring (1.1MB)",
             "value": 250679375,
             "range": "± 2230874",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "james@lovedthanlost.net",
+            "name": "James Turnbull",
+            "username": "jamtur01"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "f042670a308f9462f0e11165bf0ab98de8f891bd",
+          "message": "Merge pull request #16 from jamtur01/feat/golden-file-tests\n\nRationalize test suite, fix metadata extraction",
+          "timestamp": "2026-04-11T18:04:01-04:00",
+          "tree_id": "d8a08e6f2880106df41249825c731d7d316955cb",
+          "url": "https://github.com/jamtur01/decruft/commit/f042670a308f9462f0e11165bf0ab98de8f891bd"
+        },
+        "date": 1775945195629,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "small_page (12KB blog)",
+            "value": 2755122,
+            "range": "± 12546",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "medium_page (317KB stephango)",
+            "value": 3822703,
+            "range": "± 222845",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "large_page (1.1MB wikipedia)",
+            "value": 399994648,
+            "range": "± 2053118",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "github_issue (267KB)",
+            "value": 4159910,
+            "range": "± 26725",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "markdown_output (12KB blog)",
+            "value": 2960298,
+            "range": "± 55945",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "large_page_no_scoring (1.1MB)",
+            "value": 251846660,
+            "range": "± 10872024",
             "unit": "ns/iter"
           }
         ]
