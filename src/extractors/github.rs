@@ -177,12 +177,22 @@ fn extract_issue_author(html: &Html, container_id: ego_tree::NodeId) -> String {
     ];
     for sel_str in &author_selectors {
         let ids = dom::select_within(html, container_id, sel_str);
-        if let Some(&id) = ids.first()
-            && let Some(href) = dom::get_attr(html, id, "href")
-        {
-            let name = href.strip_prefix('/').unwrap_or(&href);
-            if !name.is_empty() {
-                return name.to_string();
+        if let Some(&id) = ids.first() {
+            // Prefer text content (the displayed username)
+            let text = dom::text_content(html, id);
+            let trimmed = text.trim();
+            if !trimmed.is_empty() {
+                return trimmed.to_string();
+            }
+            // Fall back to href, extracting username from path
+            if let Some(href) = dom::get_attr(html, id, "href") {
+                let name = href
+                    .strip_prefix("https://github.com/")
+                    .or_else(|| href.strip_prefix('/'))
+                    .unwrap_or(&href);
+                if !name.is_empty() {
+                    return name.to_string();
+                }
             }
         }
     }

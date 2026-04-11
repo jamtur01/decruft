@@ -338,6 +338,30 @@ fn strip_last_breadcrumb_segment(title: &str) -> String {
 // ------------------------------------------------------------------
 
 fn extract_author(html: &Html, schema: Option<&serde_json::Value>) -> String {
+    let raw = extract_author_raw(html, schema);
+    clean_author(&raw)
+}
+
+/// Strip URLs, separator-delimited URLs, and "By " prefixes from author.
+fn clean_author(author: &str) -> String {
+    let mut result = author.to_string();
+    // Strip trailing " - https://..." or " | https://..."
+    for sep in [" - ", " | ", " · "] {
+        if let Some(idx) = result.find(sep) {
+            let after = result[idx + sep.len()..].trim();
+            if after.starts_with("http://") || after.starts_with("https://") {
+                result = result[..idx].trim().to_string();
+            }
+        }
+    }
+    // Strip if the entire value is a URL
+    if result.starts_with("http://") || result.starts_with("https://") {
+        return String::new();
+    }
+    result
+}
+
+fn extract_author_raw(html: &Html, schema: Option<&serde_json::Value>) -> String {
     if let Some(v) = get_meta_content(html, "property", "author")
         .or_else(|| get_meta_content(html, "name", "author"))
         .or_else(|| get_meta_content(html, "property", "article:author"))
