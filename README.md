@@ -156,6 +156,8 @@ Each metadata field is extracted using a fallback chain:
 
 Inspired by [defuddle](https://github.com/kepano/defuddle) by Steph Ango. The selector lists, scoring heuristics, and extraction pipeline are adapted from defuddle's approach.
 
+Test fixtures include pages from defuddle's test suite and Mozilla's [Readability.js](https://github.com/mozilla/readability) test suite (via [readabilityrs](https://github.com/theiskaa/readabilityrs)).
+
 ## License
 
 MIT
