@@ -76,6 +76,12 @@ fn remove_partial_selectors_with_elements(
         if is_inside_pre_or_code(html, node_id) {
             continue;
         }
+        if is_footnote_list_container(html, node_id) {
+            continue;
+        }
+        if contains_pre_or_code(html, node_id) {
+            continue;
+        }
 
         let Some(node_ref) = html.tree.get(node_id) else {
             continue;
@@ -533,6 +539,59 @@ fn is_inside_pre_or_code(html: &Html, node_id: NodeId) -> bool {
         };
         current = parent.id();
     }
+}
+
+/// Check if an element is or is inside a block-level footnote list
+/// container (not an inline reference marker). Protects footnote
+/// content from partial selector removal when class names like
+/// "footnotes-footer" match the "footer" partial pattern.
+fn is_footnote_list_container(html: &Html, node_id: NodeId) -> bool {
+    let mut current = node_id;
+    loop {
+        if let Some(id) = dom::get_attr(html, current, "id")
+            && (id == "footnotes" || id.starts_with("fn:"))
+        {
+            return true;
+        }
+        let tag = dom::tag_name(html, current);
+        let is_block = matches!(
+            tag.as_deref(),
+            Some("div" | "section" | "ol" | "ul" | "aside")
+        );
+        if is_block
+            && let Some(class) = dom::get_attr(html, current, "class")
+            && (class.contains("footnotes")
+                || class.contains("footnote-footer")
+                || class.contains("reflist"))
+        {
+            return true;
+        }
+        let Some(parent_id) = dom::parent_element(html, current) else {
+            return false;
+        };
+        current = parent_id;
+    }
+}
+
+/// Check if `node_id` has any `<pre>` descendants (code blocks).
+/// Protects code block containers from partial selector removal.
+/// Only checks `<pre>`, not inline `<code>`, to avoid over-protecting.
+fn contains_pre_or_code(html: &Html, node_id: NodeId) -> bool {
+    let mut stack = vec![node_id];
+    while let Some(id) = stack.pop() {
+        let Some(node_ref) = html.tree.get(id) else {
+            continue;
+        };
+        if let Node::Element(el) = node_ref.value() {
+            if el.name.local.as_ref() == "pre" {
+                return true;
+            }
+        }
+        for child in node_ref.children() {
+            stack.push(child.id());
+        }
+    }
+    false
 }
 
 fn truncate(s: &str, max_len: usize) -> String {

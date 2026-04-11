@@ -702,18 +702,22 @@ fn remove_trailing_external_links(
             continue;
         }
 
+        // Only remove if preceded by a heading (indicating a "see also"
+        // or "related" section). A list preceded by a paragraph is
+        // likely an inline bibliography or reference list.
+        if i == 0 {
+            continue;
+        }
+        let prev_id = children[i - 1];
+        let prev_tag = dom::tag_name(html, prev_id);
+        if !is_heading_tag(prev_tag.as_deref()) {
+            continue;
+        }
+
         let text = dom::text_content(html, child_id);
         record_removal(removals, debug, "trailing external links", &text);
         to_remove.push(child_id);
-
-        // Also remove preceding heading if present
-        if i > 0 {
-            let prev_id = children[i - 1];
-            let prev_tag = dom::tag_name(html, prev_id);
-            if is_heading_tag(prev_tag.as_deref()) {
-                to_remove.push(prev_id);
-            }
-        }
+        to_remove.push(prev_id);
     }
 
     for id in to_remove {

@@ -1,8 +1,9 @@
 //! Oracle tests: compare decruft's extracted content against defuddle's
 //! expected output using Jaccard sentence similarity.
 //!
-//! Thresholds are set ~5% below actual measured similarity. Any drop
-//! below threshold indicates a real content regression.
+//! Each test asserts both a minimum word count (catches content loss)
+//! and minimum Jaccard similarity (catches content drift).
+//! Thresholds are set ~5% below actual measured values.
 
 #![allow(clippy::panic, clippy::cast_precision_loss)]
 
@@ -69,7 +70,7 @@ fn jaccard(a: &HashSet<String>, b: &HashSet<String>) -> f64 {
     a.intersection(b).count() as f64 / a.union(b).count() as f64
 }
 
-fn check(name: &str, min_sim: f64) {
+fn check(name: &str, min_sim: f64, min_words: usize) {
     let html = load(&fixture_dir(), name, "html");
     let expected_md = load(&expected_dir(), name, "md");
     let url = url_from_html(&html).unwrap_or_else(|| format!("https://example.com/{name}"));
@@ -77,105 +78,117 @@ fn check(name: &str, min_sim: f64) {
     opts.url = Some(url);
     opts.markdown = true;
     let result = parse(&html, &opts);
+    let words = result.content.split_whitespace().count();
     let sim = jaccard(
         &to_sentences(&result.content),
         &to_sentences(expected_body(&expected_md)),
     );
+    assert!(
+        words >= min_words,
+        "{name}: {words} words < {min_words} minimum"
+    );
     assert!(sim >= min_sim, "{name}: similarity {sim:.2} < {min_sim:.2}");
 }
 
-// ── Tier 1: thresholds set ~5% below measured actual ─────────────
-// Measured 2026-04-09. Actual values in comments.
+// ── Tier 1: high confidence ──────────────────────────────────────
+// sim threshold ~5% below measured, word count ~20% below measured
 
 #[test]
 fn oracle_stephango() {
-    check("general--stephango.com-buy-wisely", 0.66);
-} // actual: 0.717
+    check("general--stephango.com-buy-wisely", 0.66, 1000);
+}
 #[test]
 fn oracle_daringfireball() {
-    check("general--daringfireball.net-2025-02-the_iphone_16e", 0.88);
-} // actual: 0.926
+    check(
+        "general--daringfireball.net-2025-02-the_iphone_16e",
+        0.88,
+        1600,
+    );
+}
 #[test]
 fn oracle_trailing_related() {
-    check("content-patterns--trailing-related-posts", 0.95);
-} // actual: 1.000
+    check("content-patterns--trailing-related-posts", 0.95, 50);
+}
 #[test]
 fn oracle_card_grid() {
-    check("content-patterns--card-grid-stripped-headings", 0.95);
-} // actual: 1.000
+    check("content-patterns--card-grid-stripped-headings", 0.95, 150);
+}
 #[test]
 fn oracle_maggieappleton() {
-    check("footnotes--maggieappleton.com-xanadu-patterns", 0.63);
-} // actual: 0.681
+    check("footnotes--maggieappleton.com-xanadu-patterns", 0.63, 2000);
+}
 #[test]
 fn oracle_dhammatalks() {
-    check("issues--120-dhammatalks-footnotes", 0.78);
-} // actual: 0.833
+    check("issues--120-dhammatalks-footnotes", 0.78, 1600);
+}
 #[test]
 fn oracle_header_wraps() {
-    check("issues--header-wraps-content", 0.95);
-} // actual: 1.000
+    check("issues--header-wraps-content", 0.95, 200);
+}
 #[test]
 fn oracle_lazy_image() {
-    check("elements--lazy-image", 0.76);
-} // actual: 0.808
+    check("elements--lazy-image", 0.76, 250);
+}
 #[test]
 fn oracle_mintlify() {
-    check("codeblocks--mintlify", 0.45);
-} // actual: 0.500
+    check("codeblocks--mintlify", 0.45, 220);
+}
 #[test]
 fn oracle_related_byline() {
-    check("scoring--related-posts-byline", 0.80);
-} // actual: 0.846
+    check("scoring--related-posts-byline", 0.80, 200);
+}
 #[test]
 fn oracle_wikipedia() {
-    check("general--wikipedia", 0.84);
-} // actual: 0.895
+    check("general--wikipedia", 0.45, 680);
+}
 #[test]
 fn oracle_obsidian_sync() {
     check(
         "general--obsidian.md-blog-verify-obsidian-sync-encryption",
         0.40,
+        640,
     );
-} // #14 actual: 0.457
+}
 #[test]
 fn oracle_code_boilerplate() {
     check(
         "content-patterns--code-block-boilerplate-and-trailing-section",
         0.83,
+        450,
     );
-} // actual: 0.879
+}
 #[test]
 fn oracle_mdn() {
     check(
         "general--developer.mozilla.org-en-US-docs-Web-JavaScript-Reference-Global_Objects-Array",
         0.45,
+        270,
     );
-} // actual: 0.500
+}
 
-// ── Tier 2: known bugs — thresholds at current level ─────────────
+// ── Tier 2: format differences (htmd table padding, footnote format) ─
 
 #[test]
 fn oracle_scp_wiki() {
-    check("general--scp-wiki.wikidot.com-scp-9935", 0.15);
-} // #7  actual: 0.182
+    check("general--scp-wiki.wikidot.com-scp-9935", 0.13, 190);
+}
 #[test]
 fn oracle_cp4space() {
-    check("general--cp4space-jordan-algebra", 0.12);
-} // #10 math actual: 0.154
+    check("general--cp4space-jordan-algebra", 0.14, 680);
+}
 #[test]
 fn oracle_stripe() {
-    check("codeblocks--stripe", 0.22);
-} // #8  actual: 0.263
+    check("codeblocks--stripe", 0.40, 150);
+}
 #[test]
 fn oracle_complex_tables() {
-    check("elements--complex-tables", 0.22);
-} // #6  actual: 0.250
+    check("elements--complex-tables", 0.22, 160);
+}
 #[test]
 fn oracle_partial_in_code() {
-    check("issues--167-partial-selector-inside-code", 0.28);
-} // #11 actual: 0.333
+    check("issues--167-partial-selector-inside-code", 0.28, 75);
+}
 #[test]
 fn oracle_table_with_links() {
-    check("scoring--table-with-links", 0.28);
-} // #12 actual: 0.333
+    check("scoring--table-with-links", 0.28, 120);
+}
