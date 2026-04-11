@@ -770,7 +770,7 @@ fn apply_extractor_metadata(
 ) {
     if let Some(t) = &extracted.title {
         let cleaned = metadata::clean_title(t, "", None, None);
-        if meta.title.is_empty() || (!cleaned.is_empty() && cleaned.len() < meta.title.len()) {
+        if !cleaned.is_empty() {
             meta.title = cleaned;
         }
     }
@@ -780,9 +780,7 @@ fn apply_extractor_metadata(
     if let Some(a) = &extracted.author {
         meta.author.clone_from(a);
     }
-    if let Some(s) = &extracted.site
-        && meta.site_name.is_empty()
-    {
+    if let Some(s) = &extracted.site {
         meta.site_name.clone_from(s);
     }
     if let Some(p) = &extracted.published
@@ -862,6 +860,35 @@ fn convert_to_markdown(html: &str) -> Option<String> {
         .map(|s| fix_bang_image_collision(s.as_str()))
         .map(|s| unescape_latex_delimiters(&s))
         .map(|s| clean_bare_bullets(&s))
+        .map(|s| collapse_newlines(&s))
+}
+
+/// Collapse runs of 3+ newlines into exactly 2 (one blank line),
+/// but only outside fenced code blocks where multiple blank lines
+/// may be semantically meaningful.
+fn collapse_newlines(md: &str) -> String {
+    let mut out = Vec::new();
+    let lines: Vec<&str> = md.split('\n').collect();
+    let mut in_fence = false;
+    let mut blank_run = 0;
+
+    for line in &lines {
+        let trimmed = line.trim();
+        if trimmed.starts_with("```") || trimmed.starts_with("~~~") {
+            in_fence = !in_fence;
+        }
+
+        if line.is_empty() {
+            blank_run += 1;
+            if in_fence || blank_run <= 1 {
+                out.push(*line);
+            }
+        } else {
+            blank_run = 0;
+            out.push(*line);
+        }
+    }
+    out.join("\n")
 }
 
 /// Remove bare bullet lines (a lone `-`, `+`, or `*` with no text)
@@ -871,10 +898,17 @@ fn clean_bare_bullets(md: &str) -> String {
     let lines: Vec<&str> = md.lines().collect();
     for (i, line) in lines.iter().enumerate() {
         let trimmed = line.trim();
-        if (trimmed == "-" || trimmed == "+" || trimmed == "*")
-            && lines.get(i + 1).is_none_or(|next| next.trim().is_empty())
-        {
-            continue;
+        if trimmed == "-" || trimmed == "+" || trimmed == "*" {
+            let next = lines.get(i + 1).map(|s| s.trim());
+            // Remove if followed by empty line, another bare bullet, or end of input
+            if next.is_none()
+                || next == Some("")
+                || next == Some("-")
+                || next == Some("+")
+                || next == Some("*")
+            {
+                continue;
+            }
         }
         out.push(*line);
     }

@@ -1,0 +1,28 @@
+<article>
+		<h1>Base64 Placeholder Images</h1>
+		<p>This article tests removal of unresolvable base64 placeholder images while preserving resolvable ones.</p>
+
+		<!-- Unresolvable base64 placeholder (no srcset, data-src, or picture source) — should be removed -->
+		
+
+		<p>Some article text between images with enough words for content detection to function properly here.</p>
+
+		<!-- Base64 inside picture with sources — should be resolved to source URL -->
+		<figure>
+			<picture>
+				<source srcset="https://www.example.com/images/resolved.webp 2x, https://www.example.com/images/resolved-small.webp 1x">
+				
+			</picture>
+			<figcaption>Resolvable from picture source. Photo credit.</figcaption>
+		</figure>
+
+		<p>More article text with enough content for the parser to work with on this test article page.</p>
+
+		<!-- Base64 with data-src alternative — should be resolved -->
+		
+
+		<!-- Real image — should be preserved -->
+		<img alt="A real image." src="https://www.example.com/images/real-image.jpg">
+
+		<p>Final paragraph with concluding article text for the content detection scoring algorithm.</p>
+	</article>

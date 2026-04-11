@@ -1,0 +1,21 @@
+<div class="post">
+      <h1 id="rust-2024-call-for-testing">
+Rust 2024 call for testing</h1>
+<p>We've been hard at work on Rust 2024. We're thrilled about how it has turned out. It's going to be the largest edition since Rust 2015. It has a great many improvements that make the language more consistent and ergonomic, that further our relentless commitment to safety, and that will open the door to long-awaited features such as <code>gen</code> blocks, <code>let</code> chains, and the never (<code>!</code>) type. For more on the changes, see the nightly <a href="https://doc.rust-lang.org/nightly/edition-guide/rust-2024/index.html">Edition Guide</a>.</p>
+<p>As planned, we recently merged the feature-complete Rust 2024 edition <a href="https://github.com/rust-lang/rust/pull/133349">to the release train</a> for Rust 1.85. It has now entered <strong>nightly beta</strong><sup id="fnref:1"><a href="https://example.com/rust_blog#fn:1">1</a></sup>.</p>
+<p>You can help right now to make this edition a success by testing Rust 2024 on your own projects using nightly Rust. Migrating your projects to the new edition is straightforward and mostly automated. Here's how:</p>
+<ol>
+<li>Install the most recent nightly with <code>rustup update nightly</code>.</li>
+<li>In your project, run <code>cargo +nightly fix --edition</code>.</li>
+<li>Edit <code>Cargo.toml</code> and change the edition field to say <code>edition = "2024"</code> and, if you have a <code>rust-version</code> specified, set <code>rust-version = "1.85"</code>.</li>
+<li>Run <code>cargo +nightly check</code> to verify your project now works in the new edition.</li>
+<li>Run some tests, and try out the new features!</li>
+</ol>
+<p>(More details on how to migrate can be found <a href="https://doc.rust-lang.org/nightly/edition-guide/editions/transitioning-an-existing-project-to-a-new-edition.html">here</a> and within each of the <a href="https://doc.rust-lang.org/nightly/edition-guide/rust-2024/index.html">chapters</a> describing the changes in Rust 2024.)</p>
+<p>If you encounter any problems or see areas where we could make the experience better, tell us about it by <a href="https://github.com/rust-lang/rust/issues/new/choose">filing an issue</a>.</p>
+<h3 id="coming-next">
+Coming next</h3>
+<p>Rust 2024 will enter the beta channel on 2025-01-09, and will be released to stable Rust with Rust 1.85 on 2025-02-20.</p>
+
+
+    <div id="footnotes"><div class="footnote" id="fn:1"><p>That is, it's still in nightly (not in the beta channel), but the edition items are frozen in a way similar to it being in the beta channel, and as with any beta, we'd like wide testing. </p></div></div></div>

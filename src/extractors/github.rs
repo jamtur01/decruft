@@ -119,7 +119,7 @@ fn extract_repo_info(url: Option<&str>) -> (String, String) {
 // --- Issue extraction ---
 
 fn extract_issue(html: &Html, url: Option<&str>, include_replies: bool) -> ExtractorResult {
-    let (owner, repo) = extract_repo_info(url);
+    let (_owner, _repo) = extract_repo_info(url);
     let title = extract_title(html);
     let (body, author) = extract_issue_body(html);
     let comments = if include_replies {
@@ -137,7 +137,7 @@ fn extract_issue(html: &Html, url: Option<&str>, include_replies: bool) -> Extra
         } else {
             Some(author)
         },
-        site: Some(format!("GitHub - {owner}/{repo}")),
+        site: Some("GitHub".to_string()),
         published: None,
         image: None,
         description: None,
@@ -146,9 +146,19 @@ fn extract_issue(html: &Html, url: Option<&str>, include_replies: bool) -> Extra
 
 fn extract_title(html: &Html) -> String {
     let sel = Selector::parse("title").ok();
-    sel.and_then(|s| html.select(&s).next())
+    let raw = sel
+        .and_then(|s| html.select(&s).next())
         .map(|el| dom::text_content(html, el.id()).trim().to_string())
-        .unwrap_or_default()
+        .unwrap_or_default();
+    // Strip trailing " · owner/repo" from GitHub titles
+    if let Some(idx) = raw.rfind(" · ") {
+        let after = &raw[idx + " · ".len()..];
+        // If the suffix contains a "/" it's an owner/repo path
+        if after.contains('/') {
+            return raw[..idx].to_string();
+        }
+    }
+    raw
 }
 
 fn extract_issue_body(html: &Html) -> (String, String) {
@@ -177,12 +187,22 @@ fn extract_issue_author(html: &Html, container_id: ego_tree::NodeId) -> String {
     ];
     for sel_str in &author_selectors {
         let ids = dom::select_within(html, container_id, sel_str);
-        if let Some(&id) = ids.first()
-            && let Some(href) = dom::get_attr(html, id, "href")
-        {
-            let name = href.strip_prefix('/').unwrap_or(&href);
-            if !name.is_empty() {
-                return name.to_string();
+        if let Some(&id) = ids.first() {
+            // Prefer text content (the displayed username)
+            let text = dom::text_content(html, id);
+            let trimmed = text.trim();
+            if !trimmed.is_empty() {
+                return trimmed.to_string();
+            }
+            // Fall back to href, extracting username from path
+            if let Some(href) = dom::get_attr(html, id, "href") {
+                let name = href
+                    .strip_prefix("https://github.com/")
+                    .or_else(|| href.strip_prefix('/'))
+                    .unwrap_or(&href);
+                if !name.is_empty() {
+                    return name.to_string();
+                }
             }
         }
     }
@@ -263,7 +283,7 @@ fn extract_relative_time(html: &Html, container_id: ego_tree::NodeId) -> String 
 // --- PR extraction ---
 
 fn extract_pr(html: &Html, url: Option<&str>, include_replies: bool) -> ExtractorResult {
-    let (owner, repo) = extract_repo_info(url);
+    let (_owner, _repo) = extract_repo_info(url);
     let title = extract_title(html);
     let (body, author) = extract_pr_body(html);
     let comments = if include_replies {
@@ -281,7 +301,7 @@ fn extract_pr(html: &Html, url: Option<&str>, include_replies: bool) -> Extracto
         } else {
             Some(author)
         },
-        site: Some(format!("GitHub - {owner}/{repo}")),
+        site: Some("GitHub".to_string()),
         published: None,
         image: None,
         description: None,
@@ -421,7 +441,7 @@ fn try_api_fetch(url: Option<&str>, include_replies: bool) -> Option<ExtractorRe
         } else {
             Some(author)
         },
-        site: Some(format!("GitHub - {owner}/{repo}")),
+        site: Some("GitHub".to_string()),
         published: if published.is_empty() {
             None
         } else {
@@ -570,10 +590,7 @@ mod tests {
     use super::*;
 
     fn load_fixture(name: &str) -> String {
-        let path = format!(
-            "{}/tests/fixtures/defuddle/{name}",
-            env!("CARGO_MANIFEST_DIR")
-        );
+        let path = format!("{}/tests/fixtures/{name}", env!("CARGO_MANIFEST_DIR"));
         std::fs::read_to_string(&path)
             .unwrap_or_else(|e| panic!("fixture not found at {path}: {e}"))
     }
@@ -652,14 +669,13 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "real network call"]
     fn api_fetch_live_issue() {
         let url = "https://github.com/rust-lang/rust/issues/1";
         let result = try_api_fetch(Some(url), false);
         if let Some(r) = result {
             assert!(r.title.is_some());
             assert!(r.author.is_some());
-            assert!(r.site.unwrap().contains("rust-lang/rust"));
+            assert_eq!(r.site.as_deref(), Some("GitHub"));
         }
         // Don't fail if network is unavailable
     }
@@ -675,7 +691,7 @@ mod tests {
 
         assert!(result.title.unwrap().contains("Pull Request #42"));
         assert_eq!(result.author.as_deref(), Some("author-one"));
-        assert!(result.site.unwrap().contains("test-owner/test-repo"));
+        assert_eq!(result.site.as_deref(), Some("GitHub"));
         // PR body should contain the summary
         assert!(result.content.contains("Summary"));
         assert!(result.content.contains("regression"));

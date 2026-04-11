@@ -7,15 +7,19 @@ decruft is a Rust port of [defuddle](https://github.com/kepano/defuddle) — a w
 ## Before making changes
 
 1. Read the relevant source files before editing
-2. Run `cargo test` to establish baseline (273 tests expected)
+2. Run `cargo test` to establish baseline
 3. Check `cargo clippy --all-targets -- -D warnings` is clean
 
 ## After making changes
 
 1. `cargo fmt`
 2. `cargo clippy --all-targets -- -D warnings` — zero warnings required
-3. `cargo test` — all tests must pass
-4. If extraction behavior changed: `bash tests/compare_sites.sh`
+3. `cargo test` — all tests must pass, zero failures allowed
+4. If extraction behavior changed:
+   - `cargo test --test regression -- --ignored regenerate` to update golden files
+   - `cargo test --test extraction -- --ignored regenerate_metadata` to update metadata
+   - Review diffs with `git diff tests/expected/`
+   - `bash tests/compare_sites.sh` for comparison vs defuddle
 
 ## Code rules
 
@@ -41,18 +45,29 @@ decruft is a Rust port of [defuddle](https://github.com/kepano/defuddle) — a w
 - `fancy_regex::is_match()` returns `Result<bool>`, not `bool`
 - HTML entities in JSON-LD need decoding (non-ASCII in `strip_json_comments`)
 - `content_selector` option is a hard override — retries skip when it's set
-- Network tests use `#[ignore]` — run with `cargo test -- --ignored`
+
+## Test structure
+
+Six test files, each with a single concern:
+
+- `tests/regression.rs` — golden file exact match (HTML + markdown), byte-for-byte, with fixture URLs
+- `tests/extraction.rs` — metadata exact match against JSON expectations + non-empty sweep
+- `tests/behavior.rs` — pipeline option toggles (ported from defuddle)
+- `tests/markdown.rs` — markdown conversion unit tests + zero-tolerance quality audit
+- `tests/formats.rs` — JSON/HTML/text output + public API coverage
+- `tests/cli.rs` — CLI binary tests
 
 ## Test fixtures
 
-- 144 HTML fixtures in `tests/fixtures/defuddle/` from defuddle's test suite
-- 146 expected markdown files in `tests/expected/defuddle/`
-- Our own fixtures in `tests/fixtures/` (complex_blog, news_article, wikipedia)
-- Fixture-dependent tests panic if files are missing — all fixtures are checked in
+- 280 HTML fixtures in `tests/fixtures/` (flat — 144 from defuddle, 130 from Mozilla, 6 standalone)
+- 280 golden HTML files in `tests/expected/golden/`
+- 280 golden markdown files in `tests/expected/golden-markdown/`
+- 280 metadata JSON files in `tests/expected/metadata/`
+- Every fixture MUST have all three expected files — tests fail on missing files
+- Mozilla fixtures are prefixed `mozilla--` (e.g. `mozilla--bbc-1.html`)
 
 ## Network tests
 
-Tests that make real HTTP requests are marked `#[ignore]` and only run with
-`cargo test -- --ignored`. They should never run in CI. Each extractor with an
-API fallback (GitHub, HN, Stack Overflow, Lobsters, C2 Wiki) also has mock-based
-tests that validate the JSON parsing logic on canned data without network calls.
+Most network tests (GitHub, HN, Stack Overflow, Lobsters, C2 Wiki) run by default.
+The X/Twitter oEmbed test is `#[ignore]` because the API is frequently rate-limited.
+Run with `cargo test -- --ignored` to include it.

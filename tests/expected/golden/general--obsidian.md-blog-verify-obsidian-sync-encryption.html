@@ -1,0 +1,75 @@
+<article class="typeset mt-16">
+			<div><p>On our <a href="https://obsidian.md">About page</a>, we describe the guiding principles that have shaped Obsidian since the start. Privacy is one of these principles, and we go to great lengths to make sure we can uphold this<span class="widont"> </span>statement:</p>
+<blockquote>
+<p>We believe that your thoughts and ideas belong to you and deserve complete privacy. That’s why your data is stored on your device, inaccessible to us. When you use our online services, your data is protected with end-to-end encryption for maximum<span class="widont"> </span>security.</p>
+</blockquote>
+<p>When you use <a href="https://obsidian.md/sync">Obsidian Sync</a>, your data is end-to-end encrypted. But how can you be sure that is<span class="widont"> </span>true?</p>
+<p>In this guide, we provide step-by-step instructions so that you can trustlessly verify the end-to-end encryption of your data when it is sent and received via our Sync<span class="widont"> </span>servers.</p>
+<h3>How Obsidian Sync<span class="widont"> </span>works</h3>
+<p>Let’s review how Obsidian Sync encryption<span class="widont"> </span>works:</p>
+<ol>
+<li>You provide a vault password, or let our managed server generate one for you. This password is separate from your account password and is only used for establishing a remote<span class="widont"> </span>vault.</li>
+<li>The Obsidian app generates a unique <a href="https://en.wikipedia.org/wiki/Salt_(cryptography)">salt</a> for each vault. A salt is random data used to protect your password by mixing it with your password before<span class="widont"> </span>hashing.</li>
+<li>Your base key is derived from your password + salt using an algorithm called <a href="https://en.wikipedia.org/wiki/Scrypt">scrypt</a>.</li>
+<li>Your encryption key is derived from the base key using an algorithm called <a href="https://en.wikipedia.org/wiki/HKDF"><span class="caps">HKDF</span></a>. If your vault was created using the <a href="https://help.obsidian.md/sync/migrate">older encryption version</a>, the encryption key uses the base key<span class="widont"> </span>directly.</li>
+<li>This encryption key is used to encrypt/decrypt data with <a href="https://en.wikipedia.org/wiki/Advanced_Encryption_Standard"><span class="caps">AES</span>-256</a> using <a href="https://en.wikipedia.org/wiki/Galois/Counter_Mode">Galois/Counter<span class="widont"> </span>Mode</a>.</li>
+</ol>
+<p>In the next few steps, you’ll learn how to get your vault’s salt, and test the encryption of your<span class="widont"> </span>data.</p>
+<h3>Getting your vault’s salt and encryption<span class="widont"> </span>version</h3>
+<p>First, get the salt used to derive your encryption key by following these<span class="widont"> </span>steps:</p>
+<ol>
+<li>Make sure that Obsidian Sync is turned<span class="widont"> </span>on.</li>
+<li>Open Developer Tools in the Obsidian app using the hotkey <kbd>Cmd+Opt+I</kbd> on macOS or <kbd>Ctrl+Shift+I</kbd> on Windows.</li>
+<li>Go to the Console and run the following code, by copy/pasting it and pressing the Return<span class="widont"> </span>key:</li>
+</ol>
+<pre><code data-lang="js">let data = await (await fetch('https://api.obsidian.md/vault/list', {method:'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({token: JSON.parse(localStorage.getItem('obsidian-account')).token})})).json();
+let vaults = [].concat(data.shared, data.vaults);
+let vault = vaults.find(v =&gt; v.id === app.internalPlugins.getEnabledPluginById('sync').vaultId);
+console.log(`The salt of your vault ${vault.name} is: "${vault.salt}" with encryptionVersion ${vault.encryption_version}`);</code></pre>
+<p>You should see a message containing your salt and encryption<span class="widont"> </span>version:</p>
+<pre><code>The salt of your vault Notes is: "8II2%?YeNpddlbd@4Z)c" with encryptionVersion 0</code></pre>
+<h3>Decrypting data</h3>
+<p>Next, find an example of a sync event and decrypt it. Here we will use the Network tab of Developers Tools. This is where all sync events are logged, so you can see data that is being sent and received by the Obsidian app, and confirm that it is using your encryption<span class="widont"> </span>key.</p>
+<ol>
+<li>Go to the Network tab of the Developer Tools, and filter by "Socket" types (for <a href="https://en.wikipedia.org/wiki/WebSocket">WebSocket</a>).</li>
+<li>Find the WebSocket connection to Obsidian Sync. It will look like <code>sync-xx.obsidian.md</code> — you may need to reload Obsidian to see<span class="widont"> </span>it.</li>
+<li>In the WebSocket data stream, go to the Message tab. There you will see binary messages of uploads and downloads. If you aren’t seeing them, you can easily trigger one by modifying any synced note in your<span class="widont"> </span>vault.</li>
+<li>Right click on one of them and choose <code>Copy message &gt; Copy as Base64</code>.</li>
+<li>Using the following code, enter your password, your salt, and base64 binary data, and change the encryption version if necessary. Then, run the decryption routine in the Console (alternatively you can run it in a NodeJS prompt or<span class="widont"> </span>script).</li>
+</ol>
+<pre><code data-lang="js">// Use the standard crypto package from NodeJS
+let crypto = require('crypto');
+
+// Enter your password, salt, and base64 binary data
+let password = '8VbM0dCTdyX4QzO(@)Y7';
+let salt = '8zUqk?w*rnU7LneIzJR&amp;';
+let data = Buffer.from('sAsic1PU9IpdteFDoff+dSVHTL1KnOWaGE5PJnYf51L8qPJFslqHWcqZAdrYaUMdXqirdlw4rDhtvWb9Lg==', 'base64');
+
+// Enter the encryption protocol version (0 or 3)
+let encryptionVersion = 3;
+
+// Derive the encryption/decryption key from your password and salt
+let key = crypto.scryptSync(Buffer.from(password.normalize('NFKC'), 'utf8'), Buffer.from(salt.normalize('NFKC'), 'utf8'),
+    32, {N: 32768, r: 8, p: 1, maxmem: 128 * 32768 * 8 * 2});
+let aesKey = key;
+if (encryptionVersion === 3) {
+    aesKey = crypto.hkdfSync('sha256', key, '', 'ObsidianAesGcm', 32);
+}
+
+// Split up the data blob into the 12-bytes IV, the encrypted data, and the 16-bytes auth tag.
+let iv = data.subarray(0, 12);
+let encryptedData = data.subarray(12, data.length - 16);
+let authTag = data.subarray(data.length - 16);
+
+// Decrypt the data
+let decipher = crypto.createDecipheriv('aes-256-gcm', aesKey, iv);
+decipher.setAuthTag(authTag);
+let decrypted = Buffer.concat([decipher.update(encryptedData), decipher.final()]);
+
+// Print it to a string
+console.log(decrypted.toString('utf8'));</code></pre>
+<p>The data that is returned should be a revision of a file that was sent or received via the Obsidian Sync’s servers. That’s it! If it properly decrypts, you’ll know your encryption key is<span class="widont"> </span>working.</p>
+<hr>
+<p><strong>2025-09-05 edit:</strong> Updated instructions to support <a href="https://obsidian.md/changelog/2025-08-22-sync/">new Sync<span class="widont"> </span>version</a>.</p>
+</div>
+		</article>

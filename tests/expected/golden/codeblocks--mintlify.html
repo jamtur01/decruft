@@ -1,0 +1,41 @@
+<div class="mdx-content relative mt-8 mb-14 prose prose-gray dark:prose-invert [contain:inline-size] isolate" data-page-href="/guides/modes" data-page-title="Cover vs Contain Modes" id="content">
+<span>The <code>mode</code> prop controls how <code>SanityImage</code> handles aspect ratio changes when you specify both <code>width</code> and <code>height</code>. Understanding the difference between <code>cover</code> and <code>contain</code> is essential for getting the exact image behavior you need.</span>
+<h2 class="flex whitespace-pre-wrap group font-semibold" id="the-two-modes"><span class="cursor-pointer">The Two Modes</span></h2>
+<h3 class="flex whitespace-pre-wrap group font-semibold" id="contain-mode-default"><span class="cursor-pointer">Contain Mode (Default)</span></h3>
+<span><strong>Contain</strong> mode treats the dimensions you provide as boundaries, resizing the image to fit inside of them. The output image will match the aspect ratio of the original image—no cropping will occur.</span>
+<div class="code-block mt-5 mb-8 not-prose rounded-2xl relative group min-w-0 text-gray-950 dark:text-gray-50 codeblock-light border border-gray-950/10 dark:border-white/10 dark:twoslash-dark bg-transparent dark:bg-transparent"><div class="absolute top-3 right-4 flex items-center gap-1.5"></div><div class="font-mono whitespace-pre leading-6"><pre><code data-lang="tsx">&lt;SanityImage
+  id={image._id}
+  baseUrl="https://cdn.sanity.io/images/abcd1234/production/"
+  width={500}
+  height={300}
+  mode="contain" // or omit, as this is the default
+  alt="Product image"
+/&gt;</code></pre></div></div>
+<span>With contain mode, if your original image is 1200×800 (3:2 ratio) and you request 500×300 (5:3 ratio), the image will be resized to fit within those boundaries while maintaining its 3:2 aspect ratio.</span>
+<h3 class="flex whitespace-pre-wrap group font-semibold" id="cover-mode"><span class="cursor-pointer">Cover Mode</span></h3>
+<span><strong>Cover</strong> mode treats the dimensions you provide as a container, resizing the image to completely fill the dimensions. The output image will match the aspect ratio of the dimensions you provide.</span>
+<div class="code-block mt-5 mb-8 not-prose rounded-2xl relative group min-w-0 text-gray-950 dark:text-gray-50 codeblock-light border border-gray-950/10 dark:border-white/10 dark:twoslash-dark bg-transparent dark:bg-transparent"><div class="absolute top-3 right-4 flex items-center gap-1.5"></div><div class="font-mono whitespace-pre leading-6"><pre><code data-lang="tsx">&lt;SanityImage
+  id={image._id}
+  baseUrl="https://cdn.sanity.io/images/abcd1234/production/"
+  width={500}
+  height={300}
+  mode="cover"
+  alt="Product image"
+/&gt;</code></pre></div></div>
+<span>With cover mode, if your original image is 1200×800 (3:2 ratio) and you request 500×300 (5:3 ratio), the image will be cropped to exactly 500×300 to match your requested aspect ratio.</span>
+<h2 class="flex whitespace-pre-wrap group font-semibold" id="choosing-the-right-mode"><span class="cursor-pointer">Choosing the Right Mode</span></h2>
+<span>Use <strong>contain</strong> when:</span>
+<ul>
+<li>You want to preserve the full image without any cropping</li>
+<li>The image might have a different aspect ratio than the display area</li>
+<li>You are displaying photos where every part of the image matters</li>
+</ul>
+<span>Use <strong>cover</strong> when:</span>
+<ul>
+<li>You need the image to fill a specific area completely</li>
+<li>Some cropping is acceptable</li>
+<li>You are creating thumbnails or hero images with fixed dimensions</li>
+</ul>
+
+
+</div>

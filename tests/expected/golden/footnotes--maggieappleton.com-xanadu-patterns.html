@@ -1,0 +1,245 @@
+<main>   <main class="styled-main"> <article class="prose-wrapper"> <div class="desktop-container">   </div>   <div class="collapse-content">  </div>   <p class="intro-paragraph"> When it comes to visionary, before-its-time software, it’s hard to find a better archetype than Ted Nelson’s <a href="https://en.wikipedia.org/wiki/Project_Xanadu">Project Xanadu</a>. </p>  
+<p>It’s infamous in the technology community as a sixty-year project that never quite launched. A
+cautionary tale of what happens when you overhype, underdeliver, and try to stuff an operating
+system’s worth of features into a single piece of proprietary software. The kind of tale that makes
+our ferociously lean startup culture of Move Fast, Break Things, and Demo or Die seem almost
+sensible.</p>
+<p>Xanadu was a hypothetical hypertext system. <sup id="fnref:1"><a href="https://example.com/footnotes--maggieappleton.com-xanadu-patterns#fn:1">1</a></sup> </p>
+<p>It’s hard to read the word <em>hypertext</em> in <span class="container" title="2021 was 5 years ago"> 2021<sub class="styled-sub">5ya</sub>  </span>  and not believe its synonymous
+with the system Tim Berners-Lee built in <span class="container" title="1989 was 37 years ago"> 1989<sub class="styled-sub">37ya</sub>  </span>  – the World Wide Web that became
+so much more than linked text on digital screens. The version of hypertext you are reading this on
+is the only hypertext most of us have ever known.</p>
+<p>And yet the idea of hypertext predates Berners-Lee by two decades. The term was coined in
+<span class="container" title="1963 was 63 years ago"> 1963<sub class="styled-sub">63ya</sub>  </span>  by none other than Ted Nelson as part of a much larger vision; one small
+brick in the grand Xanadu dream mansion. <sup id="fnref:2"><a href="https://example.com/footnotes--maggieappleton.com-xanadu-patterns#fn:2">2</a></sup> </p>
+<p>To talk about Xanadu, we need to put a pin in our current understanding of <em>hypertext</em>. Our
+preconceived notions of what a link is, how it works, and what digital text is capable of threatens
+to overwrite the alternate history we’re about to explore.</p>
+<p>Ted hoped Xanadu would be a medium for
+“<span class="tooltip-trigger">  <a class="link" href="https://xanadu.com.au/ted/XUsurvey/xuDation.html">serious electronic literature</a>   </span>   ” – a paradigm
+shift that would free us from the material constraints of paper. His vision was the first to
+meaningfully consider how storing information in digital bits could reconfigure the way we read,
+write, cite, and share words.</p>
+<p>Xanadu’s failure to mature into a widespread, useable commercial product is great fodder a
+<span class="tooltip-trigger">  <a class="link" href="https://www.wired.com/1995/06/xanadu/">dramatic cover story</a>   </span>   . One fuelled by the noticeably
+combative language in Xanadu’s <span class="tooltip-trigger">  <a class="link" href="https://xanadu.com/">documentation</a>   </span>   :</p>
+<blockquote>
+<p>“The computer world is a continual war over software politics and paradigms” where “we fight on”
+for “vindication” and “the last laugh.”</p>
+</blockquote>
+<p>One feels like the dinner guest who has stumbled into a raging marital argument over unwashed tea
+towels. You don’t dare ask for context.</p>
+<p>Yet these historical skirmishes and financial flops are also the least interesting thing about
+Xanadu. The most interesting part is its <strong>Pattern Language</strong>.</p>
+<h2 class="title2" id="architectural-pattern-languages">Architectural Pattern Languages</h2> 
+<p><span class="tooltip-trigger">   <span class="styled-container"> <a class="styled-link" href="https://example.com/pattern-languages"> <span>Pattern Languages</span> </a> </span>   </span>    are sets of flexible, reusable solutions to common
+design problems.</p>
+<p>They come from the land of architects: the software developers of the material world. Namely, the
+architect <span class="tooltip-trigger">  <a class="link" href="https://en.wikipedia.org/wiki/Christopher_Alexander">Christopher Alexander</a>   </span>   , whose
+philosophy of constructing vibrant and humane living space escaped the confines of urban planning
+and infused the world of software design in the late 1980’s.</p>
+<p>In their book <span class="tooltip-trigger">  <a class="link" href="https://en.wikipedia.org/wiki/A_Pattern_Language">A Pattern Language</a>   </span>   , Alexander
+defined 253 architectural patterns for designing cities, towns, and homes. These became the example
+patterns for writing patterns. Each one is composed of a context, problem, example, and solution.</p>
+ <div> <img alt="A Pattern Language" height="319" width="220" src="https://example.com/_astro/patterns.D8-ibnKY_Z2ngng6.webp"> </div>   
+<p>For example, the design pattern <strong>A Place to Wait</strong> asks that we create comfortable accommodation
+and ambient activity whenever someone needs to wait; benches, cafes, reading rooms, miniature
+playgrounds, three-reel slot machines (if we happen to be in the Las Vegas airport). This solves the
+problem of huddles of people awkwardly hovering in liminal space; near doorways, taking up
+sidewalks, anxiously waiting for delayed flights or dental operations or immigration investigations
+without anything to distract them from uncertain fates.</p>
+<p>Others like <strong>Light on Two Sides of Every Room</strong> and <strong>Staircase as Stage</strong> are fairly
+self-explanatory.</p>
+<p>There’s no single way to implement these design patterns. They are purposefully abstract enough to
+adapt to the situation at hand. Rules of thumb rather than sets of formulaic instructions.</p>
+<h2 class="title2" id="xanadu-as-a-design-pattern">Xanadu as a Design Pattern</h2> 
+<p>Taken as a collection of design patterns, Xanadu’s documentation suggests solutions to some of the
+hypertextual problems we’re wrestling with today;</p>
+<ul>
+<li>How do we structure information and build relationships between pieces of data that help us see
+them across contexts, and clarify understanding?</li>
+<li>How do we build systems that allow people to collaborate on shared documents without losing
+authorship? How do we credit and compensate authors based on their contributions?</li>
+<li>How do we bring ideas and data from a variety of sources into conversation with our own, while
+leaving a clear trail back to the origin?</li>
+</ul>
+<p>Xanadu became a sad parable, when it should have been a piece of speculative design. A set of seeds
+scattered into the wind for other people to pick up and plant, rather than the patent-happy
+industrial farming conglomerate it tried to grow into.</p>
+<p>Curiously enough, there appear to be rogue seedlings sprouting around the web. A number of Xanadu’s
+design patterns are showing up in modern manifestations. We’re finding ways to backwards engineer
+the original spirit of Xanadu into the existing structures of the World Wide Web.</p>
+<h1>The Patterns</h1>
+<h3 class="title3" id="1-visible-links">1. Visible Links</h3> 
+<p>Ted Nelson has many gripes, and <strong>jump links</strong> are one of his biggest. They’re the kind of links we
+all use around the web today. Clicking a hyperlink is a bit of a gamble. It <em>jumps</em> you into
+somewhere unknown. You find out when you get there.</p>
+<p>We’ve found ways to adapt to this; Venkatesh Rao has a compelling exploration of how we’ve developed
+a <span class="tooltip-trigger">  <a class="link" href="https://www.ribbonfarm.com/2009/07/01/the-rhetoric-of-the-hyperlink/">rhetoric of hyperlinking</a>   </span>   
+to hint at where people are headed. Most browsers will do this more explicitly by showing you a URL
+preview, but they tuck them into the far corner in tiny text:</p>
+<figure class="container"> <div class="image-wrapper"> <img alt="URL hover previews showing in the left hand corner of page" src="https://res.cloudinary.com/dxj9qr5gj/image/upload/c_scale,f_auto,q_auto:good,w_1200/v1623585337/maggieappleton.com/notes/xanadu/hover-preview-url_shrink_kxvwtp.png"> </div>  </figure> 
+<p>These can only tell you so much when modern URLs are often obscured by link shorteners and
+overstuffed with tracking queries. These solutions are only a band-aid on the underlying wound. They
+suggest where you’re headed, rather than showing you.</p>
+<p>Nelson’s answer to jump links are <strong>visible links</strong> – links that show you the full context of where
+you’re headed. These were an essential feature of Xanadu. In the original mockups for “<em>Xanadocs</em>”
+linked text would be connected to its source in a rather literal fashion: brightly coloured
+highlights running between documents.</p>
+<figure class="container framed"> <div class="image-wrapper image-frame"> <img alt="One of the original UI mockups for a Xanadoc with visible links between text blocks" src="https://res.cloudinary.com/dxj9qr5gj/image/upload/c_scale,f_auto,q_auto:good,w_1200/v1623916915/maggieappleton.com/notes/xanadu/xanadu_au17yq_shrink_tqkdxs.png"> </div> <figcaption>One of the original UI mockups for a Xanadoc with visible links between text blocks</figcaption> </figure> 
+<p>This proposed solution relies on two other patterns – <em>parallel documents</em> and <em>transpointing
+windows</em> (covered below) – but the underlying principle was simply that links made their
+destinations clear.</p>
+<p>In lieu of Xanadoc links, the modern web has landed on some fairly decent solutions to this issue:
+<strong>hover previews and unfurls</strong>.</p>
+<p><strong>Hover previews</strong> are when you can see a preview of the page you’re headed to when you hover over a
+link. It’s usually an excerpt that gives you the page title, the first few lines of text, and
+sometimes an image. Wikipedia was one of the first major sites to
+<span class="tooltip-trigger">  <a class="link" href="https://blog.wikimedia.org/2018/04/18/how-we-designed-page-previews-for-wikipedia/">add these</a>   </span>    in
+<span class="container" title="2018 was 8 years ago"> 2018<sub class="styled-sub">8ya</sub>  </span> .</p>
+<figure class="container framed"> <div class="image-wrapper image-frame"> <img alt="Wikipedia's interface showing one of the hover previews that appear over links" src="https://res.cloudinary.com/dg3gyk0gu/image/upload/c_scale,f_auto,q_auto:good,w_1000/v1592343673/maggieappleton.com/notes/Screenshot_-_2020-06-16_20.49.44.png"> </div> <figcaption>Wikipedia's interface showing one of the hover previews that appear over links</figcaption> </figure> 
+<p>Hover previews have also become popular in the <span class="tooltip-trigger">   <span class="styled-container"> <a class="styled-link" href="https://example.com/garden-history"> <span>Digital Gardening</span> </a> </span>   </span>    community as a way to help
+visitors quickly navigate through collections of public notes and essays that are deeply
+interlinked. <a href="https://notes.andymatuschak.org/">Andy Matuschak</a> and
+<a href="https://www.gwern.net/index">Gwern Branwen</a> are two gardeners with good examples of how
+these work in action.</p>
+<figure class="container framed"> <div class="image-wrapper image-frame"> <img alt="Andy Matuschak's notes website featuring hover link previews" src="https://res.cloudinary.com/dg3gyk0gu/image/upload/c_scale,f_auto,q_auto:good,w_1000/v1592343501/maggieappleton.com/notes/Screenshot_2020-06-16_at_22.38.06.png"> </div> <figcaption>Andy Matuschak's notes website featuring hover link previews</figcaption> </figure> 
+<p>Similar to hover previews, <strong>unfurls</strong> are the preview cards that automagically appear when you
+paste a link into Twitter, Facebook, Notion, Miro, or any other richly-featured web app. If I paste
+a link to this great article on
+<span class="tooltip-trigger">  <a class="link" href="https://www.cjr.org/special_report/building-honest-internet-public-interest.php">building a more honest internet</a>   </span>   
+into a Tweet or Notion document, it automagically displays the feature image, title, and byline
+without any extra effort from me:</p>
+<figure class="container framed"> <div class="image-wrapper image-frame"> <img alt="An open graph image preview appearing in a tweet" src="https://res.cloudinary.com/dxj9qr5gj/image/upload/c_scale,f_auto,q_auto:best,w_800/v1623916885/maggieappleton.com/notes/xanadu/tweet-opengraph_o6eecg.jpg"> </div>  </figure> 
+<figure class="container framed"> <div class="image-wrapper image-frame"> <img alt="Open graph previews appear in Notion when you paste a link and select 'Create Bookmark'" src="https://res.cloudinary.com/dxj9qr5gj/image/upload/c_scale,f_auto,q_auto:best,w_1000/v1623917579/maggieappleton.com/notes/xanadu/notion-ogpreview_shrink_ckiuyn.png"> </div> <figcaption>Open graph previews appear in Notion when you paste a link and select 'Create Bookmark'</figcaption> </figure> 
+<p>This system is powered by the <span class="tooltip-trigger">  <a class="link" href="https://ogp.me/">Open Graph Protocol</a>   </span>    which Facebook introduced in
+<span class="container" title="2010 was 16 years ago"> 2010<sub class="styled-sub">16ya</sub>  </span> . This standardised format helps website authors define <em>metadata</em> like
+titles, descriptions, authors, and images for each of their pages. These are automatically retrieved
+and “unfurled” when the link is pasted elsewhere on the web.</p>
+<p>Both hover previews and link unfurls give you a good sense of where you’re headed if you click on a
+link. They get us to <em>semi-visible</em> links.</p>
+<p>Previews aren’t quite the same as physical links between parts of a page though. You lose the
+fine-grained associations between specific paragraphs and lines. If we wanted to dial up the
+Xanadu-esque visibility, we could work on showing previews of the whole page and directing people to
+specific pieces of text within it.</p>
+<h3 class="title3" id="2-parallel-documents">2. Parallel Documents</h3> 
+<p>Ted’s proposal for visible links relied on another key Xanadu pattern: <strong>parallel documents arranged
+side-by-side</strong>. This pattern allow us to see quotations in their original context, and quickly jump
+to the source material of documents.</p>
+<p>It’s also tricky to misquote someone and cherry-pick misleading excerpts when the reader has
+immediate, effortless access to the original.</p>
+<figure class="container"> <div class="image-wrapper"> <img alt="Three parallel documents with visible links between them" src="https://res.cloudinary.com/dxj9qr5gj/image/upload/c_scale,f_auto,q_auto:good,w_900/v1640076312/maggieappleton.com/notes/xanadu/transclusion_6_shrink_sl0vcb_mtepgz.jpg"> </div>  </figure> 
+<p>This sounds great in theory. Being able to lay multiple sheets of paper down side-by-side in
+meatspace is one of its shining qualities. Humans are very good at visually skimming information
+spread out in front of us – it allows us to quickly pattern-match by comparing and contrasting.</p>
+<p>Ideally our digital mediums would lean into our ability to survey a large visual field. But the
+limitations of LCD screen sizes lead to some unsatisfying compromises. Instead, we end up squishing
+columns of documents onto our tiny screens.</p>
+<p>The existing prototypes of Xanadu don’t gracefully solve this problem in any way. Some of them –
+like the <span class="container" title="2007 was 19 years ago"> 2007<sub class="styled-sub">19ya</sub>  </span>  <em>XanaduSpace</em> demo – suggest launching into the disorienting
+world of 3D paper where documents tower over you like skyscrapers.</p>
+<p>Here’s Ted to give you an interactive tour:</p>
+<div class="video"> <iframe allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen="" frameborder="0" height="570" src="https://www.youtube.com/embed/cjXW5jKzjCA" width="1000"></iframe> </div> 
+<p>Flying about in multiple dimensions feels slightly distracting when you’re trying to write a
+detailed product spec or salvage your mediocre thesis.</p>
+<p>We have developed some slightly less nauseasting solutions to this problem.</p>
+<div class="draft-container"> <svg data-astro-cid-yuxp3hac="true" data-icon="pencil" height="140" width="140">   <symbol id="ai:local:pencil" viewBox="0 0 140 120"><g fill="none"><path d="M88.537 34.814a8.8 8.8 0 0 1 2.886-1.981 8.9 8.9 0 0 1 3.444-.7 9 9 0 0 1 3.465.69 9.1 9.1 0 0 1 4.922 4.922 9 9 0 0 1 .691 3.466 8.9 8.9 0 0 1-.7 3.444 8.8 8.8 0 0 1-1.982 2.885l-3.824 3.824-12.726-12.726 3.825-3.824zm-5.544 5.545L41.59 81.761l-7.38 17.46c-.698 1.654.992 3.344 2.646 2.645l17.46-7.38 41.406-41.4z" fill="var(--color-sea-blue)"></path><path d="M48.424 88.643s-.881-8.642-9.091-9.091l-12.518 5.591 4.79 18.588 10.38 5.205 15.098-11.634c-1.313-8.212-8.659-8.659-8.659-8.659z" stroke="#fff"></path></g></symbol><use href="#ai:local:pencil"></use>  </svg> <div> <svg data-astro-cid-yuxp3hac="" height="2"> <path d="M150,0 L400,0" data-astro-cid-yuxp3hac="" stroke="var(--color-sea-blue)" stroke-dasharray="12,8" stroke-width="2"></path> </svg> <h2>Draft in Progress</h2> <svg data-astro-cid-yuxp3hac="" height="2"> <path d="M0,0 L150,0" data-astro-cid-yuxp3hac="" stroke="var(--color-sea-blue)" stroke-dasharray="12,8" stroke-width="2"></path> </svg> </div> <p>
+The quality of writing below this point is haphazard, disjointed, and
+		nonsensical. It's probably a good idea to come back later.
+</p> </div> 
+<p>Tabs and slide-over windows help us quickly move between documents, although they still fail at
+letting us see more than two at once.</p>
+<p>Many modern note-taking apps have popularised fat “sidebars” that are essentially second windows.</p>
+<p>Roam Research, Obsidian, Logseq, and Innos are all designed for parallel documents</p>
+<p>Arranging two windows side-by-side doesn’t properly solve this problem. We can’t select things from
+from one window and drag them into the next. The two windows don’t know about each other and usually
+can’t interact. They’re connected to different data sources, possibly running in seperate
+applications. Copying and pasting text, images, or objects between the two is a cumbersome
+workaround.</p>
+<p>The mobile-first responsive web also makes this tricky. There is simply no space on a 320px-wide
+screen to consider viewing multiple windows at once. Although patterns like horizontal scroll and
+slide-over windows might help solve this.</p>
+<h3 class="title3" id="3-transpointing-windows">3. Transpointing Windows</h3> 
+<p>Parts of documents visibly point to other parts</p>
+<p>LiquidText</p>
+<figure class="container framed"> <div class="image-wrapper image-frame"> <img alt="The interface of LiquidText with transpointing between sections of text" src="https://res.cloudinary.com/dxj9qr5gj/image/upload/c_scale,f_auto,q_auto:best,w_1100/v1623925818/maggieappleton.com/notes/xanadu/liquid_rrgru8.png"> </div> <figcaption>The interface of LiquidText with transpointing between sections of text</figcaption> </figure> 
+<p><span class="tooltip-trigger">  <a class="link" href="https://azlen.me/">Azlen Elza</a>   </span>    managed to craft up this crazy demo inside of their Roam Research
+database.</p>
+<div class="tweet-embed"> <astro-embed-tweet>
+
+</astro-embed-tweet> </div>  
+<h3 class="title3" id="4-transclusion">4. Transclusion</h3> 
+<ul>
+<li><span class="tooltip-trigger">   <span class="styled-container"> <a class="styled-link" href="https://example.com/transcopyright-dreams"> <span>Transclusion and Transcopyright Dreams</span> </a> </span>   </span>   </li>
+</ul>
+<h3 class="title3" id="5-bi-directional-links">5. Bi-Directional Links</h3> 
+<ul>
+<li><span class="tooltip-trigger">   <span class="styled-container"> <a class="styled-link" href="https://example.com/bidirectionals"> <span>A Short History of Bi-Directional Links</span> </a> </span>   </span>   </li>
+</ul>
+<h3 class="title3" id="6-version-control">6. Version Control</h3> 
+<p>In the age of Git, we tend to take version control for granted.</p>
+<p>The first version control system dates back to
+<span class="tooltip-trigger">  <a class="link" href="https://en.wikipedia.org/wiki/Version_control#History">1975</a>   </span>   . It’s now difficult to imagine
+programming without it.</p>
+<h3 class="title3" id="7-modular-text-blocks">7. Modular Text Blocks</h3> 
+<p>The core building block of the web has always been documents. While the idea of a web<em>page</em> has
+evolved far beyond it’s original idea, we still construct, connect, and navigate websites at the
+page level.</p>
+<p>The early web was built for academic researchers to share their work, in a time before all the plebs
+invaded with our bleeding-heart livejournal entries, dancing baby GIFs, and TikTok moves. These
+researchers designed the system to mimic their primary medium of communication; paper-based academic
+articles and documents.</p>
+<p>This paper document design metaphor determined many of the early architectural decisions. URL
+addresses were set at the <em>page</em> level, rather than the paragraph. Inline images were an
+afterthought, and even a contentious addition to the spec. <sup id="fnref:3"><a href="https://example.com/footnotes--maggieappleton.com-xanadu-patterns#fn:3">3</a></sup> </p>
+<p>Blocks construct documents</p>
+<p>Notion pioneered this in the note-taking space</p>
+<p>Explosion of note-taking apps using a block-first approach: Roam, Innos, Clover, Craft, Kosmik</p>
+<h3 class="title3" id="8-stable-universal-addresses">8. Stable, Universal Addresses</h3> 
+<p>The web enforces addresess on the document level rather than the block level</p>
+<p>No stability at all, link rot everywhere</p>
+<p>URL queries and subpaths</p>
+<p>Roam block UIDs</p>
+<h3 class="title3" id="9-annotation">9. Annotation</h3> 
+<p><span class="tooltip-trigger">  <a class="link" href="https://example.com/footnotes--maggieappleton.com-xanadu-patterns">Hypothesis</a>   </span>   </p>
+
+<h3 class="title3" id="10-multiple-views-and-spatial-arrangements">10. Multiple Views and Spatial Arrangements</h3> 
+<p>Graph previews are a weak version of this</p>
+<p>Notion linked databases that offer various view types</p>
+<p>Most modern dashboards offer multiple ways to view data</p>
+<p>ZigZag format</p>
+<h3 class="title3" id="11-micropayments">11. Micropayments</h3> 
+<p>Jarons Lanier’s dreams in Who Owns the Future</p>
+<p>The inescapable cost of transactions</p>
+<p>Web Monetisation API, Coil</p>
+<p>Grant for the Web</p>
+<p>Graeber’s money-as-debt, soft money, local currencies and DAOs</p>
+<hr>
+<p>The original Xanadu vision was ambitious. Unreasonably ambitious. The above feature list is a small
+selection.</p>
+<p>Perhaps you sense the problem.<br>
+Solving all the things all at once gets tricky.</p>
+<p>Instead, what we’re now seeing is the ad-hoc, decentralised manifestation of Xanadu in bits and
+pieces.</p>
+<p>People are building Xanadu without knowing what Xanadu is.<br>
+Which is the essence of a good pattern language; true patterns evolve naturally within systems, and
+are found rather than crafted. <sup id="fnref:4"><a href="https://example.com/footnotes--maggieappleton.com-xanadu-patterns#fn:4">4</a></sup> </p>
+<p>In the grand scheme of things, 60 years isn’t an extraordinary amount of time to spend solving a
+problem. It’s about 0.09% of history since humans first started creating symbolic cultural artefacts
+<sup id="fnref:5"><a href="https://example.com/footnotes--maggieappleton.com-xanadu-patterns#fn:5">5</a></sup> </p>
+<p>Who knows, maybe Xanadu can still happen (if you clap for it) ✨</p>
+<br>
+<figure class="container"> <div class="image-wrapper"> <img alt="" src="https://3.bp.blogspot.com/-s2BU-a7w2bc/VuNwBkwNSSI/AAAAAAAARDg/P_UuFud4PmIfKQoJLq4EHYxVL6YL8TQsw/s1600/XANADU.jpg"> </div>  </figure>  </article>  </main>   <div class="inner-container has-backlinks"><div class="likes-container"><div class="single-image"><img alt="байрактар гезе" src="https://avatars.webmention.io/pbs.twimg.com/38be17147a8f98490b9ca22c549c6febb2a2cc50bc6e5ee51c407fa0c0e72147.jpg"></div><div class="single-image"><img alt="Oh another alt" src="https://avatars.webmention.io/pbs.twimg.com/5f791d842936810fdc603e7d97009586dc418e65511c3b138216f6e388b80211.jpg"></div><div class="single-image"><img alt="Richard Gaskin" src="https://avatars.webmention.io/pbs.twimg.com/dd984a386624af6d1acd18dca830554a778783e77e436f08e5775fe813cffcc6.png"></div><div class="single-image"><img alt="CatoMinor" src="https://avatars.webmention.io/pbs.twimg.com/e17a48e2404130b07bbda8fb762e28d60e24453a42942330f8084915fc431fa5.jpg"></div><span>4 Likes and Reposts</span></div><div class="reply"><img alt="grand theft eigenvalue ????" src="https://avatars.webmention.io/amanita.us-east.host.bsky.network/e08000d73d542eec142d58fb6c41efe14554e02e8ad5724bd04811d60b6a8001.jpg"><div class="content"><span>Project Xanadu self-assembly
+
+</span></div></div></div>  <div id="footnotes"><div class="footnote" id="fn:1"> The word hypothetical is a
+bit strong. Many versions were built. There is a working demo showcasing a few of its features
+<span class="tooltip-trigger">  <a class="link" href="http://xanadu.com/xanademos/MoeJusteOrigins.html">here</a>   </span>   . But there is no active version on the App
+Store or Product Hunt I can link you to. </div><div class="footnote" id="fn:2"> While Nelson coined the word, the
+notion of linked documents goes back to Jorge Luis Borges The Garden of Forking Paths” in
+<span class="container" title="1941 was 85 years ago"> 1941<sub class="styled-sub">85ya</sub>  </span>  and Vannevar Bush’s Memex machine in <span class="container" title="1945 was 81 years ago"> 1945<sub class="styled-sub">81ya</sub>  </span>  – both
+significant, named influences for Nelson.  </div><div class="footnote" id="fn:3"> No one seriously
+considered the possibility of adding videos or animations. The presumption visual images are a
+impoverished medium for serious intellectual thought is a whole other kettle of fish. </div><div class="footnote" id="fn:4"> Christopher Alexander’s
+<a href="https://en.wikipedia.org/wiki/The_Nature_of_Order">The Nature of Order</a> goes deep on
+this principle </div><div class="footnote" id="fn:5"> Using <a href="https://en.wikipedia.org/wiki/Cave_of_La_Pasiega">La Pasiega
+Cave</a> in Spain as a relative marker - 65,000 y.a. </div></div></main>

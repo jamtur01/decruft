@@ -12,10 +12,10 @@ pub fn extract_metadata(
     url: Option<&str>,
     schema: Option<&serde_json::Value>,
 ) -> Metadata {
-    let site_name = extract_site_name(html, schema);
+    let author = extract_author(html, schema);
+    let site_name = extract_site_name(html, schema, &author);
     let domain = extract_domain(url);
     let title = extract_title(html, schema, &site_name, &domain);
-    let author = extract_author(html, schema);
     let published = extract_published(html, schema);
     let modified = extract_modified(html, schema);
     let description = extract_description(html, schema);
@@ -338,6 +338,30 @@ fn strip_last_breadcrumb_segment(title: &str) -> String {
 // ------------------------------------------------------------------
 
 fn extract_author(html: &Html, schema: Option<&serde_json::Value>) -> String {
+    let raw = extract_author_raw(html, schema);
+    clean_author(&raw)
+}
+
+/// Strip URLs, separator-delimited URLs, and "By " prefixes from author.
+fn clean_author(author: &str) -> String {
+    let mut result = author.to_string();
+    // Strip trailing " - https://..." or " | https://..."
+    for sep in [" - ", " | ", " · "] {
+        if let Some(idx) = result.find(sep) {
+            let after = result[idx + sep.len()..].trim();
+            if after.starts_with("http://") || after.starts_with("https://") {
+                result = result[..idx].trim().to_string();
+            }
+        }
+    }
+    // Strip if the entire value is a URL
+    if result.starts_with("http://") || result.starts_with("https://") {
+        return String::new();
+    }
+    result
+}
+
+fn extract_author_raw(html: &Html, schema: Option<&serde_json::Value>) -> String {
     if let Some(v) = get_meta_content(html, "property", "author")
         .or_else(|| get_meta_content(html, "name", "author"))
         .or_else(|| get_meta_content(html, "property", "article:author"))
@@ -521,24 +545,45 @@ fn itemprop_author(html: &Html) -> Option<String> {
 }
 
 fn class_author(html: &Html) -> Option<String> {
-    let Ok(sel) = Selector::parse(".author") else {
-        return None;
-    };
-    let mut names = Vec::new();
-    for el in html.select(&sel) {
-        let text = dom::text_content(html, el.id());
-        let trimmed = text.trim().to_string();
-        if !trimmed.is_empty() {
-            names.push(trimmed);
-        }
-        if names.len() >= 3 {
-            break;
+    // Prefer [rel="author"] or [itemprop="author"] over bare .author
+    let selectors = ["[rel=\"author\"]", "[itemprop=\"author\"]", ".author"];
+    for sel_str in selectors {
+        let Ok(sel) = Selector::parse(sel_str) else {
+            continue;
+        };
+        for el in html.select(&sel) {
+            // Skip .author inside comment/mention/reply containers
+            if is_inside_comment_section(html, el.id()) {
+                continue;
+            }
+            let text = dom::text_content(html, el.id());
+            let trimmed = text.trim().to_string();
+            if !trimmed.is_empty() && trimmed.split_whitespace().count() <= 6 {
+                return Some(trimmed);
+            }
         }
     }
-    if names.is_empty() {
-        return None;
+    None
+}
+
+fn is_inside_comment_section(html: &Html, node_id: ego_tree::NodeId) -> bool {
+    let mut current = node_id;
+    loop {
+        if let Some(class) = dom::get_attr(html, current, "class") {
+            let lower = class.to_lowercase();
+            if lower.contains("comment")
+                || lower.contains("mention")
+                || lower.contains("repli")
+                || lower.contains("backlink")
+            {
+                return true;
+            }
+        }
+        let Some(parent) = dom::parent_element(html, current) else {
+            return false;
+        };
+        current = parent;
     }
-    Some(names.join(", "))
 }
 
 // ------------------------------------------------------------------
@@ -631,7 +676,7 @@ fn first_time_element(html: &Html) -> Option<String> {
 // Site name
 // ------------------------------------------------------------------
 
-fn extract_site_name(html: &Html, schema: Option<&serde_json::Value>) -> String {
+fn extract_site_name(html: &Html, schema: Option<&serde_json::Value>, author: &str) -> String {
     schema_str(schema, "publisher.name")
         .or_else(|| get_meta_content(html, "property", "og:site_name"))
         .or_else(|| schema_graph_website_name(schema))
@@ -641,6 +686,20 @@ fn extract_site_name(html: &Html, schema: Option<&serde_json::Value>) -> String 
         .or_else(|| schema_str(schema, "isPartOf.name"))
         .or_else(|| get_dc_content(html, "publisher"))
         .or_else(|| get_meta_content(html, "name", "application-name"))
+        // Fallback: use author name as site name (matches defuddle behavior)
+        .or_else(|| {
+            if !author.is_empty()
+                && author.split_whitespace().count() <= 4
+                && !author.contains(',')
+                && !author.contains("http")
+            {
+                Some(author.to_string())
+            } else {
+                None
+            }
+        })
+        // Fallback: infer from <title> element's last segment after separator
+        .or_else(|| site_name_from_title(html))
         .and_then(|name| {
             if name.split_whitespace().count() > 6 {
                 None
@@ -649,6 +708,35 @@ fn extract_site_name(html: &Html, schema: Option<&serde_json::Value>) -> String 
             }
         })
         .unwrap_or_default()
+}
+
+/// Extract site name from `<title>` element's last separator-delimited
+/// segment. e.g., "Article Title - Wikipedia" → "Wikipedia".
+/// Only returns if the last segment is short (≤4 words) and the title
+/// segment before it is longer (indicating it's the article title).
+fn site_name_from_title(html: &Html) -> Option<String> {
+    let title = title_element_text(html)?;
+    // Only use unambiguous separators for site name inference
+    // (skip " · ", " / ", " -- " which are used within titles)
+    for sep in &[" | ", " - "] {
+        let Some(idx) = title.rfind(sep) else {
+            continue;
+        };
+        let before = title[..idx].trim();
+        let after = title[idx + sep.len()..].trim();
+        if after.is_empty() || before.is_empty() {
+            continue;
+        }
+        // Last segment ≤4 words, before must be ≥2 words (a real article title)
+        // and at least as long as the suffix
+        if after.split_whitespace().count() <= 4
+            && before.split_whitespace().count() >= 2
+            && before.len() >= after.len()
+        {
+            return Some(after.to_string());
+        }
+    }
+    None
 }
 
 /// Search a single schema object's `@graph` for `@type: "WebSite"`
@@ -985,15 +1073,16 @@ mod tests {
     }
 
     #[test]
-    fn title_preserved_when_no_site_name() {
+    fn title_suffix_inferred_as_site_name() {
         let doc = Html::parse_document(
             r"<html><head>
             <title>Article Name | Site Name</title>
             </head><body></body></html>",
         );
         let m = extract_metadata(&doc, None, None);
-        // Without a known site name, the full title is preserved
-        assert_eq!(m.title, "Article Name | Site Name");
+        // Site name inferred from title suffix, title stripped
+        assert_eq!(m.title, "Article Name");
+        assert_eq!(m.site_name, "Site Name");
     }
 
     #[test]

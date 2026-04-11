@@ -296,7 +296,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "real network call"]
     fn api_fetch_on_live_page() {
         let result = try_api_fetch("ExtremeProgramming");
         if let Some(r) = result {
