@@ -11,6 +11,7 @@ documentation = "https://docs.rs/decruft"
 readme = "README.md"
 keywords = ["html", "content-extraction", "readability", "scraping", "web"]
 categories = ["command-line-utilities", "parser-implementations", "web-programming"]
+exclude = ["tests/fixtures", "tests/expected", "tools/"]
 
 [lib]
 name = "decruft"
