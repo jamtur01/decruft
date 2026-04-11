@@ -863,26 +863,36 @@ fn convert_to_markdown(html: &str) -> Option<String> {
         .map(|s| collapse_newlines(&s))
 }
 
-/// Remove bare bullet lines (a lone `-`, `+`, or `*` with no text)
-/// that htmd produces for certain empty or nested-only list items.
-/// Collapse runs of 3+ newlines into exactly 2 (one blank line).
+/// Collapse runs of 3+ newlines into exactly 2 (one blank line),
+/// but only outside fenced code blocks where multiple blank lines
+/// may be semantically meaningful.
 fn collapse_newlines(md: &str) -> String {
-    let mut result = String::with_capacity(md.len());
-    let mut newline_count = 0;
-    for ch in md.chars() {
-        if ch == '\n' {
-            newline_count += 1;
-            if newline_count <= 2 {
-                result.push(ch);
+    let mut out = Vec::new();
+    let lines: Vec<&str> = md.split('\n').collect();
+    let mut in_fence = false;
+    let mut blank_run = 0;
+
+    for line in &lines {
+        let trimmed = line.trim();
+        if trimmed.starts_with("```") || trimmed.starts_with("~~~") {
+            in_fence = !in_fence;
+        }
+
+        if line.is_empty() {
+            blank_run += 1;
+            if in_fence || blank_run <= 1 {
+                out.push(*line);
             }
         } else {
-            newline_count = 0;
-            result.push(ch);
+            blank_run = 0;
+            out.push(*line);
         }
     }
-    result
+    out.join("\n")
 }
 
+/// Remove bare bullet lines (a lone `-`, `+`, or `*` with no text)
+/// that htmd produces for certain empty or nested-only list items.
 fn clean_bare_bullets(md: &str) -> String {
     let mut out = Vec::new();
     let lines: Vec<&str> = md.lines().collect();

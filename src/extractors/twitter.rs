@@ -57,8 +57,10 @@ pub fn extract_x_article(html: &Html, url: Option<&str>) -> Option<ExtractorResu
         if let Some(result) = try_oembed(u) {
             return Some(result);
         }
-        // Fallback: extract from HTML og:title for tweet status pages
-        return try_tweet_from_html(html, url);
+        // Fallback: extract metadata from HTML; only use if it
+        // produced meaningful content (otherwise let generic pipeline run)
+        return try_tweet_from_html(html, url)
+            .filter(|r| !r.content.trim().is_empty() || r.title.is_some());
     }
     None
 }
@@ -155,8 +157,11 @@ fn urlencoding(s: &str) -> String {
 fn try_tweet_from_html(html: &Html, url: Option<&str>) -> Option<ExtractorResult> {
     use std::sync::LazyLock;
     static OG_TITLE_RE: LazyLock<regex::Regex> = LazyLock::new(|| {
-        regex::Regex::new(r#"(?:\(\d+\)\s+)?[^:]+\s+on\s+X:\s*["""](.+?)["""]"#)
-            .expect("x og:title regex is valid")
+        // Character class [\u{201c}\u{201d}"] matches straight and curly quotes
+        regex::Regex::new(
+            r#"(?:\(\d+\)\s+)?[^:]+\s+on\s+X:\s*["""\u{201c}\u{201d}](.+?)["""\u{201c}\u{201d}]"#,
+        )
+        .expect("x og:title regex is valid")
     });
 
     let og_title = dom::select_ids(html, "meta[property=\"og:title\"]")
@@ -196,10 +201,8 @@ fn try_tweet_from_html(html: &Html, url: Option<&str>) -> Option<ExtractorResult
     })
 }
 
-/// Extract author display name from oembed link element.
-/// e.g. `<link ... title="Heinrich on X: ...">` → "Heinrich"
-/// Extract author display name from <title> element pattern.
-/// "(N) Name on X: ..." → "Name"
+/// Extract author display name from the `<title>` element.
+/// Matches "(N) Name on X: ..." → "Name".
 fn tweet_author_from_title(html: &Html) -> Option<String> {
     use std::sync::LazyLock;
     static NAME_RE: LazyLock<regex::Regex> = LazyLock::new(|| {
@@ -317,7 +320,7 @@ fn html_attr_escape(s: &str) -> String {
 }
 
 #[cfg(test)]
-#[expect(clippy::unwrap_used)]
+#[expect(clippy::unwrap_used, clippy::panic)]
 mod tests {
     use super::*;
 
@@ -412,13 +415,13 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "X/Twitter oEmbed API is frequently rate-limited"]
     fn oembed_on_live_tweet() {
-        let result = try_oembed("https://x.com/elikiris/status/1925627023102992830");
-        if let Some(r) = result {
-            assert!(!r.content.is_empty(), "oEmbed should return content");
-            assert!(r.author.is_some(), "oEmbed should return author");
-            assert_eq!(r.site.as_deref(), Some("X (Twitter)"));
-        }
-        // Don't fail if network is unavailable
+        let Some(r) = try_oembed("https://x.com/elikiris/status/1925627023102992830") else {
+            panic!("oEmbed API returned None — network unavailable?");
+        };
+        assert!(!r.content.is_empty(), "oEmbed should return content");
+        assert!(r.author.is_some(), "oEmbed should return author");
+        assert_eq!(r.site.as_deref(), Some("X (Twitter)"));
     }
 }
