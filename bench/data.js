@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1775923365879,
+  "lastUpdate": 1775926829654,
   "repoUrl": "https://github.com/jamtur01/decruft",
   "entries": {
     "decruft benchmarks": [
@@ -539,6 +539,66 @@ window.BENCHMARK_DATA = {
             "name": "large_page_no_scoring (1.1MB)",
             "value": 243970089,
             "range": "± 2836851",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "james@lovedthanlost.net",
+            "name": "James Turnbull",
+            "username": "jamtur01"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "c57021c194155a9cdbab7f957ea6697a46eff321",
+          "message": "Merge pull request #4 from jamtur01/feat/dublin-core\n\nfeat(metadata): add Dublin Core and Parsely metadata support",
+          "timestamp": "2026-04-11T12:58:06-04:00",
+          "tree_id": "1b8a0b24a6b1692762bddbb4ff8c49bbfe89a98f",
+          "url": "https://github.com/jamtur01/decruft/commit/c57021c194155a9cdbab7f957ea6697a46eff321"
+        },
+        "date": 1775926829341,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "small_page (12KB blog)",
+            "value": 2702983,
+            "range": "± 21279",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "medium_page (317KB stephango)",
+            "value": 3743987,
+            "range": "± 31484",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "large_page (1.1MB wikipedia)",
+            "value": 388042430,
+            "range": "± 946443",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "github_issue (267KB)",
+            "value": 4118214,
+            "range": "± 26369",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "markdown_output (12KB blog)",
+            "value": 2875842,
+            "range": "± 75021",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "large_page_no_scoring (1.1MB)",
+            "value": 244174725,
+            "range": "± 1299088",
             "unit": "ns/iter"
           }
         ]
