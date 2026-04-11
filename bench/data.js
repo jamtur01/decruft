@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1775926829654,
+  "lastUpdate": 1775928648492,
   "repoUrl": "https://github.com/jamtur01/decruft",
   "entries": {
     "decruft benchmarks": [
@@ -599,6 +599,66 @@ window.BENCHMARK_DATA = {
             "name": "large_page_no_scoring (1.1MB)",
             "value": 244174725,
             "range": "± 1299088",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "james@lovedthanlost.net",
+            "name": "James Turnbull",
+            "username": "jamtur01"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "9a056a4cbea53138ce503a873d0f18fba0539458",
+          "message": "Merge pull request #9 from jamtur01/feat/oracle-fixtures\n\ntest: add oracle fixture tests against defuddle output",
+          "timestamp": "2026-04-11T13:28:21-04:00",
+          "tree_id": "e1fe45f2e8f01a9a227a55f046c2968af0bb2ee2",
+          "url": "https://github.com/jamtur01/decruft/commit/9a056a4cbea53138ce503a873d0f18fba0539458"
+        },
+        "date": 1775928647901,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "small_page (12KB blog)",
+            "value": 2677503,
+            "range": "± 26722",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "medium_page (317KB stephango)",
+            "value": 3681506,
+            "range": "± 27522",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "large_page (1.1MB wikipedia)",
+            "value": 392078907,
+            "range": "± 5579012",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "github_issue (267KB)",
+            "value": 4197670,
+            "range": "± 28858",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "markdown_output (12KB blog)",
+            "value": 2846726,
+            "range": "± 90785",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "large_page_no_scoring (1.1MB)",
+            "value": 241951680,
+            "range": "± 2124518",
             "unit": "ns/iter"
           }
         ]
