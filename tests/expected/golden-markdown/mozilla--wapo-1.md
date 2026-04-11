@@ -1,0 +1,132 @@
+Full Screen
+
+Autoplay
+
+Close
+
+*×* 
+
+At least 17 dead in Tunisia after attack in capital city 
+
+![](https://img.washingtonpost.com/rf/image_606w/2010-2019/WashingtonPost/2015/03/18/Foreign/Images/Nic6429732.jpg) 
+
+View Photos
+
+Security forces in Tunisia stormed the country’s most prominent museum, freeing hostages and ending a siege by gunmen. 
+
+Caption
+
+Security forces in Tunisia stormed the country’s most prominent museum, freeing hostages and ending a siege by gunmen.
+
+March 18, 2015 Tunisian security forces secure the area after gunmen attacked the famed Bardo National Museum in Tunis, the capital. Fethi Belaid/AFP/Getty Images 
+
+[Buy Photo](#) 
+
+Wait 1 second to continue.
+
+Gunmen opened fire on visitors at Tunisia’s most renowned museum on Wednesday, killing at least 19 people, including 17 foreigners, in an assault that threatened to upset the fragile stability of a country seen as the lone success of the Arab Spring.
+
+It was the most deadly terrorist attack in the North African nation in more than a decade. Although no group claimed responsibility, the bloodshed raised fears that militants linked to the Islamic State were expanding their operations.
+
+The attackers, clad in military uniforms, [stormed the Bardo National Museum](http://www.washingtonpost.com/world/gunmen-storm-museum-in-tunisia-killing-at-least-8/2015/03/18/00202e76-cd73-11e4-8730-4f473416e759_story.html) on Wednesday afternoon, seizing and gunning down foreign tourists before security forces raided the building to end the siege. The museum is a major tourist draw and is near the heavily guarded national parliament in downtown Tunis.
+
+Tunisian Prime Minister Habib Essid said that in addition to the slain foreigners — from Italy, Poland, Germany and Spain — a local museum worker and a security official were killed. Two gunmen died, and three others may have escaped, officials said. About 50 other people were wounded, according to local news reports.
+
+“Our nation is in danger,” Essid declared in a televised address Wednesday evening. He vowed that the country would be “merciless” in defending itself.
+
+ *[\[Read: Why Tunisia, Arab Spring’s sole success story, suffers from Islamist violence\]](http://www.washingtonpost.com/blogs/worldviews/wp/2015/03/18/why-tunisia-the-arab-springs-sole-success-story-suffers-from-islamist-violence/)* 
+
+Tunisia, a mostly Muslim nation of about 11 million people, was governed for decades by autocrats who imposed secularism. Its sun-drenched Mediterranean beaches drew thousands of bikini-clad tourists, and its governments promoted education and other rights for women. But the country has grappled with rising Islamist militancy since a popular uprising overthrew its dictator four years ago, setting the stage for the Arab Spring revolts across the region.
+
+Thousands of Tunisians have flocked to join jihadist groups in Syria, including the Islamic State, making the country one of the major sources of foreign fighters in the conflict. Tunisian security forces have also fought increasing gunbattles with jihadists at home.
+
+Despite this, the country has been hailed as a model of democratic transition as other governments that came to power after the Arab Spring collapsed, often in bloody confrontations. But the attack Wednesday — on a national landmark that showcases Tunisia’s rich heritage — could heighten tensions in a nation that has become deeply divided between pro- and anti-Islamist political factions.
+
+Many Tunisians accuse the country’s political Islamists, who held power from 2011 to 2013, of having been slow to respond to the growing danger of terrorism. Islamist politicians have acknowledged that they did not realize the threat that would develop when radical Muslims, who had been repressed under authoritarian regimes, won the freedom to preach freely in mosques.
+
+In Washington, White House press secretary Josh Earnest [condemned the attack](http://hosted2.ap.org/APDEFAULT/cae69a7523db45408eeb2b3a98c0c9c5/Article_2015-03-18-ML--Tunisia-Attack-The%20Latest/id-653822d829b24cef993c5bd6a7ce44b5) and said the U.S. government was willing to assist Tunisian authorities in the investigation.
+
+Gunmen in military uniforms stormed Tunisia's national museum, killing at least 19 people, most of them foreign tourists. (Reuters) 
+
+“This attack today is meant to threaten authorities, to frighten tourists and to negatively affect the economy,” said Lotfi Azzouz, Tunisia country director for Amnesty International, a London-based rights group.
+
+Tourism is critical to Tunisia’s economy, accounting for 15 percent of its gross domestic product in 2013, according to the World Travel and Tourism Council, an industry body. The Bardo museum hosts one of the world’s most outstanding collections of Roman mosaics and is popular with tourists and Tunisians alike.
+
+*\[[Bardo museum houses amazing Roman treasures](http://www.washingtonpost.com/blogs/worldviews/wp/2015/03/18/tunisias-bardo-museum-attacked-by-terrorists-is-home-to-amazing-roman-treasures/)\]* 
+
+The attack is “also aimed at the country’s security and stability during the transition period,” Azzouz said. “And it could have political repercussions — like the curtailing of human rights, or even less government transparency if there’s fear of further attacks.”
+
+The attack raised concerns that the government, led by secularists, would be pressured to stage a wider crackdown on Islamists of all stripes. Lawmakers are drafting an anti-terrorism bill to give security forces additional tools to fight militants.
+
+Full Screen
+
+Autoplay
+
+Close
+
+*×* 
+
+Inside Tunisia’s Bardo National Museum 
+
+![](https://img.washingtonpost.com/rf/image_606w/2010-2019/WashingtonPost/2015/03/18/Foreign/Images/144714787.jpg) 
+
+View Photos
+
+Housed in a 19th-century palace, the museum where gunmen killed foreign tourists is famous for its Roman mosaics and other antiquities. 
+
+Caption
+
+Housed in a 19th-century palace, the museum where gunmen killed foreign tourists is famous for its Roman mosaics and other antiquities.
+
+May 17, 2012 One of the many mosaics for which the Bardo National Museum in Tunis is famous. On March 18, 2015, gunmen attacked the museum and killed at least 19 people. Fethi Belaid/AFP/Getty Images 
+
+[Buy Photo](#) 
+
+Wait 1 second to continue.
+
+ *[\[Read: Tunisia sends most foreign fighters to Islamic State in Syria\]](http://www.washingtonpost.com/world/national-security/tunisia-after-igniting-arab-spring-sends-the-most-fighters-to-islamic-state-in-syria/2014/10/28/b5db4faa-5971-11e4-8264-deed989ae9a2_story.html)* 
+
+“We must pay attention to what is written” in that law, Azzouz said. “There is worry the government will use the attack to justify some draconian measures.”
+
+Tunisian Islamists and secular forces have worked together — often reluctantly — to defuse the country’s political crises in the years since the revolt.
+
+Last fall, Tunisians elected a secular-minded president and parliament dominated by liberal forces after [souring on Islamist-led rule](http://www.washingtonpost.com/world/middle_east/tunisias-islamists-get-sobering-lesson-in-governing/2014/11/20/b6fc8988-65ad-11e4-ab86-46000e1d0035_story.html). In 2011, voters had elected a government led by the Ennahda party — a movement similar to Egypt’s Islamist Muslim Brotherhood. But a political stalemate developed as the party and others tried to draft the country’s new constitution. The Islamists failed to improve a slumping economy. And Ennahda came under fire for what many Tunisians saw as a failure to crack down on Islamist extremists.
+
+[![](https://img.washingtonpost.com/rf/image_480w/2010-2019/WashingtonPost/2015/01/27/Foreign/Graphics/foreignFighters-Jan14-GS.jpg?uuid=CDUNJKYyEeShYhIdBsp38Q)](http://www.washingtonpost.com/world/foreign-fighters-flow-to-syria/2015/01/27/7fa56b70-a631-11e4-a7c2-03d37af98440_graphic.html) [View Graphic](http://www.washingtonpost.com/world/foreign-fighters-flow-to-syria/2015/01/27/7fa56b70-a631-11e4-a7c2-03d37af98440_graphic.html) 
+
+Map: Flow of foreign fighters to Syria 
+
+After the collapse of the authoritarian system in 2011, hard-line Muslims known as Salafists attacked bars and art galleries. Then, in 2012, hundreds of Islamists [assaulted the U.S. Embassy](http://www.washingtonpost.com/world/middle_east/in-tunisia-embassy-attack-tests-fledgling-democracy/2012/09/20/19f3986a-0273-11e2-8102-ebee9c66e190_story.html) in Tunis, shattering windows and hurling gasoline bombs, after the release of a crude online video about the prophet Muhammad. The government outlawed the group behind the attack — Ansar al-Sharia, an al-Qaeda-linked organization — and began a crackdown. But the killing [of two leftist politicians](http://www.bbc.com/news/world-africa-23452979) in 2013 prompted a fresh political crisis, and Ennahda stepped down, replaced by a technocratic government.
+
+Tunisia’s [current coalition government](http://www.washingtonpost.com/blogs/monkey-cage/wp/2015/02/03/tunisia-opts-for-an-inclusive-new-government/) includes an Ennahda minister in the cabinet. Still, many leftist figures openly oppose collaboration with the movement’s leaders.
+
+“Ennahda is responsible for the current deterioration of the situation, because they were careless with the extremists” while they were in power, Azzouz said.
+
+The leader of Ennahda, Rachid Ghannouchi, condemned Wednesday’s attack, saying in a statement that it “will not break our people’s will and will not undermine our revolution and our democracy.”
+
+Security officials are particularly concerned by the collapse of Libya, where various armed groups are vying for influence and jihadist militants have entrenched themselves in major cities. Tunisians worry that extremists can easily get arms and training in the neighboring country.
+
+In January, Libyan militants loyal to the Islamic State [beheaded 21 Christians](http://www.washingtonpost.com/world/middle_east/video-shows-purported-beheading-of-egyptian-christians-in-libya/2015/02/15/b8d0f092-b548-11e4-bc30-a4e75503948a_story.html) — 20 of them Egyptian Copts — along the country’s coast. They later seized the Libyan city of Sirte.
+
+![](https://img.washingtonpost.com/rf/image_480w/2010-2019/WashingtonPost/2015/03/18/Foreign/Graphics/tunisia600.jpg?uuid=1_yuLs2LEeSHME9HNBbnWQ)  
+ 
+
+Officials are worried about the number of Tunisian militants who may have joined the jihadists in Libya — with the goal of returning home to fight the Tunis government.
+
+Ajmi Lourimi, a member of Ennahda’s general secretariat, said he believed the attack would unite Tunisians in the face of terrorism.
+
+“There is a consensus here that this \[attack\] is alien to our culture, to our way of life. We want to unify against this danger,” Lourimi said. He said he did not expect a wider government campaign against Islamists.
+
+“We have nothing to fear,” he said of himself and fellow Ennahda members. “We believe the Interior Ministry should be trained and equipped to fight and counter this militancy.”
+
+The last major attack on a civilian target in Tunisia was in 2002, when al-Qaeda militants killed more than 20 people in a car bombing outside a synagogue in the city of Djerba.
+
+Heba Habib contributed to this report.
+
+**Read more:** 
+
+[Tunisia’s Islamists get a sobering lesson in governing](http://www.washingtonpost.com/world/middle_east/tunisias-islamists-get-sobering-lesson-in-governing/2014/11/20/b6fc8988-65ad-11e4-ab86-46000e1d0035_story.html "www.washingtonpost.com") 
+
+[Tunisia sends most foreign fighters to Islamic State in Syria](http://www.washingtonpost.com/world/national-security/tunisia-after-igniting-arab-spring-sends-the-most-fighters-to-islamic-state-in-syria/2014/10/28/b5db4faa-5971-11e4-8264-deed989ae9a2_story.html) 
+
+[Tunisia’s Bardo museum is home to amazing Roman treasures](http://www.washingtonpost.com/blogs/worldviews/wp/2015/03/18/tunisias-bardo-museum-attacked-by-terrorists-is-home-to-amazing-roman-treasures/)

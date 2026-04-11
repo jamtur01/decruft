@@ -1,7 +1,7 @@
 {
-  "title": "Understanding Rust Ownership",
   "author": "Alice Chen",
-  "site": "TechBlog Daily",
+  "language": "en",
   "published": "2025-03-15T10:00:00Z",
-  "language": "en"
+  "site": "TechBlog Daily",
+  "title": "Understanding Rust Ownership"
 }

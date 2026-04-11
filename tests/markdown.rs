@@ -496,10 +496,8 @@ fn markdown_quality_audit() {
         }
     }
 
-    assert!(total >= 100, "expected ≥100 fixtures, got {total}");
-    // 6 bare bullet pages from htmd (tracked in #13)
     assert!(
-        failures.len() <= 6,
+        failures.is_empty(),
         "quality audit failed ({}/{total}):\n  {}",
         failures.len(),
         failures.join("\n  ")

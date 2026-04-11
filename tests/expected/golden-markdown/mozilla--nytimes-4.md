@@ -1,0 +1,405 @@
+The federal government could soon pay more in interest on its debt than it spends on the military, Medicaid or children’s programs. 
+
+The run-up in borrowing costs is a one-two punch brought on by the need to finance a fast-growing budget deficit, worsened by tax cuts and steadily rising interest rates that will make the debt more expensive. 
+
+With less money coming in and more going toward interest, political leaders will find it harder to address pressing needs like fixing crumbling roads and bridges or to make emergency moves like pulling the economy out of future recessions. 
+
+Within a decade, more than $900 billion in interest payments will be due annually, easily outpacing spending on myriad other programs. Already the fastest-growing major government expense, the cost of interest is on track to hit $390 billion next year, nearly 50 percent more than in 2017, according to the Congressional Budget Office. 
+
+“It’s very much something to worry about,” said C. Eugene Steuerle, a fellow at the Urban Institute and a co-founder of the Urban-Brookings Tax Policy Center in Washington. “Everything else is getting squeezed.” 
+
+Gradually rising interest rates would have made borrowing more expensive even without additional debt. But the tax cuts passed late last year have created a deeper hole, with the deficit increasing faster than expected. A budget bill [approved in February that raised](https://www.nytimes.com/2018/02/08/us/politics/congress-budget-deal-vote.html?module=inline "") spending by $300 billion over two years will add to the financial pressure. 
+
+The deficit is expected to total nearly $1 trillion next year — the first time it has been that big since 2012, when the economy was still struggling to recover from the financial crisis and interest rates were near zero. 
+
+$915 
+
+billion 
+
+Interest payments on the national debt 
+
+$900 
+
+billion 
+
+600 
+
+300 
+
+$263 
+
+billion 
+
+0 
+
+’17 
+
+’18 
+
+’19 
+
+’20 
+
+’21 
+
+’22 
+
+’23 
+
+’24 
+
+’25 
+
+’26 
+
+’27 
+
+’28 
+
+Interest payments on the national debt 
+
+$900 
+
+billion 
+
+$915 
+
+billion 
+
+600 
+
+300 
+
+$263 
+
+billion 
+
+0 
+
+’17 
+
+’18 
+
+’19 
+
+’20 
+
+’21 
+
+’22 
+
+’23 
+
+’24 
+
+’25 
+
+’26 
+
+’27 
+
+’28 
+
+Deficit hawks have gone silent, even proposing changes that would exacerbate the deficit. House Republicans introduced legislation this month that would make the tax cuts permanent. 
+
+“The issue has just disappeared,” said Senator Mark Warner, a Virginia Democrat. “There’s collective amnesia.” 
+
+The combination, say economists, marks a journey into mostly uncharted financial territory. 
+
+In the past, government borrowing expanded during recessions and waned in recoveries. That countercyclical policy has been a part of the standard Keynesian toolbox to combat downturns since the Great Depression. 
+
+The deficit is soaring now as the economy booms, meaning the stimulus is pro-cyclical. The risk is that the government would have less room to maneuver if the economy slows. 
+
+Aside from wartime or a deep downturn like the 1930s or 2008-9, “this sort of aggressive fiscal stimulus is unprecedented in U.S. history,” said Jeffrey Frankel, an economist at Harvard. 
+
+Pouring gasoline on an already hot economy has resulted in faster growth — the economy expanded at an annualized rate of 4.2 percent in the second quarter. But Mr. Frankel warns that when the economy weakens, the government will find it more difficult to cut taxes or increase spending. 
+
+Lawmakers might, in fact, feel compelled to cut spending as tax revenue falls, further depressing the economy. “There will eventually be another recession, and this increases the chances we will have to slam on the brakes when the car is already going too slowly,” Mr. Frankel said. 
+
+## Interest costs make it harder for the government to do other things
+
+15 
+
+% 
+
+Net interest 
+
+13.0% 
+
+Defense 
+
+10 
+
+Medicaid 
+
+6.6% 
+
+5 
+
+0 
+
+’17 
+
+’18 
+
+’19 
+
+’20 
+
+’21 
+
+’22 
+
+’23 
+
+’24 
+
+’25 
+
+’26 
+
+’27 
+
+’28 
+
+15 
+
+% 
+
+Net interest 
+
+13.0% 
+
+Defense 
+
+10 
+
+Medicaid 
+
+6.6% 
+
+5 
+
+0 
+
+’17 
+
+’18 
+
+’19 
+
+’20 
+
+’21 
+
+’22 
+
+’23 
+
+’24 
+
+’25 
+
+’26 
+
+’27 
+
+’28 
+
+Finding the money to pay investors who hold government debt will crimp other parts of the budget. In a decade, interest on the debt will eat up 13 percent of government spending, up from 6.6 percent in 2017. 
+
+“By 2020, we will spend more on interest than we do on kids, including education, food stamps and aid to families,” said Marc Goldwein, senior policy director at the Committee for a Responsible Federal Budget, a research and advocacy organization. 
+
+Interest costs already dwarf spending on many popular programs. For example, grants to students from low-income families for college total roughly $30 billion — about one-tenth of what the government will pay in interest this year. Interest payments will overtake Medicaid in 2020 and the Department of Defense budget in 2023. 
+
+What’s more, the heavy burden of interest payments could make it harder for the government to repair aging infrastructure or take on other big new projects. 
+
+Mr. Trump has called for spending $1 trillion on infrastructure, but Congress has not taken up that idea. 
+
+## The U.S. hasn’t faced this issue for years
+
+Until recently, ultralow interest rates, set by the Federal Reserve to support the economy, allowed lawmakers to borrow without fretting too much about the cost of that debt. 
+
+But as the economy has strengthened, the Fed has gradually raised rates, starting in December 2015. The central bank is expected to push rates up again on Wednesday, and more increases are in store. 
+
+“When rates went down to record lows, it allowed the government to take on more debt without paying more interest,” Mr. Goldwein said. “That party is ending.” 
+
+Yield on 10-year Treasury note 
+
+8 
+
+% 
+
+MONTHLY 
+
+RECESSIONS 
+
+6 
+
+4 
+
+2 
+
+0 
+
+’98 
+
+’00 
+
+’02 
+
+’04 
+
+’06 
+
+’08 
+
+’10 
+
+’12 
+
+’14 
+
+’16 
+
+’18 
+
+Yield on 10-year Treasury note 
+
+8 
+
+% 
+
+MONTHLY 
+
+RECESSIONS 
+
+6 
+
+4 
+
+2 
+
+0 
+
+’98 
+
+’02 
+
+’06 
+
+’10 
+
+’14 
+
+’18 
+
+Since the beginning of the year, the yield on the 10-year Treasury note has risen by more than half a percentage point, to 3.1 percent. The Congressional Budget Office estimates that the yield will climb to 4.2 percent in 2021. Given that the total public debt of the United States stands at nearly $16 trillion, even a small uptick in rates can cost the government billions. 
+
+There’s no guarantee that these forecasts will prove accurate. If the economy weakens, rates might fall or rise only slightly, reducing interest payments. But rates could also overshoot the budget office forecast. 
+
+Some members of Congress want to set the stage for even more red ink. Republicans in the House want to make last year’s tax cuts permanent, instead of letting some of them expire at the end of 2025. That would reduce federal revenue by an additional $631 billion over 10 years, according to the [Tax Policy Center](https://www.taxpolicycenter.org/publications/analysis-protecting-family-and-small-business-tax-cuts-act-2018 ""). 
+
+## No, the United States isn’t at risk of becoming the next Greece
+
+U.S. Dollar index 
+
+140 
+
+MONTHLY 
+
+RECESSIONS 
+
+120 
+
+100 
+
+80 
+
+60 
+
+’98 
+
+’00 
+
+’02 
+
+’04 
+
+’06 
+
+’08 
+
+’10 
+
+’12 
+
+’14 
+
+’16 
+
+’18 
+
+U.S. Dollar index 
+
+140 
+
+MONTHLY 
+
+RECESSIONS 
+
+120 
+
+100 
+
+80 
+
+60 
+
+’98 
+
+’02 
+
+’06 
+
+’10 
+
+’14 
+
+’18 
+
+Deficit hawks have warned for years that a day of reckoning is coming, exposing the United States to the kind of economic crisis that overtook profligate borrowers in the past like Greece or Argentina. 
+
+But most experts say that isn’t likely because the dollar is the world’s reserve currency. As a result, the United States still has plenty of borrowing capacity left because the Fed can print money with fewer consequences than other central banks. 
+
+And interest rates plunged over the last decade, even as the government turned to the market for trillions each year after the recession. That’s because Treasury bonds are still the favored port of international investors in any economic storm. 
+
+“We exported a financial crisis a decade ago, and the world responded by sending us money,” said William G. Gale, a senior fellow at the Brookings Institution. 
+
+But that privileged position has allowed politicians in both parties to avoid politically painful steps like cutting spending or raising taxes. 
+
+That doesn’t mean rapidly rising interest costs and a bigger deficit won’t eventually catch up with us. 
+
+Charles Schultze, chairman of the Council of Economic Advisers in the Carter administration, once summed up the danger of deficits with a metaphor. “It’s not so much a question of the wolf at the door, but termites in the woodwork.” 
+
+## But Washington doesn’t want to hear about the potential problems
+
+Rather than simply splitting along party lines, lawmakers’ attitudes toward the deficit also depend on which party is in power. Republicans pilloried the Obama administration for proposing a large stimulus in the depths of the recession in 2009 and complained about the deficit for years. 
+
+In 2013, Senator Mitch McConnell of Kentucky called the debt and deficit “the transcendent issue of our era.” By 2017, as Senate majority leader, he quickly shepherded the tax cut through Congress. 
+
+Senator James Lankford, an Oklahoma Republican who warned of the deficit’s dangers in the past, nevertheless played down that threat on the Senate floor as the tax billed neared passage. 
+
+“I understand it’s a risk, but I think it’s an appropriate risk to be able to say let’s allow Americans to keep more of their own money to invest in this economy,” he said. 
+
+He also claimed the tax cuts would pay for themselves even as the Congressional Budget Office estimated that they would add $250 billion to the deficit on average from 2019 to 2024. 
+
+In an interview, Mr. Lankford insisted that the jury was still out on whether the tax cuts would generate additional revenue, citing the strong economic growth recently. 
+
+While the Republican about-face has been much more striking, Democrats have adjusted their position, too. 
+
+Mr. Warner, the Virginia Democrat, called last year’s tax bill “the worst piece of legislation we have passed since I arrived in the Senate.” In 2009, however, when Congress passed an $800 billion stimulus bill backed by the Obama administration, he called it “a responsible mix of tax cuts and investments that will create jobs.” 
+
+The difference, Mr. Warner said, was that the economy was near the precipice then. 
+
+“There was virtual unanimity among economists that we needed a stimulus,” he said. “But a $2 trillion tax cut at the end of a business cycle with borrowed money won’t end well.”

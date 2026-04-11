@@ -64,8 +64,12 @@ fn all_fixtures_extract_content() {
         }
     }
 
-    assert!(total >= 250, "expected ≥250 fixtures, got {total}");
-    assert!(failures.is_empty(), "empty extractions: {failures:?}");
+    assert!(
+        failures.is_empty(),
+        "empty extractions ({}/{}): {failures:?}",
+        failures.len(),
+        total
+    );
 }
 
 // ════════════════════════════════════════════════════════════════
@@ -78,6 +82,8 @@ fn all_fixtures_match_metadata() {
     let mut failures = Vec::new();
     let mut total = 0;
 
+    let mut missing_meta = Vec::new();
+
     for entry in fs::read_dir(fixtures_dir()).unwrap().flatten() {
         let path = entry.path();
         if path.extension().and_then(|e| e.to_str()) != Some("html") {
@@ -87,9 +93,11 @@ fn all_fixtures_match_metadata() {
         let meta_path = meta_dir.join(format!("{name}.json"));
 
         let Ok(meta_str) = fs::read_to_string(&meta_path) else {
+            missing_meta.push(name);
             continue;
         };
         let Ok(expected) = serde_json::from_str::<serde_json::Value>(&meta_str) else {
+            missing_meta.push(name);
             continue;
         };
 
@@ -127,7 +135,11 @@ fn all_fixtures_match_metadata() {
         }
     }
 
-    assert!(total >= 250, "expected ≥250 metadata files, got {total}");
+    assert!(
+        missing_meta.is_empty(),
+        "fixtures missing metadata JSON:\n  {}",
+        missing_meta.join("\n  ")
+    );
     assert!(
         failures.is_empty(),
         "{}/{total} metadata mismatches:\n  {}",

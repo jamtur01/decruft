@@ -38,6 +38,8 @@ fn golden_files() {
     let mut failures = Vec::new();
     let mut total = 0;
 
+    let mut missing_golden = Vec::new();
+
     for entry in fs::read_dir(fixtures_dir()).unwrap().flatten() {
         let path = entry.path();
         if path.extension().and_then(|e| e.to_str()) != Some("html") {
@@ -47,6 +49,7 @@ fn golden_files() {
         let golden_path = golden.join(format!("{name}.html"));
 
         let Ok(expected) = fs::read_to_string(&golden_path) else {
+            missing_golden.push(name);
             continue;
         };
 
@@ -59,12 +62,58 @@ fn golden_files() {
         }
     }
 
-    assert!(total >= 250, "expected ≥250 golden files, got {total}");
+    assert!(
+        missing_golden.is_empty(),
+        "fixtures missing golden files:\n  {}",
+        missing_golden.join("\n  ")
+    );
     assert!(
         failures.is_empty(),
         "{}/{total} golden mismatches:\n  {}\n\n\
          Regenerate: cargo test --test regression -- --ignored regenerate",
         failures.len(),
+        failures.join("\n  ")
+    );
+}
+
+#[test]
+fn golden_markdown() {
+    let golden = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/expected/golden-markdown");
+    let mut failures = Vec::new();
+    let mut missing = Vec::new();
+
+    for entry in fs::read_dir(fixtures_dir()).unwrap().flatten() {
+        let path = entry.path();
+        if path.extension().and_then(|e| e.to_str()) != Some("html") {
+            continue;
+        }
+        let name = path.file_stem().unwrap().to_string_lossy().to_string();
+        let golden_path = golden.join(format!("{name}.md"));
+
+        let Ok(expected) = fs::read_to_string(&golden_path) else {
+            missing.push(name);
+            continue;
+        };
+
+        let html = fs::read_to_string(&path).unwrap();
+        let mut opts = DecruftOptions::default();
+        opts.markdown = true;
+        let result = parse(&html, &opts);
+
+        if normalize(&result.content) != normalize(&expected) {
+            failures.push(name);
+        }
+    }
+
+    assert!(
+        missing.is_empty(),
+        "fixtures missing golden markdown:\n  {}",
+        missing.join("\n  ")
+    );
+    assert!(
+        failures.is_empty(),
+        "golden markdown mismatches:\n  {}\n\n\
+         Regenerate: cargo test --test regression -- --ignored regenerate",
         failures.join("\n  ")
     );
 }
@@ -76,6 +125,10 @@ fn regenerate() {
     let golden = golden_dir();
     fs::create_dir_all(&golden).unwrap();
 
+    let golden_md =
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/expected/golden-markdown");
+    fs::create_dir_all(&golden_md).unwrap();
+
     let mut count = 0;
     for entry in fs::read_dir(&fixtures).unwrap().flatten() {
         let path = entry.path();
@@ -84,10 +137,17 @@ fn regenerate() {
         }
         let name = path.file_stem().unwrap().to_string_lossy().to_string();
         let html = fs::read_to_string(&path).unwrap();
+
         let result = parse(&html, &DecruftOptions::default());
         fs::write(golden.join(format!("{name}.html")), &result.content).unwrap();
+
+        let mut md_opts = DecruftOptions::default();
+        md_opts.markdown = true;
+        let md_result = parse(&html, &md_opts);
+        fs::write(golden_md.join(format!("{name}.md")), &md_result.content).unwrap();
+
         count += 1;
     }
 
-    panic!("Regenerated {count} golden files. Review: git diff tests/expected/golden/");
+    panic!("Regenerated {count} golden files (HTML + markdown). Review: git diff tests/expected/");
 }

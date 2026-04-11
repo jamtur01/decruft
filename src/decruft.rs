@@ -860,19 +860,45 @@ fn convert_to_markdown(html: &str) -> Option<String> {
         .map(|s| fix_bang_image_collision(s.as_str()))
         .map(|s| unescape_latex_delimiters(&s))
         .map(|s| clean_bare_bullets(&s))
+        .map(|s| collapse_newlines(&s))
 }
 
 /// Remove bare bullet lines (a lone `-`, `+`, or `*` with no text)
 /// that htmd produces for certain empty or nested-only list items.
+/// Collapse runs of 3+ newlines into exactly 2 (one blank line).
+fn collapse_newlines(md: &str) -> String {
+    let mut result = String::with_capacity(md.len());
+    let mut newline_count = 0;
+    for ch in md.chars() {
+        if ch == '\n' {
+            newline_count += 1;
+            if newline_count <= 2 {
+                result.push(ch);
+            }
+        } else {
+            newline_count = 0;
+            result.push(ch);
+        }
+    }
+    result
+}
+
 fn clean_bare_bullets(md: &str) -> String {
     let mut out = Vec::new();
     let lines: Vec<&str> = md.lines().collect();
     for (i, line) in lines.iter().enumerate() {
         let trimmed = line.trim();
-        if (trimmed == "-" || trimmed == "+" || trimmed == "*")
-            && lines.get(i + 1).is_none_or(|next| next.trim().is_empty())
-        {
-            continue;
+        if trimmed == "-" || trimmed == "+" || trimmed == "*" {
+            let next = lines.get(i + 1).map(|s| s.trim());
+            // Remove if followed by empty line, another bare bullet, or end of input
+            if next.is_none()
+                || next == Some("")
+                || next == Some("-")
+                || next == Some("+")
+                || next == Some("*")
+            {
+                continue;
+            }
         }
         out.push(*line);
     }
