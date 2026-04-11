@@ -52,6 +52,26 @@ fn get_meta_content(html: &Html, attr: &str, value: &str) -> Option<String> {
 
 /// Walk a dot-separated path on a single JSON object, returning a
 /// trimmed, non-empty string.
+/// Query Dublin Core meta tags. Checks all common naming variants:
+/// `DC.{field}`, `dc.{field}`, `dc:{field}`, `dcterm:{field}`,
+/// `DCTERMS.{field}`, `dcterms.{field}`.
+fn get_dc_content(html: &Html, field: &str) -> Option<String> {
+    let variants = [
+        format!("DC.{field}"),
+        format!("dc.{field}"),
+        format!("dc:{field}"),
+        format!("dcterm:{field}"),
+        format!("DCTERMS.{field}"),
+        format!("dcterms.{field}"),
+    ];
+    for name in &variants {
+        if let Some(v) = get_meta_content(html, "name", name) {
+            return Some(v);
+        }
+    }
+    None
+}
+
 fn walk_schema_path(value: &serde_json::Value, path: &str) -> Option<String> {
     let mut current = value;
     for key in path.split('.') {
@@ -98,8 +118,10 @@ fn extract_title(
         .or_else(|| get_meta_content(html, "name", "twitter:title"))
         .or_else(|| get_meta_content(html, "property", "twitter:title"))
         .or_else(|| schema_str(schema, "headline"))
+        .or_else(|| get_dc_content(html, "title"))
         .or_else(|| get_meta_content(html, "name", "title"))
-        .or_else(|| get_meta_content(html, "name", "sailthru.title"));
+        .or_else(|| get_meta_content(html, "name", "sailthru.title"))
+        .or_else(|| get_meta_content(html, "name", "parsely-title"));
 
     let html_title = title_element_text(html);
 
@@ -336,7 +358,11 @@ fn extract_author(html: &Html, schema: Option<&serde_json::Value>) -> String {
         return v;
     }
 
-    if let Some(v) = get_meta_content(html, "name", "dc.creator") {
+    if let Some(v) = get_dc_content(html, "creator") {
+        return v;
+    }
+
+    if let Some(v) = get_meta_content(html, "name", "parsely-author") {
         return v;
     }
 
@@ -513,6 +539,10 @@ fn extract_published(html: &Html, schema: Option<&serde_json::Value>) -> String 
     schema_str(schema, "datePublished")
         .or_else(|| get_meta_content(html, "name", "publishDate"))
         .or_else(|| get_meta_content(html, "property", "article:published_time"))
+        .or_else(|| get_dc_content(html, "date"))
+        .or_else(|| get_meta_content(html, "name", "DCTERMS.created"))
+        .or_else(|| get_meta_content(html, "name", "DCTERMS.issued"))
+        .or_else(|| get_meta_content(html, "name", "parsely-pub-date"))
         .or_else(|| abbr_date_published(html))
         .or_else(|| get_meta_content(html, "name", "sailthru.date"))
         .or_else(|| first_time_element(html))
@@ -646,6 +676,7 @@ fn schema_graph_website_name(schema: Option<&serde_json::Value>) -> Option<Strin
 fn extract_description(html: &Html, schema: Option<&serde_json::Value>) -> String {
     get_meta_content(html, "name", "description")
         .or_else(|| get_meta_content(html, "property", "og:description"))
+        .or_else(|| get_dc_content(html, "description"))
         .or_else(|| get_meta_content(html, "property", "twitter:description"))
         .or_else(|| get_meta_content(html, "name", "twitter:description"))
         .or_else(|| get_meta_content(html, "name", "sailthru.description"))
@@ -690,6 +721,7 @@ fn extract_language(html: &Html, schema: Option<&serde_json::Value>) -> String {
     html_lang(html)
         .or_else(|| get_meta_content(html, "name", "content-language"))
         .or_else(|| get_meta_content(html, "http-equiv", "content-language"))
+        .or_else(|| get_dc_content(html, "language"))
         .or_else(|| get_meta_content(html, "property", "og:locale"))
         .or_else(|| schema_str(schema, "inLanguage"))
         .map(|s| normalize_bcp47(&s))
@@ -1059,5 +1091,104 @@ mod tests {
         let doc = Html::parse_document("<html><body></body></html>");
         let m = extract_metadata(&doc, None, Some(&schema));
         assert_eq!(m.site_name, "My Blog");
+    }
+}
+
+#[cfg(test)]
+mod dc_tests {
+    use super::*;
+    use scraper::Html;
+
+    #[test]
+    fn dc_title() {
+        let doc = Html::parse_document(
+            r#"<html><head><meta name="DC.title" content="Dublin Core Title"></head><body></body></html>"#,
+        );
+        let m = extract_metadata(&doc, None, None);
+        assert_eq!(m.title, "Dublin Core Title");
+    }
+
+    #[test]
+    fn dcterm_title() {
+        let doc = Html::parse_document(
+            r#"<html><head><meta name="dcterm:title" content="DCTerm Title"></head><body></body></html>"#,
+        );
+        let m = extract_metadata(&doc, None, None);
+        assert_eq!(m.title, "DCTerm Title");
+    }
+
+    #[test]
+    fn dc_creator_as_author() {
+        let doc = Html::parse_document(
+            r#"<html><head><meta name="DC.creator" content="Jane Doe"></head><body></body></html>"#,
+        );
+        let m = extract_metadata(&doc, None, None);
+        assert_eq!(m.author, "Jane Doe");
+    }
+
+    #[test]
+    fn dc_date_as_published() {
+        let doc = Html::parse_document(
+            r#"<html><head><meta name="DC.date" content="2025-06-15"></head><body></body></html>"#,
+        );
+        let m = extract_metadata(&doc, None, None);
+        assert_eq!(m.published, "2025-06-15");
+    }
+
+    #[test]
+    fn dcterms_created_as_published() {
+        let doc = Html::parse_document(
+            r#"<html><head><meta name="DCTERMS.created" content="2025-01-01T00:00:00Z"></head><body></body></html>"#,
+        );
+        let m = extract_metadata(&doc, None, None);
+        assert_eq!(m.published, "2025-01-01T00:00:00Z");
+    }
+
+    #[test]
+    fn dc_description() {
+        let doc = Html::parse_document(
+            r#"<html><head><meta name="DC.description" content="A Dublin Core description"></head><body></body></html>"#,
+        );
+        let m = extract_metadata(&doc, None, None);
+        assert_eq!(m.description, "A Dublin Core description");
+    }
+
+    #[test]
+    fn dc_language() {
+        let doc = Html::parse_document(
+            r#"<html><head><meta name="DC.language" content="en-US"></head><body></body></html>"#,
+        );
+        let m = extract_metadata(&doc, None, None);
+        assert_eq!(m.language, "en-US");
+    }
+
+    #[test]
+    fn og_takes_precedence_over_dc() {
+        let doc = Html::parse_document(
+            r#"<html><head>
+            <meta property="og:title" content="OG Title">
+            <meta name="DC.title" content="DC Title">
+            </head><body></body></html>"#,
+        );
+        let m = extract_metadata(&doc, None, None);
+        assert_eq!(m.title, "OG Title");
+    }
+
+    #[test]
+    fn parsely_author() {
+        let doc = Html::parse_document(
+            r#"<html><head><meta name="parsely-author" content="Parsely Author"></head><body></body></html>"#,
+        );
+        let m = extract_metadata(&doc, None, None);
+        assert_eq!(m.author, "Parsely Author");
+    }
+
+    #[test]
+    fn parsely_pub_date() {
+        let doc = Html::parse_document(
+            r#"<html><head><meta name="parsely-pub-date" content="2025-03-20"></head><body></body></html>"#,
+        );
+        let m = extract_metadata(&doc, None, None);
+        assert_eq!(m.published, "2025-03-20");
     }
 }
