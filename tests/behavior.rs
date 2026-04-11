@@ -25,15 +25,13 @@ fn opts_debug(url: &str) -> DecruftOptions {
 }
 
 /// Fixture HTML from stephango.com buy-wisely (loaded from disk).
-///
-/// Returns `None` when the fixture file is missing, allowing tests
-/// to skip gracefully instead of panicking.
-fn fixture_html() -> Option<String> {
+fn fixture_html() -> String {
     let path = format!(
         "{}/tests/fixtures/defuddle/general--stephango.com-buy-wisely.html",
         env!("CARGO_MANIFEST_DIR")
     );
-    std::fs::read_to_string(&path).ok()
+    std::fs::read_to_string(&path)
+        .unwrap_or_else(|e| panic!("required fixture missing: {path}: {e}"))
 }
 
 const FIXTURE_URL: &str = "https://stephango.com/buy-wisely";
@@ -44,9 +42,7 @@ const FIXTURE_URL: &str = "https://stephango.com/buy-wisely";
 
 #[test]
 fn debug_true_returns_debug_info_with_content_selector_and_removals() {
-    let Some(html) = fixture_html() else {
-        return;
-    };
+    let html = fixture_html();
     let result = parse(&html, &opts_debug(FIXTURE_URL));
 
     let debug = result.debug.as_ref().expect("debug should be present");
@@ -62,9 +58,7 @@ fn debug_true_returns_debug_info_with_content_selector_and_removals() {
 
 #[test]
 fn debug_false_does_not_include_debug_field() {
-    let Some(html) = fixture_html() else {
-        return;
-    };
+    let html = fixture_html();
     let result = parse(&html, &opts(FIXTURE_URL));
 
     assert!(
@@ -75,9 +69,7 @@ fn debug_false_does_not_include_debug_field() {
 
 #[test]
 fn debug_removals_include_step_and_text_for_each_entry() {
-    let Some(html) = fixture_html() else {
-        return;
-    };
+    let html = fixture_html();
     let result = parse(&html, &opts_debug(FIXTURE_URL));
     let removals = &result.debug.as_ref().expect("debug").removals;
 
@@ -94,9 +86,7 @@ fn debug_removals_include_step_and_text_for_each_entry() {
 
 #[test]
 fn debug_removals_include_expected_step_names() {
-    let Some(html) = fixture_html() else {
-        return;
-    };
+    let html = fixture_html();
     let result = parse(&html, &opts_debug(FIXTURE_URL));
     let removals = &result.debug.as_ref().expect("debug").removals;
 
@@ -124,9 +114,7 @@ fn debug_removals_include_expected_step_names() {
 
 #[test]
 fn score_and_remove_false_skips_content_scoring() {
-    let Some(html) = fixture_html() else {
-        return;
-    };
+    let html = fixture_html();
     let with_scoring = parse(&html, &opts_debug(FIXTURE_URL));
     let without_scoring = parse(&html, &{
         let mut o = opts_debug(FIXTURE_URL);
@@ -157,9 +145,7 @@ fn score_and_remove_false_skips_content_scoring() {
 
 #[test]
 fn remove_hidden_elements_false_skips_hidden_removal() {
-    let Some(html) = fixture_html() else {
-        return;
-    };
+    let html = fixture_html();
     let without_hidden = parse(&html, &{
         let mut o = opts_debug(FIXTURE_URL);
         o.remove_hidden_elements = false;
@@ -183,9 +169,7 @@ fn remove_hidden_elements_false_skips_hidden_removal() {
 
 #[test]
 fn remove_small_images_false_preserves_small_images() {
-    let Some(html) = fixture_html() else {
-        return;
-    };
+    let html = fixture_html();
     let with_removal = parse(&html, &opts(FIXTURE_URL));
     let without_removal = parse(&html, &{
         let mut o = opts(FIXTURE_URL);
@@ -203,9 +187,7 @@ fn remove_small_images_false_preserves_small_images() {
 
 #[test]
 fn all_toggles_off_produces_more_or_equal_content() {
-    let Some(html) = fixture_html() else {
-        return;
-    };
+    let html = fixture_html();
     let defaults = parse(&html, &opts(FIXTURE_URL));
     let all_off = parse(&html, &{
         let mut o = opts(FIXTURE_URL);
@@ -232,9 +214,7 @@ fn all_toggles_off_produces_more_or_equal_content() {
 
 #[test]
 fn content_selector_selects_the_specified_element() {
-    let Some(html) = fixture_html() else {
-        return;
-    };
+    let html = fixture_html();
     let result = parse(&html, &{
         let mut o = opts_debug(FIXTURE_URL);
         o.content_selector = Some("body".into());
@@ -252,9 +232,7 @@ fn content_selector_selects_the_specified_element() {
 
 #[test]
 fn content_selector_falls_back_to_auto_detection_on_no_match() {
-    let Some(html) = fixture_html() else {
-        return;
-    };
+    let html = fixture_html();
     let auto_result = parse(&html, &opts_debug(FIXTURE_URL));
     let fallback_result = parse(&html, &{
         let mut o = opts_debug(FIXTURE_URL);
