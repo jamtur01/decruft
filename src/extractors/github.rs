@@ -146,9 +146,19 @@ fn extract_issue(html: &Html, url: Option<&str>, include_replies: bool) -> Extra
 
 fn extract_title(html: &Html) -> String {
     let sel = Selector::parse("title").ok();
-    sel.and_then(|s| html.select(&s).next())
+    let raw = sel
+        .and_then(|s| html.select(&s).next())
         .map(|el| dom::text_content(html, el.id()).trim().to_string())
-        .unwrap_or_default()
+        .unwrap_or_default();
+    // Strip trailing " · owner/repo" from GitHub titles
+    if let Some(idx) = raw.rfind(" · ") {
+        let after = &raw[idx + " · ".len()..];
+        // If the suffix contains a "/" it's an owner/repo path
+        if after.contains('/') {
+            return raw[..idx].to_string();
+        }
+    }
+    raw
 }
 
 fn extract_issue_body(html: &Html) -> (String, String) {

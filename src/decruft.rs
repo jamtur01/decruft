@@ -770,7 +770,7 @@ fn apply_extractor_metadata(
 ) {
     if let Some(t) = &extracted.title {
         let cleaned = metadata::clean_title(t, "", None, None);
-        if meta.title.is_empty() || (!cleaned.is_empty() && cleaned.len() < meta.title.len()) {
+        if !cleaned.is_empty() {
             meta.title = cleaned;
         }
     }

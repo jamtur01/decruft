@@ -24,9 +24,7 @@ const IMAGES_SEL: &str = "[data-testid=\"tweetPhoto\"] img";
 /// Detect whether this page is an X/Twitter article.
 #[must_use]
 pub fn is_x_article(html: &Html, url: Option<&str>) -> bool {
-    let is_x_domain = url.is_some_and(|u| {
-        (u.contains("x.com/") || u.contains("twitter.com/")) && u.contains("/article/")
-    });
+    let is_x_domain = url.is_some_and(|u| u.contains("x.com/") || u.contains("twitter.com/"));
     if !is_x_domain {
         return false;
     }
@@ -56,7 +54,11 @@ pub fn extract_x_article(html: &Html, url: Option<&str>) -> Option<ExtractorResu
     if let Some(u) = url
         && is_tweet_url(Some(u))
     {
-        return try_oembed(u);
+        if let Some(result) = try_oembed(u) {
+            return Some(result);
+        }
+        // Fallback: extract from HTML og:title for tweet status pages
+        return try_tweet_from_html(html, url);
     }
     None
 }
@@ -145,6 +147,73 @@ fn urlencoding(s: &str) -> String {
         }
     }
     result
+}
+
+/// Extract tweet data from HTML when oEmbed is unavailable.
+/// Cleans og:title "(N) Username on X: "content" / X" → "content"
+/// Extracts author from URL handle.
+fn try_tweet_from_html(html: &Html, url: Option<&str>) -> Option<ExtractorResult> {
+    use std::sync::LazyLock;
+    static OG_TITLE_RE: LazyLock<regex::Regex> = LazyLock::new(|| {
+        regex::Regex::new(r#"(?:\(\d+\)\s+)?[^:]+\s+on\s+X:\s*["""](.+?)["""]"#)
+            .expect("x og:title regex is valid")
+    });
+
+    let og_title = dom::select_ids(html, "meta[property=\"og:title\"]")
+        .first()
+        .and_then(|&id| dom::get_attr(html, id, "content"))?;
+
+    let title = OG_TITLE_RE
+        .captures(&og_title)
+        .and_then(|caps| caps.get(1))
+        .map_or_else(
+            || {
+                og_title
+                    .strip_suffix(" / X")
+                    .unwrap_or(&og_title)
+                    .to_string()
+            },
+            |m| m.as_str().to_string(),
+        );
+
+    // Try display name from <title>, fall back to URL handle
+    let author = tweet_author_from_title(html)
+        .or_else(|| author_from_url(url))
+        .unwrap_or_default();
+
+    Some(ExtractorResult {
+        content: String::new(), // tweet content not available in static HTML
+        title: Some(title),
+        author: if author.is_empty() {
+            None
+        } else {
+            Some(author)
+        },
+        site: Some("X (Twitter)".to_string()),
+        published: None,
+        image: None,
+        description: None,
+    })
+}
+
+/// Extract author display name from oembed link element.
+/// e.g. `<link ... title="Heinrich on X: ...">` → "Heinrich"
+/// Extract author display name from <title> element pattern.
+/// "(N) Name on X: ..." → "Name"
+fn tweet_author_from_title(html: &Html) -> Option<String> {
+    use std::sync::LazyLock;
+    static NAME_RE: LazyLock<regex::Regex> = LazyLock::new(|| {
+        regex::Regex::new(r"(?:\(\d+\)\s+)?(.+?)\s+on\s+X:").expect("x name regex is valid")
+    });
+
+    let sel = scraper::Selector::parse("title").ok()?;
+    let el = html.select(&sel).next()?;
+    let title_text = dom::text_content(html, el.id());
+
+    NAME_RE
+        .captures(title_text.trim())
+        .and_then(|caps| caps.get(1))
+        .map(|m| m.as_str().to_string())
 }
 
 fn extract_title(html: &Html) -> String {
@@ -268,10 +337,8 @@ mod tests {
             &html,
             Some("https://twitter.com/user/article/12345")
         ));
-        assert!(!is_x_article(
-            &html,
-            Some("https://x.com/user/status/12345")
-        ));
+        // Status URLs with article container ARE articles
+        assert!(is_x_article(&html, Some("https://x.com/user/status/12345")));
     }
 
     #[test]
