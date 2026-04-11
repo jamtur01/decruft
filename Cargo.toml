@@ -2,6 +2,7 @@
 name = "decruft"
 version = "0.1.1"
 edition = "2024"
+rust-version = "1.85"
 description = "Extract clean, readable content from web pages"
 license = "MIT"
 repository = "https://github.com/jamtur01/decruft"
