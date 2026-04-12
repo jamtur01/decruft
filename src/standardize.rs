@@ -380,17 +380,33 @@ fn remove_dangerous_attributes(html: &mut Html) {
             }
 
             // Check URL attrs for script URIs
-            if URL_ATTRS.contains(&n) {
-                let lower = value.to_ascii_lowercase();
-                let trimmed = lower.trim();
-                if trimmed.starts_with("javascript:") || trimmed.starts_with("data:text/html") {
-                    return false;
-                }
+            if URL_ATTRS.contains(&n) && is_dangerous_uri(value) {
+                return false;
             }
 
             true
         });
     }
+}
+
+/// Check whether a URI is dangerous (script execution or embedded HTML).
+///
+/// Blocks `javascript:` URIs and `data:` URIs except safe image types.
+fn is_dangerous_uri(value: &str) -> bool {
+    let trimmed = value.to_ascii_lowercase();
+    let trimmed = trimmed.trim();
+    if trimmed.starts_with("javascript:") {
+        return true;
+    }
+    if trimmed.starts_with("data:") {
+        // Allow safe image data URIs. SVG data URIs can contain
+        // script, but browsers don't execute script from <img> src.
+        // The dangerous case (iframe/object src) is handled by element
+        // removal in cleanup.
+        let safe = trimmed.starts_with("data:image/");
+        return !safe;
+    }
+    false
 }
 
 /// Check whether a node is inside an `<svg>` ancestor.
@@ -491,6 +507,9 @@ fn resolve_srcset(html: &mut Html, node_id: NodeId, base: &url::Url) {
             continue;
         };
         let descriptor: String = tokens.collect::<Vec<_>>().join(" ");
+        if is_dangerous_uri(url_part) {
+            continue;
+        }
         let resolved = if url_part.starts_with("http://") || url_part.starts_with("https://") {
             url_part.to_string()
         } else {

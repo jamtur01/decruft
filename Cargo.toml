@@ -51,4 +51,3 @@ harness = false
 [package.metadata.docs.rs]
 all-features = true
 rustdoc-args = ["--cfg", "docsrs"]
-regex-lite = "0.1"
