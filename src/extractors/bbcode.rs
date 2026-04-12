@@ -98,9 +98,11 @@ fn bbcode_to_html(bbcode: &str) -> String {
             let url = &caps[1];
             let text = &caps[2];
             if is_safe_url(url) {
-                format!("<a href=\"{url}\">{text}</a>")
+                let escaped_url = crate::dom::html_attr_escape(url);
+                let escaped_text = crate::dom::html_escape(text);
+                format!("<a href=\"{escaped_url}\">{escaped_text}</a>")
             } else {
-                text.to_string()
+                crate::dom::html_escape(text)
             }
         })
         .to_string();
@@ -118,9 +120,10 @@ fn bbcode_to_html(bbcode: &str) -> String {
         .replace_all(&out, |caps: &regex::Captures| {
             let url = &caps[1];
             if is_safe_url(url) {
-                format!("<img src=\"{url}\">")
+                let escaped = crate::dom::html_attr_escape(url);
+                format!("<img src=\"{escaped}\">")
             } else {
-                caps[0].to_string()
+                crate::dom::html_escape(&caps[0])
             }
         })
         .to_string();
@@ -175,5 +178,26 @@ mod tests {
         assert_eq!(result.title.as_deref(), Some("Launch Day"));
         assert!(result.html.contains("<strong>Welcome</strong>"));
         assert!(result.html.contains("to the event"));
+    }
+
+    #[test]
+    fn img_tag_escapes_url() {
+        let input = r#"[img]https://x.com" onerror="alert(1)[/img]"#;
+        let result = bbcode_to_html(input);
+        // Quotes are escaped — onerror cannot break out as a separate
+        // attribute. The entire payload stays inside src="...".
+        assert!(result.contains("&quot;"));
+        assert!(
+            result.contains(r#"src="https://x.com&quot;"#),
+            "expected escaped quote in src attr, got: {result}"
+        );
+    }
+
+    #[test]
+    fn url_tag_escapes_text() {
+        let input = r#"[url="https://x.com"]<script>alert(1)</script>[/url]"#;
+        let result = bbcode_to_html(input);
+        assert!(!result.contains("<script>"));
+        assert!(result.contains("&lt;script&gt;"));
     }
 }

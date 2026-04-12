@@ -682,6 +682,12 @@ fn json_str(json: &serde_json::Value, key: &str) -> String {
         .to_string()
 }
 
+/// Check if a link destination is dangerous (case-insensitive).
+fn is_dangerous_link(url: &str) -> bool {
+    let lower = url.trim().to_ascii_lowercase();
+    lower.starts_with("javascript:") || lower.starts_with("vbscript:") || lower.starts_with("data:")
+}
+
 /// Convert GitHub-flavored markdown to HTML.
 ///
 /// Uses pulldown-cmark with GFM extensions (tables, strikethrough,
@@ -707,7 +713,7 @@ fn markdown_to_html(md: &str) -> String {
             title,
             id,
             link_type,
-        }) if dest_url.starts_with("javascript:") => Event::Start(Tag::Link {
+        }) if is_dangerous_link(&dest_url) => Event::Start(Tag::Link {
             dest_url: "".into(),
             title,
             id,
@@ -912,6 +918,25 @@ mod tests {
         let md = "[click](javascript:alert(1))";
         let html = markdown_to_html(md);
         assert!(!html.contains("javascript:"));
+    }
+
+    #[test]
+    fn markdown_to_html_sanitizes_javascript_case_variants() {
+        for proto in ["JavaScript:", "JAVASCRIPT:", "jAvAsCrIpT:"] {
+            let md = format!("[click]({proto}alert(1))");
+            let html = markdown_to_html(&md);
+            assert!(
+                !html.contains(proto),
+                "should block {proto} but got: {html}"
+            );
+        }
+    }
+
+    #[test]
+    fn markdown_to_html_sanitizes_data_uri_links() {
+        let md = "[click](data:text/html,<script>alert(1)</script>)";
+        let html = markdown_to_html(md);
+        assert!(!html.contains("data:text/html"));
     }
 
     #[test]
