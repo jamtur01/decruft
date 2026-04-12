@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1775949464608,
+  "lastUpdate": 1775961648671,
   "repoUrl": "https://github.com/jamtur01/decruft",
   "entries": {
     "decruft benchmarks": [
@@ -1019,6 +1019,66 @@ window.BENCHMARK_DATA = {
             "name": "large_page_no_scoring (1.1MB)",
             "value": 249810543,
             "range": "± 6129948",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "james@lovedthanlost.net",
+            "name": "James Turnbull",
+            "username": "jamtur01"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "1285194176d925bd850f15bf306b2b5a39d059e5",
+          "message": "Merge pull request #21 from jamtur01/unify-http-fetch\n\nrefactor: unify HTTP fetching into single module",
+          "timestamp": "2026-04-11T22:38:19-04:00",
+          "tree_id": "9a2fda12698c4caafa7f33377301d7de5e744082",
+          "url": "https://github.com/jamtur01/decruft/commit/1285194176d925bd850f15bf306b2b5a39d059e5"
+        },
+        "date": 1775961647801,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "small_page (12KB blog)",
+            "value": 2726287,
+            "range": "± 16619",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "medium_page (317KB stephango)",
+            "value": 3742095,
+            "range": "± 134787",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "large_page (1.1MB wikipedia)",
+            "value": 401536993,
+            "range": "± 5425387",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "github_issue (267KB)",
+            "value": 4192617,
+            "range": "± 23019",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "markdown_output (12KB blog)",
+            "value": 2887373,
+            "range": "± 6794",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "large_page_no_scoring (1.1MB)",
+            "value": 248781554,
+            "range": "± 847100",
             "unit": "ns/iter"
           }
         ]
