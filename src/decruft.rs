@@ -766,8 +766,6 @@ fn try_site_extractors(
     Some(result)
 }
 
-/// Merge extractor metadata into the pipeline metadata, preferring
-/// the metadata pipeline's values when they are already good.
 /// Normalize a string to `None` if empty or whitespace-only.
 fn non_empty(s: &str) -> Option<String> {
     let trimmed = s.trim();
@@ -778,6 +776,11 @@ fn non_empty(s: &str) -> Option<String> {
     }
 }
 
+/// Apply site-specific extractor metadata onto the pipeline metadata.
+///
+/// Title, author, and site always override (extractors are more
+/// reliable for these). Published, image, and description only fill
+/// in when the pipeline left them as `None`.
 fn apply_extractor_metadata(
     extracted: &extractors::ExtractorResult,
     meta: &mut crate::types::Metadata,

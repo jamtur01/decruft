@@ -71,6 +71,34 @@ fn json_serialization() {
     assert!(json.contains("\"content\":"));
 }
 
+#[test]
+fn json_omits_none_metadata_fields() {
+    let minimal = r"<html><body><article><p>Just enough content.</p></article></body></html>";
+    let r = parse(minimal, &DecruftOptions::default());
+    let json = serde_json::to_string(&r).expect("should serialize");
+    let value: serde_json::Value = serde_json::from_str(&json).expect("should parse JSON");
+    let obj = value.as_object().expect("should be a JSON object");
+
+    // content and word_count are always present
+    assert!(obj.contains_key("content"), "JSON: {json}");
+    assert!(obj.contains_key("word_count"), "JSON: {json}");
+
+    // Metadata fields should be absent when None
+    for key in [
+        "title",
+        "author",
+        "site",
+        "description",
+        "published",
+        "modified",
+    ] {
+        assert!(
+            !obj.contains_key(key),
+            "expected {key} to be omitted: {json}"
+        );
+    }
+}
+
 // ── HTML output ─────────────────────────────────────────────────
 
 #[test]

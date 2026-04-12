@@ -1184,6 +1184,7 @@ fn extract_content_type(html: &Html, schema: Option<&serde_json::Value>) -> Opti
     get_meta_content(html, "property", "og:type")
         .or_else(|| get_dc_content(html, "type"))
         .or_else(|| schema_type(schema))
+        .filter(|s| !s.trim().is_empty())
 }
 
 /// Extract @type from schema.org data (e.g., "Article", "`NewsArticle`").
