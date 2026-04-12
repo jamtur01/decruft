@@ -64,6 +64,7 @@ pub(crate) mod types;
 
 pub use decruft::parse;
 pub use dom::strip_html_tags;
+pub use http::{FetchError, fetch_page};
 pub use types::{DebugInfo, DecruftOptions, DecruftResult, MetaTag, Removal};
 
 /// Parse HTML with default options.

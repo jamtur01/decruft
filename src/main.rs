@@ -163,30 +163,8 @@ fn write_stdout(s: &str) {
 }
 
 fn fetch_url(url: &str) -> String {
-    let config = ureq::config::Config::builder()
-        .timeout_global(Some(std::time::Duration::from_secs(30)))
-        .build();
-    let agent = ureq::Agent::new_with_config(config);
-    let response = agent
-        .get(url)
-        .header(
-            "User-Agent",
-            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
-        )
-        .call();
-
-    match response {
-        Ok(resp) if resp.status() == 200 => match resp.into_body().read_to_string() {
-            Ok(body) => body,
-            Err(e) => {
-                eprintln!("Error reading response for {url}: {e}");
-                std::process::exit(1);
-            }
-        },
-        Ok(resp) => {
-            eprintln!("Error fetching {url}: HTTP {}", resp.status());
-            std::process::exit(1);
-        }
+    match decruft::fetch_page(url) {
+        Ok(body) => body,
         Err(e) => {
             eprintln!("Error fetching {url}: {e}");
             std::process::exit(1);
