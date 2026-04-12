@@ -152,6 +152,28 @@ fn strip_html_tags_decodes_entities() {
     assert!(text.contains("<rocks>"));
 }
 
+#[test]
+fn strip_html_tags_decodes_numeric_entities() {
+    let text = decruft::strip_html_tags("<p>&#169; 2025 &#x2014; hello</p>");
+    assert!(text.contains('\u{00A9}')); // ©
+    assert!(text.contains('\u{2014}')); // —
+}
+
+#[test]
+fn strip_html_tags_decodes_named_entities() {
+    let text = decruft::strip_html_tags("<p>&mdash; &ldquo;hi&rdquo; &euro;5</p>");
+    assert!(text.contains('\u{2014}')); // —
+    assert!(text.contains('\u{201C}')); // "
+    assert!(text.contains('\u{201D}')); // "
+    assert!(text.contains('\u{20AC}')); // €
+}
+
+#[test]
+fn strip_html_tags_preserves_unknown_entities() {
+    let text = decruft::strip_html_tags("<p>&unknownentity;</p>");
+    assert!(text.contains("&unknownentity;"));
+}
+
 // ── Format consistency ──────────────────────────────────────────
 
 #[test]

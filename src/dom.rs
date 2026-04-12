@@ -263,11 +263,102 @@ fn strip_tags(html: &str) -> String {
 }
 
 fn decode_entities(s: &str) -> String {
-    s.replace("&nbsp;", " ")
-        .replace("&amp;", "&")
-        .replace("&lt;", "<")
-        .replace("&gt;", ">")
-        .replace("&quot;", "\"")
+    let mut result = String::with_capacity(s.len());
+    let mut chars = s.chars().peekable();
+
+    while let Some(ch) = chars.next() {
+        if ch != '&' {
+            result.push(ch);
+            continue;
+        }
+        // Collect entity up to ';' (max 10 chars to avoid runaway)
+        let mut entity = String::new();
+        let mut found_semi = false;
+        for _ in 0..10 {
+            match chars.peek() {
+                Some(&';') => {
+                    chars.next();
+                    found_semi = true;
+                    break;
+                }
+                Some(&c) => {
+                    entity.push(c);
+                    chars.next();
+                }
+                None => break,
+            }
+        }
+        if !found_semi {
+            // Not a valid entity — emit as-is
+            result.push('&');
+            result.push_str(&entity);
+            continue;
+        }
+        if let Some(decoded) = decode_named_entity(&entity) {
+            result.push(decoded);
+        } else {
+            // Unrecognized — emit verbatim
+            result.push('&');
+            result.push_str(&entity);
+            result.push(';');
+        }
+    }
+    result
+}
+
+/// Decode a named or numeric HTML entity (without the & and ;).
+fn decode_named_entity(entity: &str) -> Option<char> {
+    // Numeric references
+    if let Some(hex) = entity
+        .strip_prefix("#x")
+        .or_else(|| entity.strip_prefix("#X"))
+    {
+        return u32::from_str_radix(hex, 16).ok().and_then(char::from_u32);
+    }
+    if let Some(dec) = entity.strip_prefix('#') {
+        return dec.parse::<u32>().ok().and_then(char::from_u32);
+    }
+    // Named entities (most common)
+    match entity {
+        "nbsp" => Some('\u{00A0}'),
+        "amp" => Some('&'),
+        "lt" => Some('<'),
+        "gt" => Some('>'),
+        "quot" => Some('"'),
+        "apos" => Some('\''),
+        "mdash" => Some('\u{2014}'),
+        "ndash" => Some('\u{2013}'),
+        "lsquo" => Some('\u{2018}'),
+        "rsquo" => Some('\u{2019}'),
+        "ldquo" => Some('\u{201C}'),
+        "rdquo" => Some('\u{201D}'),
+        "bull" => Some('\u{2022}'),
+        "hellip" => Some('\u{2026}'),
+        "copy" => Some('\u{00A9}'),
+        "reg" => Some('\u{00AE}'),
+        "trade" => Some('\u{2122}'),
+        "eacute" => Some('\u{00E9}'),
+        "egrave" => Some('\u{00E8}'),
+        "agrave" => Some('\u{00E0}'),
+        "uuml" => Some('\u{00FC}'),
+        "ouml" => Some('\u{00F6}'),
+        "auml" => Some('\u{00E4}'),
+        "ccedil" => Some('\u{00E7}'),
+        "ntilde" => Some('\u{00F1}'),
+        "szlig" => Some('\u{00DF}'),
+        "laquo" => Some('\u{00AB}'),
+        "raquo" => Some('\u{00BB}'),
+        "sect" => Some('\u{00A7}'),
+        "deg" => Some('\u{00B0}'),
+        "times" => Some('\u{00D7}'),
+        "divide" => Some('\u{00F7}'),
+        "minus" => Some('\u{2212}'),
+        "euro" => Some('\u{20AC}'),
+        "pound" => Some('\u{00A3}'),
+        "yen" => Some('\u{00A5}'),
+        "cent" => Some('\u{00A2}'),
+        _ => None,
+    }
 }
 
 /// Escape a string for safe use inside an HTML attribute value.
