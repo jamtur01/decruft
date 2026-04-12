@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1775962952049,
+  "lastUpdate": 1775963581119,
   "repoUrl": "https://github.com/jamtur01/decruft",
   "entries": {
     "decruft benchmarks": [
@@ -1139,6 +1139,66 @@ window.BENCHMARK_DATA = {
             "name": "large_page_no_scoring (1.1MB)",
             "value": 251094627,
             "range": "± 2175781",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "james@lovedthanlost.net",
+            "name": "James Turnbull",
+            "username": "jamtur01"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "b185e1dd91a62fa99a93f69ee9eb6342b3fa74c6",
+          "message": "Merge pull request #23 from jamtur01/pulldown-cmark-github-md\n\nrefactor: replace hand-rolled GitHub markdown parser with pulldown-cmark",
+          "timestamp": "2026-04-11T23:10:19-04:00",
+          "tree_id": "d447b6d8144f05fc76e3f9d0450fc9f587cea938",
+          "url": "https://github.com/jamtur01/decruft/commit/b185e1dd91a62fa99a93f69ee9eb6342b3fa74c6"
+        },
+        "date": 1775963580595,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "small_page (12KB blog)",
+            "value": 2716498,
+            "range": "± 11876",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "medium_page (317KB stephango)",
+            "value": 3777354,
+            "range": "± 12171",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "large_page (1.1MB wikipedia)",
+            "value": 396200808,
+            "range": "± 2916459",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "github_issue (267KB)",
+            "value": 4119286,
+            "range": "± 11253",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "markdown_output (12KB blog)",
+            "value": 2925170,
+            "range": "± 19691",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "large_page_no_scoring (1.1MB)",
+            "value": 247664483,
+            "range": "± 16495648",
             "unit": "ns/iter"
           }
         ]
