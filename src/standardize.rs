@@ -655,4 +655,75 @@ mod tests {
         assert!(!out.contains("<applet"));
         assert!(out.contains("safe"));
     }
+
+    // ── is_dangerous_uri / data: URI filtering ─────────────────────
+
+    #[test]
+    fn dangerous_uri_blocks_javascript() {
+        assert!(is_dangerous_uri("javascript:alert(1)"));
+        assert!(is_dangerous_uri("  JavaScript:void(0)  "));
+    }
+
+    #[test]
+    fn dangerous_uri_blocks_data_text_types() {
+        assert!(is_dangerous_uri("data:text/html,<script>x</script>"));
+        assert!(is_dangerous_uri("data:text/javascript,alert(1)"));
+        assert!(is_dangerous_uri("data:application/javascript,x"));
+    }
+
+    #[test]
+    fn dangerous_uri_allows_data_images() {
+        assert!(!is_dangerous_uri("data:image/png;base64,iVBOR"));
+        assert!(!is_dangerous_uri("data:image/jpeg;base64,/9j/4"));
+        assert!(!is_dangerous_uri("data:image/gif;base64,R0lGO"));
+        assert!(!is_dangerous_uri("data:image/webp;base64,UklG"));
+        assert!(!is_dangerous_uri("data:image/svg+xml;utf8,<svg/>"));
+    }
+
+    #[test]
+    fn dangerous_uri_blocks_other_data_types() {
+        assert!(is_dangerous_uri("data:application/pdf,x"));
+        assert!(is_dangerous_uri("data:,arbitrary"));
+    }
+
+    #[test]
+    fn dangerous_uri_allows_normal_urls() {
+        assert!(!is_dangerous_uri("https://example.com"));
+        assert!(!is_dangerous_uri("/relative/path"));
+        assert!(!is_dangerous_uri(""));
+    }
+
+    #[test]
+    fn strip_removes_dangerous_data_uri_from_src() {
+        let mut doc = Html::parse_document(
+            r#"<html><body><img src="data:text/javascript,alert(1)"></body></html>"#,
+        );
+        strip_unsafe_elements(&mut doc);
+        let out = dom::outer_html(&doc, doc.tree.root().id());
+        assert!(!out.contains("data:text/javascript"));
+    }
+
+    #[test]
+    fn strip_preserves_data_image_in_src() {
+        let mut doc = Html::parse_document(
+            r#"<html><body><img src="data:image/gif;base64,R0lGODlh"></body></html>"#,
+        );
+        strip_unsafe_elements(&mut doc);
+        let out = dom::outer_html(&doc, doc.tree.root().id());
+        assert!(out.contains("data:image/gif"));
+    }
+
+    #[test]
+    fn srcset_filters_dangerous_uris() {
+        let html_str = r#"<html><body>
+            <img srcset="javascript:alert(1) 1x, /safe.jpg 2x">
+        </body></html>"#;
+        let mut doc = Html::parse_document(html_str);
+        let body_ids = dom::select_ids(&doc, "body");
+        let body = body_ids[0];
+        resolve_urls(&mut doc, body, "https://example.com");
+        let out = dom::outer_html(&doc, body);
+        assert!(!out.contains("javascript:"));
+        assert!(out.contains("https://example.com/safe.jpg 2x"));
+    }
 }
