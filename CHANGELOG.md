@@ -1,3 +1,30 @@
+## v0.1.4
+
+- release: v0.1.4
+- fix: regenerate Lobsters golden files from merged fixture
+- fix: refresh Lobsters fixture and golden files
+- Merge pull request #25 from jamtur01/fix-review-round2
+- fix: entity scan limit, Lobsters style parsing; add Lobsters + C2 Wiki fixtures
+- test: add Stack Exchange network fixtures
+- fix: SE site names, schema image arrays, relative canonicals, comment depth, entity decoding
+- fix: case-insensitive javascript: filter, block data: URIs in markdown links, escape BBCode output
+- Merge pull request #24 from jamtur01/review-fixes
+- fix: block SVG data URIs, harden srcset parsing, escape API metadata
+- test: add tests for data URI filtering, FetchError::Status, GitHub API
+- fix: extract labels/milestone/merge status, paginate GitHub API
+- fix: fetch PR review comments and line-level discussion
+- fix: expand data URI filtering, fix FetchError, update docs
+- Merge pull request #23 from jamtur01/pulldown-cmark-github-md
+- Merge pull request #22 from jamtur01/option-metadata-fields
+- fix: sanitize raw HTML, harden autolink pre-pass
+- fix: normalize content_type, fix doc comment, add JSON omission test
+- refactor: replace hand-rolled GitHub markdown parser with pulldown-cmark
+- Merge pull request #21 from jamtur01/unify-http-fetch
+- fix: normalize empty/whitespace strings to None in metadata merging
+- fix: preserve error detail in CLI fetch, narrow public API surface
+- refactor: use Option<String> for metadata fields in DecruftResult and Metadata
+- refactor: unify HTTP fetching into single module
+- Update CHANGELOG for v0.1.3
 ## Unreleased
 
 ### Breaking changes
