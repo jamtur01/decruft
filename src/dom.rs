@@ -274,7 +274,7 @@ fn decode_entities(s: &str) -> String {
         // Collect entity up to ';' (max 10 chars to avoid runaway)
         let mut entity = String::new();
         let mut found_semi = false;
-        for _ in 0..10 {
+        for _ in 0..12 {
             match chars.peek() {
                 Some(&';') => {
                     chars.next();

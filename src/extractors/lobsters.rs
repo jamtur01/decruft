@@ -177,13 +177,24 @@ fn extract_comment_depth(html: &Html, comment_id: ego_tree::NodeId) -> usize {
     while let Some(nid) = current {
         if dom::has_class(html, nid, "comments_subtree") {
             if let Some(style) = dom::get_attr(html, nid, "style") {
-                // Parse "margin-left:18px" -> depth 1
-                if let Some(ml) = style
-                    .split("margin-left")
-                    .nth(1)
-                    .and_then(|s| s.trim_start_matches(':').trim().strip_suffix("px"))
-                    .and_then(|s| s.trim().parse::<f64>().ok())
-                {
+                // Parse margin-left from CSS like "margin-left: 18px;"
+                // or "margin-left:36px; color: red"
+                let ml_value = style
+                    .split(';')
+                    .find_map(|decl| {
+                        let decl = decl.trim();
+                        let (prop, val) = decl.split_once(':')?;
+                        if prop.trim() == "margin-left" {
+                            Some(val.trim().to_string())
+                        } else {
+                            None
+                        }
+                    })
+                    .and_then(|v| {
+                        v.strip_suffix("px")
+                            .and_then(|n| n.trim().parse::<f64>().ok())
+                    });
+                if let Some(ml) = ml_value {
                     // Lobsters uses ~18px per nesting level
                     #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
                     return ml.max(0.0).round() as usize / 18;
