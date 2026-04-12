@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1775976257525,
+  "lastUpdate": 1775977157459,
   "repoUrl": "https://github.com/jamtur01/decruft",
   "entries": {
     "decruft benchmarks": [
@@ -1379,6 +1379,66 @@ window.BENCHMARK_DATA = {
             "name": "large_page_no_scoring (1.1MB)",
             "value": 250224024,
             "range": "± 4194046",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "james@lovedthanlost.net",
+            "name": "James Turnbull",
+            "username": "jamtur01"
+          },
+          "committer": {
+            "email": "james@lovedthanlost.net",
+            "name": "James Turnbull",
+            "username": "jamtur01"
+          },
+          "distinct": true,
+          "id": "89c473d08089210733b5afdf9b61e7561229a656",
+          "message": "fix: refresh Lobsters fixture and golden files\n\nThe Lobsters page is dynamic (scores, timestamps), so the fixture\nand golden files must be from the same fetch. Refetch and regenerate.",
+          "timestamp": "2026-04-12T02:56:43-04:00",
+          "tree_id": "523be01df637907f96562790a582ea7d1ef0f55c",
+          "url": "https://github.com/jamtur01/decruft/commit/89c473d08089210733b5afdf9b61e7561229a656"
+        },
+        "date": 1775977156747,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "small_page (12KB blog)",
+            "value": 2732782,
+            "range": "± 80500",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "medium_page (317KB stephango)",
+            "value": 3761531,
+            "range": "± 102176",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "large_page (1.1MB wikipedia)",
+            "value": 398604209,
+            "range": "± 6618698",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "github_issue (267KB)",
+            "value": 4166356,
+            "range": "± 13626",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "markdown_output (12KB blog)",
+            "value": 2909350,
+            "range": "± 11255",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "large_page_no_scoring (1.1MB)",
+            "value": 247990664,
+            "range": "± 2572686",
             "unit": "ns/iter"
           }
         ]
