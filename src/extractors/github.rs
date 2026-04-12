@@ -451,20 +451,23 @@ fn try_api_fetch(url: Option<&str>, include_replies: bool) -> Option<ExtractorRe
             .unwrap_or(false);
     let state = json_str(&json, "state");
 
-    // Build metadata header
+    // Build metadata header (escape all API-sourced values)
     let mut meta_html = String::new();
     if is_pr {
         let status = if merged { "merged" } else { &state };
         if !status.is_empty() {
-            let _ = writeln!(meta_html, "<p><strong>Status:</strong> {status}</p>");
+            let escaped = dom::html_escape(status);
+            let _ = writeln!(meta_html, "<p><strong>Status:</strong> {escaped}</p>");
         }
     }
     if !labels.is_empty() {
         let label_str = labels.join(", ");
-        let _ = writeln!(meta_html, "<p><strong>Labels:</strong> {label_str}</p>");
+        let escaped = dom::html_escape(&label_str);
+        let _ = writeln!(meta_html, "<p><strong>Labels:</strong> {escaped}</p>");
     }
     if !milestone.is_empty() {
-        let _ = writeln!(meta_html, "<p><strong>Milestone:</strong> {milestone}</p>");
+        let escaped = dom::html_escape(milestone);
+        let _ = writeln!(meta_html, "<p><strong>Milestone:</strong> {escaped}</p>");
     }
 
     let body_html = format!("{meta_html}{}", markdown_to_html(&body));
@@ -616,7 +619,8 @@ fn fetch_pr_review_comments(owner: &str, repo: &str, number: &str) -> String {
         let prefix = if path.is_empty() {
             String::new()
         } else {
-            format!("<p><code>{path}</code></p>\n")
+            let escaped = dom::html_escape(path);
+            format!("<p><code>{escaped}</code></p>\n")
         };
         comments.push(CommentData {
             author,

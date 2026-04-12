@@ -386,24 +386,43 @@ fn remove_dangerous_attributes(html: &mut Html) {
 
             true
         });
+
+        // Filter dangerous URIs from srcset/data-srcset values
+        for (name, value) in &mut el.attrs {
+            let n = name.local.as_ref();
+            if n == "srcset" || n == "data-srcset" {
+                let candidates = split_srcset_candidates(value);
+                let safe: Vec<&str> = candidates
+                    .into_iter()
+                    .filter(|entry| {
+                        let url = entry.split_whitespace().next().unwrap_or("");
+                        !is_dangerous_uri(url)
+                    })
+                    .collect();
+                *value = safe.join(",").into();
+            }
+        }
     }
 }
 
 /// Check whether a URI is dangerous (script execution or embedded HTML).
 ///
-/// Blocks `javascript:` URIs and `data:` URIs except safe image types.
+/// Blocks `javascript:` URIs and `data:` URIs except safe raster image
+/// types. SVG data URIs are rejected because SVG can contain `<script>`.
 fn is_dangerous_uri(value: &str) -> bool {
     let trimmed = value.to_ascii_lowercase();
     let trimmed = trimmed.trim();
     if trimmed.starts_with("javascript:") {
         return true;
     }
-    if trimmed.starts_with("data:") {
-        // Allow safe image data URIs. SVG data URIs can contain
-        // script, but browsers don't execute script from <img> src.
-        // The dangerous case (iframe/object src) is handled by element
-        // removal in cleanup.
-        let safe = trimmed.starts_with("data:image/");
+    if let Some(data_uri) = trimmed.strip_prefix("data:") {
+        // Extract the MIME essence type (before any ;params or ,payload)
+        let media_type = data_uri.split(',').next().unwrap_or("").trim();
+        let essence = media_type.split(';').next().unwrap_or("").trim();
+        let safe = matches!(
+            essence,
+            "image/png" | "image/jpeg" | "image/gif" | "image/webp" | "image/avif"
+        );
         return !safe;
     }
     false
@@ -500,7 +519,7 @@ fn resolve_srcset(html: &mut Html, node_id: NodeId, base: &url::Url) {
         return;
     };
     let mut parts = Vec::new();
-    for entry in val.split(',') {
+    for entry in split_srcset_candidates(&val) {
         let trimmed = entry.trim();
         let mut tokens = trimmed.split_whitespace();
         let Some(url_part) = tokens.next() else {
@@ -524,6 +543,48 @@ fn resolve_srcset(html: &mut Html, node_id: NodeId, base: &url::Url) {
     }
     let new_val = parts.join(", ");
     dom::set_attr(html, node_id, "srcset", &new_val);
+}
+
+/// Split srcset into candidates without breaking data URIs.
+///
+/// Data URIs contain commas (separating metadata from payload), so a
+/// naive `split(',')` corrupts them. This splits on commas that follow
+/// a whitespace+descriptor pattern or appear between non-data URLs.
+fn split_srcset_candidates(srcset: &str) -> Vec<&str> {
+    let mut candidates = Vec::new();
+    let mut start = 0;
+    let mut i = 0;
+    let bytes = srcset.as_bytes();
+
+    while i < bytes.len() {
+        if bytes[i] == b',' {
+            // Check if we're inside a data URI by looking at the
+            // candidate so far. If it starts with "data:" and we
+            // haven't seen a descriptor (like "1x", "2w") after
+            // whitespace, the comma is part of the data URI.
+            let candidate = srcset[start..i].trim();
+            let has_descriptor = candidate
+                .rsplit_once(char::is_whitespace)
+                .is_some_and(|(_, desc)| desc.ends_with('x') || desc.ends_with('w'));
+            let is_data_uri = candidate
+                .split_whitespace()
+                .next()
+                .is_some_and(|url| url.starts_with("data:"));
+
+            if is_data_uri && !has_descriptor {
+                // Comma is inside the data URI payload — skip
+                i += 1;
+                continue;
+            }
+            candidates.push(&srcset[start..i]);
+            start = i + 1;
+        }
+        i += 1;
+    }
+    if start < srcset.len() {
+        candidates.push(&srcset[start..]);
+    }
+    candidates
 }
 
 /// Parse an HTML string, strip unsafe elements and attributes, then
@@ -672,12 +733,19 @@ mod tests {
     }
 
     #[test]
-    fn dangerous_uri_allows_data_images() {
+    fn dangerous_uri_allows_raster_images() {
         assert!(!is_dangerous_uri("data:image/png;base64,iVBOR"));
         assert!(!is_dangerous_uri("data:image/jpeg;base64,/9j/4"));
         assert!(!is_dangerous_uri("data:image/gif;base64,R0lGO"));
         assert!(!is_dangerous_uri("data:image/webp;base64,UklG"));
-        assert!(!is_dangerous_uri("data:image/svg+xml;utf8,<svg/>"));
+        assert!(!is_dangerous_uri("data:image/avif;base64,AAAA"));
+    }
+
+    #[test]
+    fn dangerous_uri_blocks_svg_data_uri() {
+        assert!(is_dangerous_uri("data:image/svg+xml;utf8,<svg/>"));
+        assert!(is_dangerous_uri("data:image/svg+xml;charset=utf-8,<svg/>"));
+        assert!(is_dangerous_uri("data:image/svg+xml;base64,PHN2Zz4="));
     }
 
     #[test]
@@ -725,5 +793,45 @@ mod tests {
         let out = dom::outer_html(&doc, body);
         assert!(!out.contains("javascript:"));
         assert!(out.contains("https://example.com/safe.jpg 2x"));
+    }
+
+    #[test]
+    fn strip_sanitizes_srcset_without_url_resolution() {
+        // Verifies that strip_unsafe_elements (used by sanitize_html_string)
+        // filters dangerous srcset entries even without resolve_urls.
+        let mut doc = Html::parse_document(
+            r#"<html><body><img srcset="javascript:x 1x, /safe.jpg 2x"></body></html>"#,
+        );
+        strip_unsafe_elements(&mut doc);
+        let out = dom::outer_html(&doc, doc.tree.root().id());
+        assert!(!out.contains("javascript:"));
+        assert!(out.contains("/safe.jpg 2x"));
+    }
+
+    #[test]
+    fn strip_blocks_svg_data_uri_in_src() {
+        let mut doc = Html::parse_document(
+            r#"<html><body><img src="data:image/svg+xml;utf8,<svg><script>alert(1)</script></svg>"></body></html>"#,
+        );
+        strip_unsafe_elements(&mut doc);
+        let out = dom::outer_html(&doc, doc.tree.root().id());
+        assert!(!out.contains("data:image/svg+xml"));
+    }
+
+    // ── split_srcset_candidates ────────────────────────────────────
+
+    #[test]
+    fn split_srcset_simple() {
+        let result = split_srcset_candidates("/a.jpg 1x, /b.jpg 2x");
+        assert_eq!(result.len(), 2);
+    }
+
+    #[test]
+    fn split_srcset_preserves_data_uri() {
+        let srcset = "data:image/gif;base64,R0lGODlh 1x, /fallback.jpg 2x";
+        let result = split_srcset_candidates(srcset);
+        assert_eq!(result.len(), 2);
+        assert!(result[0].trim().starts_with("data:image/gif"));
+        assert!(result[1].trim().contains("fallback.jpg"));
     }
 }
