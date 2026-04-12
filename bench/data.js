@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1775977157459,
+  "lastUpdate": 1776010905810,
   "repoUrl": "https://github.com/jamtur01/decruft",
   "entries": {
     "decruft benchmarks": [
@@ -1439,6 +1439,66 @@ window.BENCHMARK_DATA = {
             "name": "large_page_no_scoring (1.1MB)",
             "value": 247990664,
             "range": "± 2572686",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "james@lovedthanlost.net",
+            "name": "James Turnbull",
+            "username": "jamtur01"
+          },
+          "committer": {
+            "email": "james@lovedthanlost.net",
+            "name": "James Turnbull",
+            "username": "jamtur01"
+          },
+          "distinct": true,
+          "id": "1605ab792779a1c8da2182252a9530a03be71b23",
+          "message": "fix: regenerate Lobsters golden files from merged fixture",
+          "timestamp": "2026-04-12T12:19:12-04:00",
+          "tree_id": "ce5a3c8160d0b3d5888ac4906df868773cd23cec",
+          "url": "https://github.com/jamtur01/decruft/commit/1605ab792779a1c8da2182252a9530a03be71b23"
+        },
+        "date": 1776010904602,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "small_page (12KB blog)",
+            "value": 2703226,
+            "range": "± 12482",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "medium_page (317KB stephango)",
+            "value": 3729469,
+            "range": "± 44485",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "large_page (1.1MB wikipedia)",
+            "value": 402640807,
+            "range": "± 6743993",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "github_issue (267KB)",
+            "value": 4147684,
+            "range": "± 23823",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "markdown_output (12KB blog)",
+            "value": 2883932,
+            "range": "± 14141",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "large_page_no_scoring (1.1MB)",
+            "value": 246915463,
+            "range": "± 4204510",
             "unit": "ns/iter"
           }
         ]
