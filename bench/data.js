@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1775961648671,
+  "lastUpdate": 1775962952049,
   "repoUrl": "https://github.com/jamtur01/decruft",
   "entries": {
     "decruft benchmarks": [
@@ -1079,6 +1079,66 @@ window.BENCHMARK_DATA = {
             "name": "large_page_no_scoring (1.1MB)",
             "value": 248781554,
             "range": "± 847100",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "james@lovedthanlost.net",
+            "name": "James Turnbull",
+            "username": "jamtur01"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "87a627e38f0c41f3eb4cfc5cccb65bd66aac4fe0",
+          "message": "Merge pull request #22 from jamtur01/option-metadata-fields\n\nrefactor: use Option<String> for metadata fields in DecruftResult",
+          "timestamp": "2026-04-11T23:00:00-04:00",
+          "tree_id": "ce2d956fd30686f57259d0c9de4b63f6d0ec10b0",
+          "url": "https://github.com/jamtur01/decruft/commit/87a627e38f0c41f3eb4cfc5cccb65bd66aac4fe0"
+        },
+        "date": 1775962951273,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "small_page (12KB blog)",
+            "value": 2738941,
+            "range": "± 43742",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "medium_page (317KB stephango)",
+            "value": 3750598,
+            "range": "± 106153",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "large_page (1.1MB wikipedia)",
+            "value": 404102147,
+            "range": "± 5661108",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "github_issue (267KB)",
+            "value": 4221795,
+            "range": "± 55200",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "markdown_output (12KB blog)",
+            "value": 2885824,
+            "range": "± 69828",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "large_page_no_scoring (1.1MB)",
+            "value": 251094627,
+            "range": "± 2175781",
             "unit": "ns/iter"
           }
         ]
