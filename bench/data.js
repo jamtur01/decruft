@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1775968171125,
+  "lastUpdate": 1775970938357,
   "repoUrl": "https://github.com/jamtur01/decruft",
   "entries": {
     "decruft benchmarks": [
@@ -1259,6 +1259,66 @@ window.BENCHMARK_DATA = {
             "name": "large_page_no_scoring (1.1MB)",
             "value": 250420876,
             "range": "± 2806679",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "james@lovedthanlost.net",
+            "name": "James Turnbull",
+            "username": "jamtur01"
+          },
+          "committer": {
+            "email": "james@lovedthanlost.net",
+            "name": "James Turnbull",
+            "username": "jamtur01"
+          },
+          "distinct": true,
+          "id": "d03651f18acb0347779a087489bfe2c4be2b0f58",
+          "message": "fix: case-insensitive javascript: filter, block data: URIs in markdown\nlinks, escape BBCode output\n\nSecurity:\n- Markdown link sanitizer now uses case-insensitive check via\n  is_dangerous_link() — blocks JavaScript:, JAVASCRIPT:, etc.\n  Previously only matched lowercase javascript:.\n- Block data: and vbscript: URIs in markdown link destinations,\n  not just javascript:.\n- BBCode [img] tag URL now escaped with html_attr_escape() to prevent\n  attribute breakout via embedded quotes.\n- BBCode [url] tag text now escaped with html_escape() to prevent\n  script injection via link text content.\n\nTests:\n- Case variant javascript: links (JavaScript:, JAVASCRIPT:, jAvAsCrIpT:)\n- data: URI in markdown links\n- BBCode img tag attribute escaping\n- BBCode url tag text escaping",
+          "timestamp": "2026-04-12T01:13:04-04:00",
+          "tree_id": "308c19dd4c64e1fc31212d05f448e10ca4d8a219",
+          "url": "https://github.com/jamtur01/decruft/commit/d03651f18acb0347779a087489bfe2c4be2b0f58"
+        },
+        "date": 1775970937846,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "small_page (12KB blog)",
+            "value": 2771057,
+            "range": "± 180597",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "medium_page (317KB stephango)",
+            "value": 3821259,
+            "range": "± 24583",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "large_page (1.1MB wikipedia)",
+            "value": 412442094,
+            "range": "± 5235069",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "github_issue (267KB)",
+            "value": 4133638,
+            "range": "± 28734",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "markdown_output (12KB blog)",
+            "value": 2975544,
+            "range": "± 102072",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "large_page_no_scoring (1.1MB)",
+            "value": 257376268,
+            "range": "± 3887397",
             "unit": "ns/iter"
           }
         ]
