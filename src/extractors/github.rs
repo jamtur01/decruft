@@ -513,10 +513,11 @@ fn json_str(json: &serde_json::Value, key: &str) -> String {
 /// Convert GitHub-flavored markdown to HTML.
 ///
 /// Uses pulldown-cmark with GFM extensions (tables, strikethrough,
-/// task lists) plus a regex pre-pass to linkify bare URLs, which
-/// pulldown-cmark does not handle natively.
+/// task lists, footnotes) plus a regex pre-pass to linkify bare URLs,
+/// which pulldown-cmark does not handle natively. Raw HTML in the
+/// markdown input is escaped to prevent XSS.
 fn markdown_to_html(md: &str) -> String {
-    use pulldown_cmark::{Options, Parser, html};
+    use pulldown_cmark::{Event, Options, Parser, Tag, html};
 
     let linkified = linkify_bare_urls(md);
     let options = Options::ENABLE_TABLES
@@ -524,14 +525,34 @@ fn markdown_to_html(md: &str) -> String {
         | Options::ENABLE_TASKLISTS
         | Options::ENABLE_FOOTNOTES;
     let parser = Parser::new_ext(&linkified, options);
+
+    // Escape raw HTML events and sanitize link destinations to
+    // prevent XSS from user-controlled GitHub issue/comment bodies.
+    let sanitized = parser.map(|event| match event {
+        Event::Html(raw) | Event::InlineHtml(raw) => Event::Text(raw),
+        Event::Start(Tag::Link {
+            dest_url,
+            title,
+            id,
+            link_type,
+        }) if dest_url.starts_with("javascript:") => Event::Start(Tag::Link {
+            dest_url: "".into(),
+            title,
+            id,
+            link_type,
+        }),
+        other => other,
+    });
+
     let mut html_output = String::with_capacity(md.len() * 2);
-    html::push_html(&mut html_output, parser);
+    html::push_html(&mut html_output, sanitized);
     html_output
 }
 
 /// Turn bare `https://` and `http://` URLs into markdown links so
-/// pulldown-cmark renders them as `<a>` tags. Skips URLs that are
-/// already inside markdown link syntax or fenced code blocks.
+/// pulldown-cmark renders them as `<a>` tags. Skips URLs inside
+/// markdown link syntax, fenced code blocks, inline code spans,
+/// angle-bracket autolinks, and reference-style link definitions.
 fn linkify_bare_urls(md: &str) -> String {
     use regex::Regex;
     use std::sync::LazyLock;
@@ -556,23 +577,46 @@ fn linkify_bare_urls(md: &str) -> String {
             continue;
         }
 
+        // Skip reference-style link definitions: [ref]: https://...
+        if line.trim_start().starts_with('[') && line.contains("]: http") {
+            result.push_str(line);
+            continue;
+        }
+
+        let line_bytes = line.as_bytes();
         let mut last_end = 0;
         for m in URL_RE.find_iter(line) {
             let before = if m.start() > 0 {
-                line.as_bytes()[m.start() - 1]
+                line_bytes[m.start() - 1]
             } else {
                 b' '
             };
-            // Skip URLs already in markdown link/image syntax
-            if before == b'(' || before == b'[' || before == b']' {
+            // Skip URLs already in markdown link/image syntax or
+            // angle-bracket autolinks
+            if before == b'(' || before == b'[' || before == b']' || before == b'<' {
                 continue;
             }
+            // Skip URLs inside inline code spans
+            let prefix = &line[last_end..m.start()];
+            let backtick_count = prefix.bytes().filter(|&b| b == b'`').count();
+            if backtick_count % 2 != 0 {
+                continue;
+            }
+
+            // Trim trailing punctuation that isn't part of the URL
+            let url = m.as_str().trim_end_matches(['.', ',', ';', ':', '!', '?']);
+
             result.push_str(&line[last_end..m.start()]);
             result.push('[');
-            result.push_str(m.as_str());
+            result.push_str(url);
             result.push_str("](");
-            result.push_str(m.as_str());
+            result.push_str(url);
             result.push(')');
+            // Append any trimmed punctuation as plain text
+            let trimmed_len = m.as_str().len() - url.len();
+            if trimmed_len > 0 {
+                result.push_str(&m.as_str()[url.len()..]);
+            }
             last_end = m.end();
         }
         result.push_str(&line[last_end..]);
@@ -677,6 +721,62 @@ mod tests {
         let html = markdown_to_html(md);
         assert!(!html.contains("<a href"));
         assert!(html.contains("https://example.com"));
+    }
+
+    #[test]
+    fn markdown_to_html_escapes_raw_html() {
+        let md = "<script>alert('xss')</script>\n\n<b>bold</b>";
+        let html = markdown_to_html(md);
+        assert!(!html.contains("<script>"));
+        assert!(!html.contains("</script>"));
+        assert!(html.contains("&lt;script&gt;"));
+        assert!(!html.contains("<b>"));
+        assert!(html.contains("&lt;b&gt;"));
+        assert!(html.contains("alert"));
+    }
+
+    #[test]
+    fn markdown_to_html_sanitizes_javascript_links() {
+        let md = "[click](javascript:alert(1))";
+        let html = markdown_to_html(md);
+        assert!(!html.contains("javascript:"));
+    }
+
+    #[test]
+    fn markdown_to_html_autolinks_skip_angle_brackets() {
+        let md = "See <https://example.com> for info";
+        let html = markdown_to_html(md);
+        assert!(html.contains("<a href=\"https://example.com\">"));
+        // Should not double-linkify
+        assert!(!html.contains("[https://"));
+    }
+
+    #[test]
+    fn markdown_to_html_autolinks_trim_trailing_punctuation() {
+        let md = "Visit https://example.com. And https://other.com, too!";
+        let html = markdown_to_html(md);
+        assert!(html.contains("href=\"https://example.com\""));
+        assert!(html.contains("href=\"https://other.com\""));
+        // Trailing punctuation should not be in the link
+        assert!(!html.contains("href=\"https://example.com.\""));
+        assert!(!html.contains("href=\"https://other.com,\""));
+    }
+
+    #[test]
+    fn markdown_to_html_autolinks_skip_inline_code() {
+        let md = "Use `https://example.com` as the base URL";
+        let html = markdown_to_html(md);
+        assert!(html.contains("<code>https://example.com</code>"));
+        assert!(!html.contains("<a href=\"https://example.com\">"));
+    }
+
+    #[test]
+    fn markdown_to_html_autolinks_skip_reference_links() {
+        let md = "[example]: https://example.com\n\nSee [example] for details.";
+        let html = markdown_to_html(md);
+        assert!(html.contains("href=\"https://example.com\""));
+        // Should not double-linkify the reference definition
+        assert!(!html.contains("[https://example.com](https://example.com)"));
     }
 
     #[test]
