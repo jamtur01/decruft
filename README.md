@@ -106,9 +106,28 @@ options.url = Some("https://example.com/article".into());
 
 let result = parse(html, &options);
 
-assert_eq!(result.title, "My Article - Blog Name");
+assert_eq!(result.title.as_deref(), Some("My Article - Blog Name"));
 assert!(result.content.contains("actual content"));
 assert!(!result.content.contains("Copyright"));
+```
+
+### Result structure
+
+`DecruftResult` metadata fields (`title`, `author`, `published`, `description`, `image`, `language`, `domain`, `favicon`, `site`, `canonical_url`, `content_type`, `modified`) are `Option<String>` — absent metadata is `None`, not an empty string. In JSON output, `None` fields are omitted entirely.
+
+`content` is always a `String` (cleaned HTML). Set `options.markdown = true` to get markdown in `content` instead. Set `options.separate_markdown = true` to keep HTML in `content` and also get markdown in `content_markdown`.
+
+### Fetching pages
+
+The `fetch_page` function is available for fetching URLs with browser-like defaults:
+
+```rust
+use decruft::{fetch_page, parse, DecruftOptions};
+
+let html = fetch_page("https://example.com/article").unwrap();
+let mut options = DecruftOptions::default();
+options.url = Some("https://example.com/article".into());
+let result = parse(&html, &options);
 ```
 
 ### What gets removed

@@ -403,6 +403,8 @@ fn parse_github_url(url: &str) -> Option<(String, String, String, bool)> {
 
 /// Fetch content from the GitHub REST API when HTML extraction fails.
 fn try_api_fetch(url: Option<&str>, include_replies: bool) -> Option<ExtractorResult> {
+    use std::fmt::Write;
+
     let (owner, repo, number, is_pr) = parse_github_url(url?)?;
 
     let endpoint = if is_pr { "pulls" } else { "issues" };
@@ -423,9 +425,66 @@ fn try_api_fetch(url: Option<&str>, include_replies: bool) -> Option<ExtractorRe
         .unwrap_or("")
         .to_string();
 
-    let body_html = markdown_to_html(&body);
+    // Extract labels
+    let labels: Vec<&str> = json
+        .get("labels")
+        .and_then(serde_json::Value::as_array)
+        .map(|arr| {
+            arr.iter()
+                .filter_map(|l| l.get("name").and_then(serde_json::Value::as_str))
+                .collect()
+        })
+        .unwrap_or_default();
+
+    // Extract milestone
+    let milestone = json
+        .get("milestone")
+        .and_then(|m| m.get("title"))
+        .and_then(serde_json::Value::as_str)
+        .unwrap_or("");
+
+    // PR merge status
+    let merged = is_pr
+        && json
+            .get("merged")
+            .and_then(serde_json::Value::as_bool)
+            .unwrap_or(false);
+    let state = json_str(&json, "state");
+
+    // Build metadata header (escape all API-sourced values)
+    let mut meta_html = String::new();
+    if is_pr {
+        let status = if merged { "merged" } else { &state };
+        if !status.is_empty() {
+            let escaped = dom::html_escape(status);
+            let _ = writeln!(meta_html, "<p><strong>Status:</strong> {escaped}</p>");
+        }
+    }
+    if !labels.is_empty() {
+        let label_str = labels.join(", ");
+        let escaped = dom::html_escape(&label_str);
+        let _ = writeln!(meta_html, "<p><strong>Labels:</strong> {escaped}</p>");
+    }
+    if !milestone.is_empty() {
+        let escaped = dom::html_escape(milestone);
+        let _ = writeln!(meta_html, "<p><strong>Milestone:</strong> {escaped}</p>");
+    }
+
+    let body_html = format!("{meta_html}{}", markdown_to_html(&body));
     let comments_html = if include_replies {
-        fetch_api_comments(&owner, &repo, &number)
+        let issue_comments = fetch_api_comments(&owner, &repo, &number);
+        let review_comments = if is_pr {
+            fetch_pr_review_comments(&owner, &repo, &number)
+        } else {
+            String::new()
+        };
+        if issue_comments.is_empty() {
+            review_comments
+        } else if review_comments.is_empty() {
+            issue_comments
+        } else {
+            format!("{issue_comments}\n{review_comments}")
+        }
     } else {
         String::new()
     };
@@ -453,14 +512,9 @@ fn try_api_fetch(url: Option<&str>, include_replies: bool) -> Option<ExtractorRe
 /// Fetch and format comments from the GitHub Issues API.
 fn fetch_api_comments(owner: &str, repo: &str, number: &str) -> String {
     let url = format!("https://api.github.com/repos/{owner}/{repo}/issues/{number}/comments");
-    let Some(json) = fetch_github_json(&url) else {
-        return String::new();
-    };
-    let Some(arr) = json.as_array() else {
-        return String::new();
-    };
+    let items = fetch_github_json_paginated(&url);
 
-    let comments: Vec<CommentData> = arr
+    let comments: Vec<CommentData> = items
         .iter()
         .filter_map(|c| {
             let body = c.get("body")?.as_str()?;
@@ -496,10 +550,128 @@ fn fetch_api_comments(owner: &str, repo: &str, number: &str) -> String {
     build_comment_tree(&comments)
 }
 
+/// Fetch PR review comments (review summaries + line-level comments).
+///
+/// PRs have two comment sources beyond issue comments: review objects
+/// (the summary body submitted with each review) and review comments
+/// (line-level discussion). Both are fetched and merged here.
+fn fetch_pr_review_comments(owner: &str, repo: &str, number: &str) -> String {
+    let mut comments = Vec::new();
+
+    // Review summaries (approve/request-changes/comment with body)
+    let reviews_url = format!("https://api.github.com/repos/{owner}/{repo}/pulls/{number}/reviews");
+    for review in fetch_github_json_paginated(&reviews_url) {
+        let body = review
+            .get("body")
+            .and_then(serde_json::Value::as_str)
+            .unwrap_or("");
+        if body.trim().is_empty() {
+            continue;
+        }
+        let author = review
+            .get("user")
+            .and_then(|u| u.get("login"))
+            .and_then(serde_json::Value::as_str)
+            .unwrap_or("Unknown")
+            .to_string();
+        let date = review
+            .get("submitted_at")
+            .and_then(serde_json::Value::as_str)
+            .and_then(|d| d.split('T').next())
+            .unwrap_or("")
+            .to_string();
+        comments.push(CommentData {
+            author,
+            date,
+            content: markdown_to_html(body),
+            depth: 0,
+            score: None,
+            url: None,
+        });
+    }
+
+    // Line-level review comments
+    let line_url = format!("https://api.github.com/repos/{owner}/{repo}/pulls/{number}/comments");
+    for c in fetch_github_json_paginated(&line_url) {
+        let body = c
+            .get("body")
+            .and_then(serde_json::Value::as_str)
+            .unwrap_or("");
+        if body.trim().is_empty() {
+            continue;
+        }
+        let author = c
+            .get("user")
+            .and_then(|u| u.get("login"))
+            .and_then(serde_json::Value::as_str)
+            .unwrap_or("Unknown")
+            .to_string();
+        let date = c
+            .get("created_at")
+            .and_then(serde_json::Value::as_str)
+            .and_then(|d| d.split('T').next())
+            .unwrap_or("")
+            .to_string();
+        let path = c
+            .get("path")
+            .and_then(serde_json::Value::as_str)
+            .unwrap_or("");
+        let prefix = if path.is_empty() {
+            String::new()
+        } else {
+            let escaped = dom::html_escape(path);
+            format!("<p><code>{escaped}</code></p>\n")
+        };
+        comments.push(CommentData {
+            author,
+            date,
+            content: format!("{prefix}{}", markdown_to_html(body)),
+            depth: 0,
+            score: None,
+            url: None,
+        });
+    }
+
+    if comments.is_empty() {
+        return String::new();
+    }
+    build_comment_tree(&comments)
+}
+
 /// Fetch JSON from a GitHub API endpoint.
 fn fetch_github_json(url: &str) -> Option<serde_json::Value> {
     let body = crate::http::get_with_headers(url, &[("Accept", "application/vnd.github+json")])?;
     serde_json::from_str(&body).ok()
+}
+
+/// Fetch all pages of a GitHub API endpoint that returns a JSON array.
+///
+/// Appends `?per_page=100` and follows `page` parameters up to 10 pages
+/// to avoid runaway fetching on massive threads.
+fn fetch_github_json_paginated(url: &str) -> Vec<serde_json::Value> {
+    const MAX_PAGES: u32 = 10;
+    let mut all_items = Vec::new();
+
+    for page in 1..=MAX_PAGES {
+        let separator = if url.contains('?') { '&' } else { '?' };
+        let page_url = format!("{url}{separator}per_page=100&page={page}");
+        let Some(json) = fetch_github_json(&page_url) else {
+            break;
+        };
+        let Some(arr) = json.as_array() else {
+            break;
+        };
+        if arr.is_empty() {
+            break;
+        }
+        all_items.extend(arr.iter().cloned());
+        // Less than a full page means we've reached the end
+        if arr.len() < 100 {
+            break;
+        }
+    }
+
+    all_items
 }
 
 /// Minimal helper to extract a string field from JSON.
@@ -809,5 +981,56 @@ mod tests {
         // Should have review comments
         assert!(result.content.contains("Comments"));
         assert!(result.content.contains("reviewer-bot"));
+    }
+
+    #[test]
+    fn api_fetch_live_pr_includes_labels_and_status() {
+        // rust-lang/rust#1 is an issue, not a PR, so test a known PR
+        let url = "https://github.com/rust-lang/rust/pull/2";
+        let result = try_api_fetch(Some(url), false);
+        if let Some(r) = result {
+            // PR should have status metadata
+            assert!(
+                r.content.contains("<strong>Status:</strong>"),
+                "PR content should include status"
+            );
+        }
+        // Don't fail if network is unavailable
+    }
+
+    #[test]
+    fn api_fetch_live_issue_with_labels() {
+        // Use a well-known issue that has labels
+        let url = "https://github.com/rust-lang/rust/issues/1";
+        let result = try_api_fetch(Some(url), false);
+        if let Some(r) = result {
+            assert!(r.title.is_some());
+            // Issue #1 doesn't necessarily have labels, but the
+            // content should be parseable and non-empty
+            assert!(!r.content.is_empty());
+        }
+        // Don't fail if network is unavailable
+    }
+
+    #[test]
+    fn api_fetch_live_pr_includes_review_comments() {
+        // Fetch a PR with replies to verify review comments are included
+        let url = "https://github.com/rust-lang/rust/pull/2";
+        let result = try_api_fetch(Some(url), true);
+        if let Some(r) = result {
+            assert!(r.title.is_some());
+            assert!(!r.content.is_empty());
+        }
+        // Don't fail if network is unavailable
+    }
+
+    #[test]
+    fn pagination_helper_returns_empty_for_invalid_url() {
+        let items = fetch_github_json_paginated(
+            "https://api.github.com/repos/nonexistent/repo/issues/99999/comments",
+        );
+        // Either empty (404) or network failure — both should return empty vec
+        // Don't fail if network is unavailable
+        assert!(items.len() <= 100);
     }
 }

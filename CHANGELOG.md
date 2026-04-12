@@ -1,3 +1,25 @@
+## Unreleased
+
+### Breaking changes
+
+- **`DecruftResult` metadata fields are now `Option<String>`** — `title`, `author`, `published`, `description`, `image`, `language`, `domain`, `favicon`, `site`, `canonical_url`, `content_type`, `modified` changed from `String` to `Option<String>`. Absent metadata is `None` instead of empty string. In JSON output, `None` fields are omitted.
+
+### Added
+
+- `fetch_page()` and `FetchError` are now public API exports for fetching web pages with browser-like defaults (30s timeout, browser UA).
+
+### Changed
+
+- GitHub extractor markdown rendering now uses pulldown-cmark with GFM extensions (tables, strikethrough, task lists, footnotes) instead of a hand-rolled parser. Raw HTML in markdown is escaped to prevent XSS. Bare URLs are auto-linked.
+- HTTP fetching consolidated into a single module with shared configuration. CLI and internal extractors use the same agent builder with explicit page vs API fetch paths.
+
+### Fixed
+
+- Empty/whitespace metadata strings no longer leak as `Some("")` — normalized to `None` at all merge points.
+- Expanded `data:` URI blocking to cover `data:text/javascript`, `data:image/svg+xml`, and other dangerous types (previously only blocked `data:text/html`).
+- srcset URLs now filtered for `javascript:` and dangerous `data:` URIs.
+- `FetchError::Status` variant is now reachable (disabled ureq's default `http_status_as_error` so status codes are handled explicitly).
+
 ## v0.1.3
 
 - feat: release 0.1.3
