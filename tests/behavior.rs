@@ -1114,12 +1114,13 @@ fn reddit_no_comments_returns_post_author() {
     let result = parse(NEW_REDDIT_NO_COMMENTS_HTML, &opts(REDDIT_URL));
 
     assert_eq!(
-        result.author, "original_poster",
+        result.author.as_deref(),
+        Some("original_poster"),
         "author should be the post author, got: {:?}",
         result.author
     );
-    assert_eq!(result.site, "r/test");
-    assert_eq!(result.title, "Test Post Title");
+    assert_eq!(result.site.as_deref(), Some("r/test"));
+    assert_eq!(result.title.as_deref(), Some("Test Post Title"));
 }
 
 #[test]
@@ -1127,7 +1128,8 @@ fn reddit_with_comments_returns_post_author() {
     let result = parse(NEW_REDDIT_WITH_COMMENTS_HTML, &opts(REDDIT_URL));
 
     assert_eq!(
-        result.author, "original_poster",
+        result.author.as_deref(),
+        Some("original_poster"),
         "author should be the post author, not a commenter: {:?}",
         result.author
     );

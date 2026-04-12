@@ -640,10 +640,10 @@ fn try_bbcode(
 ) -> Option<DecruftResult> {
     let bbcode = extractors::bbcode::extract_bbcode_content(html)?;
     if let Some(t) = &bbcode.title {
-        meta.title.clone_from(t);
+        meta.title = Some(t.clone());
     }
     if let Some(a) = &bbcode.author {
-        meta.author.clone_from(a);
+        meta.author = Some(a.clone());
     }
     let word_count = dom::count_words_html(&bbcode.html);
     if word_count == 0 {
@@ -771,32 +771,32 @@ fn apply_extractor_metadata(
     if let Some(t) = &extracted.title {
         let cleaned = metadata::clean_title(t, "", None, None);
         if !cleaned.is_empty() {
-            meta.title = cleaned;
+            meta.title = Some(cleaned);
         }
     }
     // Extractor author is always preferred -- site-specific
     // extractors identify the post author more reliably than the
     // generic metadata pipeline (which may pick up commenter names).
     if let Some(a) = &extracted.author {
-        meta.author.clone_from(a);
+        meta.author = Some(a.clone());
     }
     if let Some(s) = &extracted.site {
-        meta.site_name.clone_from(s);
+        meta.site_name = Some(s.clone());
     }
     if let Some(p) = &extracted.published
-        && meta.published.is_empty()
+        && meta.published.is_none()
     {
-        meta.published.clone_from(p);
+        meta.published = Some(p.clone());
     }
     if let Some(img) = &extracted.image
-        && meta.image.is_empty()
+        && meta.image.is_none()
     {
-        meta.image.clone_from(img);
+        meta.image = Some(img.clone());
     }
     if let Some(d) = &extracted.description
-        && meta.description.is_empty()
+        && meta.description.is_none()
     {
-        meta.description.clone_from(d);
+        meta.description = Some(d.clone());
     }
 }
 
@@ -806,24 +806,24 @@ fn apply_substack_meta(
     meta: &mut crate::types::Metadata,
 ) {
     if let Some(t) = &substack.title
-        && meta.title.is_empty()
+        && meta.title.is_none()
     {
-        meta.title.clone_from(t);
+        meta.title = Some(t.clone());
     }
     if let Some(a) = &substack.author
-        && meta.author.is_empty()
+        && meta.author.is_none()
     {
-        meta.author.clone_from(a);
+        meta.author = Some(a.clone());
     }
     if let Some(s) = &substack.site
-        && meta.site_name.is_empty()
+        && meta.site_name.is_none()
     {
-        meta.site_name.clone_from(s);
+        meta.site_name = Some(s.clone());
     }
     if let Some(img) = &substack.image
-        && meta.image.is_empty()
+        && meta.image.is_none()
     {
-        meta.image.clone_from(img);
+        meta.image = Some(img.clone());
     }
 }
 
