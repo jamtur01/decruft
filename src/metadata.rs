@@ -22,7 +22,7 @@ pub fn extract_metadata(
     let image = extract_image(html, schema);
     let language = extract_language(html, schema);
     let favicon = extract_favicon(html, url);
-    let canonical_url = extract_canonical_url(html);
+    let canonical_url = extract_canonical_url(html, url);
     let keywords = extract_keywords(html);
     let content_type = extract_content_type(html, schema);
 
@@ -967,16 +967,33 @@ fn extract_image(html: &Html, schema: Option<&serde_json::Value>) -> Option<Stri
 
 fn schema_image(schema: Option<&serde_json::Value>) -> Option<String> {
     let image = schema?.get("image")?;
-    if let Some(url) = image.get("url").and_then(|v| v.as_str()) {
+    schema_image_from_value(image)
+}
+
+/// Extract an image URL from a schema.org image value.
+///
+/// Handles: string, `{ "url": "..." }` object, and arrays of either.
+fn schema_image_from_value(value: &serde_json::Value) -> Option<String> {
+    // Direct string
+    if let Some(s) = value.as_str() {
+        let trimmed = s.trim();
+        if !trimmed.is_empty() {
+            return Some(trimmed.to_string());
+        }
+    }
+    // Object with "url" field
+    if let Some(url) = value.get("url").and_then(|v| v.as_str()) {
         let trimmed = url.trim();
         if !trimmed.is_empty() {
             return Some(trimmed.to_string());
         }
     }
-    if let Some(s) = image.as_str() {
-        let trimmed = s.trim();
-        if !trimmed.is_empty() {
-            return Some(trimmed.to_string());
+    // Array — take first valid entry
+    if let Some(arr) = value.as_array() {
+        for item in arr {
+            if let Some(result) = schema_image_from_value(item) {
+                return Some(result);
+            }
         }
     }
     None
@@ -1127,18 +1144,29 @@ fn base_url(raw: &str) -> Option<String> {
 // Canonical URL
 // ------------------------------------------------------------------
 
-fn extract_canonical_url(html: &Html) -> Option<String> {
-    if let Ok(sel) = Selector::parse("link[rel=\"canonical\"]") {
-        if let Some(el) = html.select(&sel).next() {
-            if let Some(href) = el.value().attr("href") {
-                let trimmed = href.trim();
-                if !trimmed.is_empty() {
-                    return Some(trimmed.to_string());
-                }
-            }
+fn extract_canonical_url(html: &Html, page_url: Option<&str>) -> Option<String> {
+    let raw = if let Ok(sel) = Selector::parse("link[rel=\"canonical\"]") {
+        html.select(&sel)
+            .next()
+            .and_then(|el| el.value().attr("href"))
+            .map(|h| h.trim().to_string())
+            .filter(|s| !s.is_empty())
+    } else {
+        None
+    };
+    let raw = raw.or_else(|| get_meta_content(html, "property", "og:url"));
+
+    // Resolve relative canonical URLs against the page URL
+    raw.map(|href| {
+        if href.starts_with("http://") || href.starts_with("https://") {
+            href
+        } else if let Some(base) = page_url.and_then(|u| url::Url::parse(u).ok()) {
+            base.join(&href)
+                .map_or(href, |resolved| resolved.to_string())
+        } else {
+            href
         }
-    }
-    get_meta_content(html, "property", "og:url")
+    })
 }
 
 // ------------------------------------------------------------------
@@ -1360,6 +1388,39 @@ mod tests {
             m.image.as_deref(),
             Some("https://img.example.com/photo.jpg")
         );
+    }
+
+    #[test]
+    fn image_from_schema_object() {
+        let schema: serde_json::Value = serde_json::json!({
+            "image": { "url": "https://img.example.com/photo.jpg" }
+        });
+        let doc = Html::parse_document("<html><body></body></html>");
+        let m = extract_metadata(&doc, None, Some(&schema));
+        assert_eq!(
+            m.image.as_deref(),
+            Some("https://img.example.com/photo.jpg")
+        );
+    }
+
+    #[test]
+    fn image_from_schema_array_of_strings() {
+        let schema: serde_json::Value = serde_json::json!({
+            "image": ["https://img.example.com/a.jpg", "https://img.example.com/b.jpg"]
+        });
+        let doc = Html::parse_document("<html><body></body></html>");
+        let m = extract_metadata(&doc, None, Some(&schema));
+        assert_eq!(m.image.as_deref(), Some("https://img.example.com/a.jpg"));
+    }
+
+    #[test]
+    fn image_from_schema_array_of_objects() {
+        let schema: serde_json::Value = serde_json::json!({
+            "image": [{ "url": "https://img.example.com/a.jpg" }]
+        });
+        let doc = Html::parse_document("<html><body></body></html>");
+        let m = extract_metadata(&doc, None, Some(&schema));
+        assert_eq!(m.image.as_deref(), Some("https://img.example.com/a.jpg"));
     }
 
     #[test]
@@ -1626,6 +1687,28 @@ mod new_fields_tests {
             m.canonical_url.as_deref(),
             Some("https://example.com/article")
         );
+    }
+
+    #[test]
+    fn canonical_url_relative_resolved() {
+        let doc = Html::parse_document(
+            r#"<html><head><link rel="canonical" href="/article"></head><body></body></html>"#,
+        );
+        let m = extract_metadata(&doc, Some("https://example.com/page"), None);
+        assert_eq!(
+            m.canonical_url.as_deref(),
+            Some("https://example.com/article")
+        );
+    }
+
+    #[test]
+    fn canonical_url_relative_no_base() {
+        let doc = Html::parse_document(
+            r#"<html><head><link rel="canonical" href="/article"></head><body></body></html>"#,
+        );
+        let m = extract_metadata(&doc, None, None);
+        // Without a page URL, relative canonical is returned as-is
+        assert_eq!(m.canonical_url.as_deref(), Some("/article"));
     }
 
     #[test]

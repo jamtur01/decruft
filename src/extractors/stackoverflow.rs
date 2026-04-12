@@ -40,7 +40,7 @@ pub fn extract_stackoverflow(
         return None;
     }
 
-    let result = extract_from_html(html, include_replies);
+    let result = extract_from_html(html, url, include_replies);
 
     match result {
         Some(ref r) if dom::count_words_html(&r.content) >= 10 => result,
@@ -48,7 +48,11 @@ pub fn extract_stackoverflow(
     }
 }
 
-fn extract_from_html(html: &Html, include_replies: bool) -> Option<ExtractorResult> {
+fn extract_from_html(
+    html: &Html,
+    url: Option<&str>,
+    include_replies: bool,
+) -> Option<ExtractorResult> {
     let title = extract_title(html);
     let question_body = extract_question_body(html);
 
@@ -64,6 +68,9 @@ fn extract_from_html(html: &Html, include_replies: bool) -> Option<ExtractorResu
     };
 
     let content = build_content_html("stackoverflow", &question_body, &answers_html);
+    let site = url
+        .and_then(parse_site_name)
+        .map_or_else(|| "Stack Overflow".to_string(), |s| display_name(&s));
 
     Some(ExtractorResult {
         content,
@@ -73,7 +80,7 @@ fn extract_from_html(html: &Html, include_replies: bool) -> Option<ExtractorResu
         } else {
             Some(author)
         },
-        site: Some("Stack Overflow".to_string()),
+        site: Some(site),
         published: None,
         image: None,
         description: None,
@@ -180,6 +187,34 @@ fn parse_question_id(url: &str) -> Option<&str> {
     Some(id)
 }
 
+/// Map an API site slug to a human-readable display name.
+fn display_name(api_name: &str) -> String {
+    match api_name {
+        "stackoverflow" => "Stack Overflow".to_string(),
+        "serverfault" => "Server Fault".to_string(),
+        "superuser" => "Super User".to_string(),
+        "askubuntu" => "Ask Ubuntu".to_string(),
+        "mathoverflow" => "MathOverflow".to_string(),
+        other => {
+            // "gaming" -> "Gaming Stack Exchange"
+            let mut capitalized = String::with_capacity(other.len() + 16);
+            let mut first = true;
+            for ch in other.chars() {
+                if first {
+                    for upper in ch.to_uppercase() {
+                        capitalized.push(upper);
+                    }
+                    first = false;
+                } else {
+                    capitalized.push(ch);
+                }
+            }
+            capitalized.push_str(" Stack Exchange");
+            capitalized
+        }
+    }
+}
+
 /// Extract the API site name from a URL.
 fn parse_site_name(url: &str) -> Option<String> {
     let host = url
@@ -267,7 +302,7 @@ fn build_from_api(
         } else {
             Some(author)
         },
-        site: Some("Stack Overflow".to_string()),
+        site: Some(display_name(site)),
         published: None,
         image: None,
         description: None,
@@ -444,7 +479,7 @@ mod tests {
         </html>
         "#;
         let html = Html::parse_document(html_str);
-        let result = extract_from_html(&html, true).unwrap();
+        let result = extract_from_html(&html, None, true).unwrap();
 
         assert_eq!(result.title.as_deref(), Some("How to foo?"));
         assert_eq!(result.author.as_deref(), Some("Alice"));
@@ -468,7 +503,7 @@ mod tests {
         </html>
         "#;
         let html = Html::parse_document(html_str);
-        let result = extract_from_html(&html, true).unwrap();
+        let result = extract_from_html(&html, None, true).unwrap();
 
         assert_eq!(result.title.as_deref(), Some("Unanswered"));
         assert!(result.content.contains("question text"));
