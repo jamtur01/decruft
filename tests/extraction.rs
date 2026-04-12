@@ -114,19 +114,19 @@ fn all_fixtures_match_metadata() {
         let exp_lang = expected["language"].as_str().unwrap_or("");
 
         let mut mismatches = Vec::new();
-        if result.title != exp_title {
+        if result.title.as_deref().unwrap_or("") != exp_title {
             mismatches.push("title");
         }
-        if result.author != exp_author {
+        if result.author.as_deref().unwrap_or("") != exp_author {
             mismatches.push("author");
         }
-        if result.site != exp_site {
+        if result.site.as_deref().unwrap_or("") != exp_site {
             mismatches.push("site");
         }
-        if result.published != exp_published {
+        if result.published.as_deref().unwrap_or("") != exp_published {
             mismatches.push("published");
         }
-        if !exp_lang.is_empty() && result.language != exp_lang {
+        if !exp_lang.is_empty() && result.language.as_deref().unwrap_or("") != exp_lang {
             mismatches.push("language");
         }
 
@@ -273,11 +273,11 @@ fn regenerate_metadata() {
         let result = parse(&html, &opts(&url));
 
         let meta = serde_json::json!({
-            "title": result.title,
-            "author": result.author,
-            "site": result.site,
-            "published": result.published,
-            "language": result.language,
+            "title": result.title.as_deref().unwrap_or(""),
+            "author": result.author.as_deref().unwrap_or(""),
+            "site": result.site.as_deref().unwrap_or(""),
+            "published": result.published.as_deref().unwrap_or(""),
+            "language": result.language.as_deref().unwrap_or(""),
         });
         fs::write(
             meta_dir.join(format!("{name}.json")),

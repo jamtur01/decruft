@@ -49,13 +49,17 @@ fn opts() -> DecruftOptions {
 #[test]
 fn metadata_fields() {
     let r = parse(SAMPLE, &opts());
-    assert_eq!(r.title, "Test Article");
-    assert_eq!(r.author, "Jane Doe");
-    assert_eq!(r.site, "Example Blog");
-    assert_eq!(r.language, "en");
-    assert_eq!(r.domain, "example.com");
-    assert!(r.published.contains("2025-01-15"));
-    assert!(!r.description.is_empty());
+    assert_eq!(r.title.as_deref(), Some("Test Article"));
+    assert_eq!(r.author.as_deref(), Some("Jane Doe"));
+    assert_eq!(r.site.as_deref(), Some("Example Blog"));
+    assert_eq!(r.language.as_deref(), Some("en"));
+    assert_eq!(r.domain.as_deref(), Some("example.com"));
+    assert!(
+        r.published
+            .as_deref()
+            .is_some_and(|p| p.contains("2025-01-15"))
+    );
+    assert!(r.description.is_some());
     assert!(r.word_count > 20);
 }
 
@@ -63,8 +67,36 @@ fn metadata_fields() {
 fn json_serialization() {
     let r = parse(SAMPLE, &opts());
     let json = serde_json::to_string(&r).expect("should serialize");
-    assert!(json.contains("\"title\":\"Test Article\""));
+    assert!(json.contains("\"title\":\"Test Article\""), "JSON: {json}");
     assert!(json.contains("\"content\":"));
+}
+
+#[test]
+fn json_omits_none_metadata_fields() {
+    let minimal = r"<html><body><article><p>Just enough content.</p></article></body></html>";
+    let r = parse(minimal, &DecruftOptions::default());
+    let json = serde_json::to_string(&r).expect("should serialize");
+    let value: serde_json::Value = serde_json::from_str(&json).expect("should parse JSON");
+    let obj = value.as_object().expect("should be a JSON object");
+
+    // content and word_count are always present
+    assert!(obj.contains_key("content"), "JSON: {json}");
+    assert!(obj.contains_key("word_count"), "JSON: {json}");
+
+    // Metadata fields should be absent when None
+    for key in [
+        "title",
+        "author",
+        "site",
+        "description",
+        "published",
+        "modified",
+    ] {
+        assert!(
+            !obj.contains_key(key),
+            "expected {key} to be omitted: {json}"
+        );
+    }
 }
 
 // ── HTML output ─────────────────────────────────────────────────
@@ -163,7 +195,10 @@ fn favicon_from_link_icon() {
         <body><article><p>Content.</p></article></body></html>"#;
     let mut o = DecruftOptions::default();
     o.url = Some("https://example.com/page".into());
-    assert_eq!(parse(html, &o).favicon, "https://example.com/favicon.ico");
+    assert_eq!(
+        parse(html, &o).favicon.as_deref(),
+        Some("https://example.com/favicon.ico")
+    );
 }
 
 #[test]

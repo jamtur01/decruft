@@ -640,10 +640,14 @@ fn try_bbcode(
 ) -> Option<DecruftResult> {
     let bbcode = extractors::bbcode::extract_bbcode_content(html)?;
     if let Some(t) = &bbcode.title {
-        meta.title.clone_from(t);
+        if let Some(v) = non_empty(t) {
+            meta.title = Some(v);
+        }
     }
     if let Some(a) = &bbcode.author {
-        meta.author.clone_from(a);
+        if let Some(v) = non_empty(a) {
+            meta.author = Some(v);
+        }
     }
     let word_count = dom::count_words_html(&bbcode.html);
     if word_count == 0 {
@@ -762,41 +766,58 @@ fn try_site_extractors(
     Some(result)
 }
 
-/// Merge extractor metadata into the pipeline metadata, preferring
-/// the metadata pipeline's values when they are already good.
+/// Normalize a string to `None` if empty or whitespace-only.
+fn non_empty(s: &str) -> Option<String> {
+    let trimmed = s.trim();
+    if trimmed.is_empty() {
+        None
+    } else {
+        Some(trimmed.to_string())
+    }
+}
+
+/// Apply site-specific extractor metadata onto the pipeline metadata.
+///
+/// Title, author, and site always override (extractors are more
+/// reliable for these). Published, image, and description only fill
+/// in when the pipeline left them as `None`.
 fn apply_extractor_metadata(
     extracted: &extractors::ExtractorResult,
     meta: &mut crate::types::Metadata,
 ) {
     if let Some(t) = &extracted.title {
         let cleaned = metadata::clean_title(t, "", None, None);
-        if !cleaned.is_empty() {
-            meta.title = cleaned;
+        if let Some(v) = non_empty(&cleaned) {
+            meta.title = Some(v);
         }
     }
     // Extractor author is always preferred -- site-specific
     // extractors identify the post author more reliably than the
     // generic metadata pipeline (which may pick up commenter names).
     if let Some(a) = &extracted.author {
-        meta.author.clone_from(a);
+        if let Some(v) = non_empty(a) {
+            meta.author = Some(v);
+        }
     }
     if let Some(s) = &extracted.site {
-        meta.site_name.clone_from(s);
+        if let Some(v) = non_empty(s) {
+            meta.site_name = Some(v);
+        }
     }
     if let Some(p) = &extracted.published
-        && meta.published.is_empty()
+        && meta.published.is_none()
     {
-        meta.published.clone_from(p);
+        meta.published = non_empty(p);
     }
     if let Some(img) = &extracted.image
-        && meta.image.is_empty()
+        && meta.image.is_none()
     {
-        meta.image.clone_from(img);
+        meta.image = non_empty(img);
     }
     if let Some(d) = &extracted.description
-        && meta.description.is_empty()
+        && meta.description.is_none()
     {
-        meta.description.clone_from(d);
+        meta.description = non_empty(d);
     }
 }
 
@@ -806,24 +827,24 @@ fn apply_substack_meta(
     meta: &mut crate::types::Metadata,
 ) {
     if let Some(t) = &substack.title
-        && meta.title.is_empty()
+        && meta.title.is_none()
     {
-        meta.title.clone_from(t);
+        meta.title = non_empty(t);
     }
     if let Some(a) = &substack.author
-        && meta.author.is_empty()
+        && meta.author.is_none()
     {
-        meta.author.clone_from(a);
+        meta.author = non_empty(a);
     }
     if let Some(s) = &substack.site
-        && meta.site_name.is_empty()
+        && meta.site_name.is_none()
     {
-        meta.site_name.clone_from(s);
+        meta.site_name = non_empty(s);
     }
     if let Some(img) = &substack.image
-        && meta.image.is_empty()
+        && meta.image.is_none()
     {
-        meta.image.clone_from(img);
+        meta.image = non_empty(img);
     }
 }
 

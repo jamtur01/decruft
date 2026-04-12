@@ -63,37 +63,46 @@ pub struct DecruftResult {
     /// Cleaned HTML content.
     pub content: String,
     /// Page title.
-    pub title: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub title: Option<String>,
     /// Page description.
-    pub description: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
     /// Domain name.
-    pub domain: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub domain: Option<String>,
     /// Favicon URL.
-    pub favicon: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub favicon: Option<String>,
     /// Primary image URL.
-    pub image: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub image: Option<String>,
     /// Content language.
-    pub language: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub language: Option<String>,
     /// Parse time in milliseconds.
     pub parse_time_ms: u64,
     /// Publication date.
-    pub published: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub published: Option<String>,
     /// Last modified date.
-    #[serde(skip_serializing_if = "String::is_empty")]
-    pub modified: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub modified: Option<String>,
     /// Author name.
-    pub author: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub author: Option<String>,
     /// Site name.
-    pub site: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub site: Option<String>,
     /// Canonical URL of the page.
-    #[serde(skip_serializing_if = "String::is_empty")]
-    pub canonical_url: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub canonical_url: Option<String>,
     /// Keywords/tags associated with the content.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub keywords: Vec<String>,
     /// Content type (e.g., "article", "website", "video").
-    #[serde(skip_serializing_if = "String::is_empty")]
-    pub content_type: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub content_type: Option<String>,
     /// Markdown version of content (when `markdown` or `separate_markdown` is enabled).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub content_markdown: Option<String>,
@@ -143,17 +152,17 @@ pub struct Removal {
 /// Metadata extracted from the page (internal representation).
 #[derive(Debug, Clone, Default, Serialize)]
 pub(crate) struct Metadata {
-    pub title: String,
-    pub description: String,
-    pub domain: String,
-    pub favicon: String,
-    pub image: String,
-    pub language: String,
-    pub published: String,
-    pub modified: String,
-    pub author: String,
-    pub site_name: String,
-    pub canonical_url: String,
+    pub title: Option<String>,
+    pub description: Option<String>,
+    pub domain: Option<String>,
+    pub favicon: Option<String>,
+    pub image: Option<String>,
+    pub language: Option<String>,
+    pub published: Option<String>,
+    pub modified: Option<String>,
+    pub author: Option<String>,
+    pub site_name: Option<String>,
+    pub canonical_url: Option<String>,
     pub keywords: Vec<String>,
-    pub content_type: String,
+    pub content_type: Option<String>,
 }
