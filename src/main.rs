@@ -163,10 +163,11 @@ fn write_stdout(s: &str) {
 }
 
 fn fetch_url(url: &str) -> String {
-    if let Some(body) = decruft::http::fetch_page(url) {
-        body
-    } else {
-        eprintln!("Error fetching {url}");
-        std::process::exit(1);
+    match decruft::fetch_page(url) {
+        Ok(body) => body,
+        Err(e) => {
+            eprintln!("Error fetching {url}: {e}");
+            std::process::exit(1);
+        }
     }
 }

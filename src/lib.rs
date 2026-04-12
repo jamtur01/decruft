@@ -49,7 +49,7 @@ mod decruft;
 pub(crate) mod dom;
 pub(crate) mod extractors;
 pub(crate) mod footnotes;
-pub mod http;
+pub(crate) mod http;
 pub(crate) mod math;
 pub(crate) mod metadata;
 pub(crate) mod metadata_block;
@@ -64,6 +64,7 @@ pub(crate) mod types;
 
 pub use decruft::parse;
 pub use dom::strip_html_tags;
+pub use http::{FetchError, fetch_page};
 pub use types::{DebugInfo, DecruftOptions, DecruftResult, MetaTag, Removal};
 
 /// Parse HTML with default options.

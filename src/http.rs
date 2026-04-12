@@ -1,3 +1,4 @@
+use std::fmt;
 use std::time::Duration;
 
 /// Timeout for API requests to known services (GitHub, HN, etc.).
@@ -11,6 +12,24 @@ const API_USER_AGENT: &str = "decruft/0.1";
 
 /// Browser-like User-Agent for fetching arbitrary web pages.
 const PAGE_USER_AGENT: &str = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36";
+
+/// Error returned by [`fetch_page`].
+#[derive(Debug)]
+pub enum FetchError {
+    /// HTTP request or body read failed (network, timeout, DNS, etc.).
+    Transport(ureq::Error),
+    /// Server returned a non-200 status code.
+    Status(u16),
+}
+
+impl fmt::Display for FetchError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Transport(e) => write!(f, "{e}"),
+            Self::Status(code) => write!(f, "HTTP {code}"),
+        }
+    }
+}
 
 fn build_agent(timeout: Duration) -> ureq::Agent {
     let config = ureq::config::Config::builder()
@@ -55,18 +74,22 @@ pub(crate) fn get_with_headers(url: &str, headers: &[(&str, &str)]) -> Option<St
 
 /// Fetch a web page (30s timeout, browser-like UA).
 ///
-/// Returns `None` on network errors, non-200 status, timeout, or
-/// body read failures.
-#[must_use]
-pub fn fetch_page(url: &str) -> Option<String> {
+/// # Errors
+///
+/// Returns [`FetchError`] on network/transport errors, non-200 status,
+/// or body read failures.
+pub fn fetch_page(url: &str) -> Result<String, FetchError> {
     let agent = build_agent(PAGE_TIMEOUT);
     let response = agent
         .get(url)
         .header("User-Agent", PAGE_USER_AGENT)
         .call()
-        .ok()?;
+        .map_err(FetchError::Transport)?;
     if response.status() != 200 {
-        return None;
+        return Err(FetchError::Status(response.status().as_u16()));
     }
-    response.into_body().read_to_string().ok()
+    response
+        .into_body()
+        .read_to_string()
+        .map_err(FetchError::Transport)
 }
