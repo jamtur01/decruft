@@ -4,7 +4,7 @@
 
 ## Comments
 
-> · · 16 points
+> · · 17 points
 > 
 > Open source is not a supply chain.
 > 
