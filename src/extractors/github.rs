@@ -425,7 +425,19 @@ fn try_api_fetch(url: Option<&str>, include_replies: bool) -> Option<ExtractorRe
 
     let body_html = markdown_to_html(&body);
     let comments_html = if include_replies {
-        fetch_api_comments(&owner, &repo, &number)
+        let issue_comments = fetch_api_comments(&owner, &repo, &number);
+        let review_comments = if is_pr {
+            fetch_pr_review_comments(&owner, &repo, &number)
+        } else {
+            String::new()
+        };
+        if issue_comments.is_empty() {
+            review_comments
+        } else if review_comments.is_empty() {
+            issue_comments
+        } else {
+            format!("{issue_comments}\n{review_comments}")
+        }
     } else {
         String::new()
     };
@@ -489,6 +501,101 @@ fn fetch_api_comments(owner: &str, repo: &str, number: &str) -> String {
             })
         })
         .collect();
+
+    if comments.is_empty() {
+        return String::new();
+    }
+    build_comment_tree(&comments)
+}
+
+/// Fetch PR review comments (review summaries + line-level comments).
+///
+/// PRs have two comment sources beyond issue comments: review objects
+/// (the summary body submitted with each review) and review comments
+/// (line-level discussion). Both are fetched and merged here.
+fn fetch_pr_review_comments(owner: &str, repo: &str, number: &str) -> String {
+    let mut comments = Vec::new();
+
+    // Review summaries (approve/request-changes/comment with body)
+    let reviews_url = format!("https://api.github.com/repos/{owner}/{repo}/pulls/{number}/reviews");
+    if let Some(json) = fetch_github_json(&reviews_url) {
+        if let Some(arr) = json.as_array() {
+            for review in arr {
+                let body = review
+                    .get("body")
+                    .and_then(serde_json::Value::as_str)
+                    .unwrap_or("");
+                if body.trim().is_empty() {
+                    continue;
+                }
+                let author = review
+                    .get("user")
+                    .and_then(|u| u.get("login"))
+                    .and_then(serde_json::Value::as_str)
+                    .unwrap_or("Unknown")
+                    .to_string();
+                let date = review
+                    .get("submitted_at")
+                    .and_then(serde_json::Value::as_str)
+                    .and_then(|d| d.split('T').next())
+                    .unwrap_or("")
+                    .to_string();
+                comments.push(CommentData {
+                    author,
+                    date,
+                    content: markdown_to_html(body),
+                    depth: 0,
+                    score: None,
+                    url: None,
+                });
+            }
+        }
+    }
+
+    // Line-level review comments
+    let line_url = format!("https://api.github.com/repos/{owner}/{repo}/pulls/{number}/comments");
+    if let Some(json) = fetch_github_json(&line_url) {
+        if let Some(arr) = json.as_array() {
+            for c in arr {
+                let body = c
+                    .get("body")
+                    .and_then(serde_json::Value::as_str)
+                    .unwrap_or("");
+                if body.trim().is_empty() {
+                    continue;
+                }
+                let author = c
+                    .get("user")
+                    .and_then(|u| u.get("login"))
+                    .and_then(serde_json::Value::as_str)
+                    .unwrap_or("Unknown")
+                    .to_string();
+                let date = c
+                    .get("created_at")
+                    .and_then(serde_json::Value::as_str)
+                    .and_then(|d| d.split('T').next())
+                    .unwrap_or("")
+                    .to_string();
+                let path = c
+                    .get("path")
+                    .and_then(serde_json::Value::as_str)
+                    .unwrap_or("");
+                let prefix = if path.is_empty() {
+                    String::new()
+                } else {
+                    format!("<p><code>{path}</code></p>\n")
+                };
+                comments.push(CommentData {
+                    author,
+                    date,
+                    content: format!("{prefix}{}", markdown_to_html(body)),
+                    depth: 0,
+                    score: None,
+                    url: None,
+                });
+            }
+        }
+    }
 
     if comments.is_empty() {
         return String::new();
