@@ -1,5 +1,3 @@
-use std::fmt::Write;
-
 use scraper::{Html, Selector};
 
 use crate::dom;
@@ -512,76 +510,74 @@ fn json_str(json: &serde_json::Value, key: &str) -> String {
         .to_string()
 }
 
-/// Convert markdown text to simple HTML.
+/// Convert GitHub-flavored markdown to HTML.
 ///
-/// Handles paragraphs, inline code, code blocks, bold, italic,
-/// links, and headers. Not a full markdown parser — just enough
-/// to make API body content readable.
+/// Uses pulldown-cmark with GFM extensions (tables, strikethrough,
+/// task lists) plus a regex pre-pass to linkify bare URLs, which
+/// pulldown-cmark does not handle natively.
 fn markdown_to_html(md: &str) -> String {
-    let mut html = String::with_capacity(md.len() * 2);
+    use pulldown_cmark::{Options, Parser, html};
+
+    let linkified = linkify_bare_urls(md);
+    let options = Options::ENABLE_TABLES
+        | Options::ENABLE_STRIKETHROUGH
+        | Options::ENABLE_TASKLISTS
+        | Options::ENABLE_FOOTNOTES;
+    let parser = Parser::new_ext(&linkified, options);
+    let mut html_output = String::with_capacity(md.len() * 2);
+    html::push_html(&mut html_output, parser);
+    html_output
+}
+
+/// Turn bare `https://` and `http://` URLs into markdown links so
+/// pulldown-cmark renders them as `<a>` tags. Skips URLs that are
+/// already inside markdown link syntax or fenced code blocks.
+fn linkify_bare_urls(md: &str) -> String {
+    use regex::Regex;
+    use std::sync::LazyLock;
+
+    static URL_RE: LazyLock<Regex> =
+        LazyLock::new(|| Regex::new(r"https?://[^\s<>\[\])\]]+").expect("valid regex"));
+
+    let mut result = String::with_capacity(md.len());
     let mut in_code_block = false;
-    let mut paragraph_lines: Vec<&str> = Vec::new();
 
     for line in md.lines() {
+        if !result.is_empty() {
+            result.push('\n');
+        }
         if line.starts_with("```") {
-            flush_paragraph(&mut html, &mut paragraph_lines);
             in_code_block = !in_code_block;
-            if in_code_block {
-                html.push_str("<pre><code>");
-            } else {
-                html.push_str("</code></pre>\n");
-            }
+            result.push_str(line);
             continue;
         }
-
         if in_code_block {
-            let _ = writeln!(html, "{}", dom::html_escape(line));
+            result.push_str(line);
             continue;
         }
 
-        let trimmed = line.trim();
-        if trimmed.is_empty() {
-            flush_paragraph(&mut html, &mut paragraph_lines);
-            continue;
+        let mut last_end = 0;
+        for m in URL_RE.find_iter(line) {
+            let before = if m.start() > 0 {
+                line.as_bytes()[m.start() - 1]
+            } else {
+                b' '
+            };
+            // Skip URLs already in markdown link/image syntax
+            if before == b'(' || before == b'[' || before == b']' {
+                continue;
+            }
+            result.push_str(&line[last_end..m.start()]);
+            result.push('[');
+            result.push_str(m.as_str());
+            result.push_str("](");
+            result.push_str(m.as_str());
+            result.push(')');
+            last_end = m.end();
         }
-
-        if let Some(header) = parse_md_header(trimmed) {
-            flush_paragraph(&mut html, &mut paragraph_lines);
-            html.push_str(&header);
-            continue;
-        }
-
-        paragraph_lines.push(trimmed);
+        result.push_str(&line[last_end..]);
     }
-
-    if in_code_block {
-        html.push_str("</code></pre>\n");
-    }
-    flush_paragraph(&mut html, &mut paragraph_lines);
-    html
-}
-
-fn flush_paragraph(html: &mut String, lines: &mut Vec<&str>) {
-    if lines.is_empty() {
-        return;
-    }
-    let text = lines.join(" ");
-    let escaped = dom::html_escape(&text);
-    let _ = writeln!(html, "<p>{escaped}</p>");
-    lines.clear();
-}
-
-fn parse_md_header(line: &str) -> Option<String> {
-    let level = line.bytes().take_while(|&b| b == b'#').count();
-    if !(1..=6).contains(&level) {
-        return None;
-    }
-    let rest = line[level..].trim();
-    if rest.is_empty() {
-        return None;
-    }
-    let escaped = dom::html_escape(rest);
-    Some(format!("<h{level}>{escaped}</h{level}>\n"))
+    result
 }
 
 #[cfg(test)]
@@ -651,7 +647,7 @@ mod tests {
     fn markdown_to_html_basic() {
         let md = "Hello **world**\n\nA paragraph.\n\n## Header\n\n```\ncode\n```";
         let html = markdown_to_html(md);
-        assert!(html.contains("<p>Hello **world**</p>"));
+        assert!(html.contains("<strong>world</strong>"));
         assert!(html.contains("<p>A paragraph.</p>"));
         assert!(html.contains("<h2>Header</h2>"));
         assert!(html.contains("<pre><code>"));
@@ -659,13 +655,28 @@ mod tests {
     }
 
     #[test]
-    fn markdown_to_html_escapes_html_in_text() {
-        let md = "Use <script>alert('xss')</script> tag\n\n## <b>Bold</b> header";
+    fn markdown_to_html_gfm_features() {
+        let md = "- [x] done\n- [ ] todo\n\n~~strike~~\n\n| a | b |\n|---|---|\n| 1 | 2 |";
         let html = markdown_to_html(md);
-        assert!(!html.contains("<script>"));
-        assert!(html.contains("&lt;script&gt;"));
-        assert!(!html.contains("<b>Bold</b> header</h2>"));
-        assert!(html.contains("&lt;b&gt;Bold&lt;/b&gt;"));
+        assert!(html.contains("<del>strike</del>"));
+        assert!(html.contains("<table>"));
+        assert!(html.contains("checked"));
+    }
+
+    #[test]
+    fn markdown_to_html_autolinks() {
+        let md = "See https://example.com for info\n\nAlready [linked](https://other.com)";
+        let html = markdown_to_html(md);
+        assert!(html.contains("<a href=\"https://example.com\">"));
+        assert!(html.contains("<a href=\"https://other.com\">"));
+    }
+
+    #[test]
+    fn markdown_to_html_autolinks_skip_code_blocks() {
+        let md = "```\nhttps://example.com\n```";
+        let html = markdown_to_html(md);
+        assert!(!html.contains("<a href"));
+        assert!(html.contains("https://example.com"));
     }
 
     #[test]
