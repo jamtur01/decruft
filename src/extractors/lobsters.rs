@@ -155,9 +155,10 @@ fn extract_comment_meta(html: &Html, container: ego_tree::NodeId) -> (String, us
         .map(|&id| dom::text_content(html, id).trim().to_string())
         .unwrap_or_default();
 
-    // Lobsters uses inline style for depth indentation;
-    // fall back to 0 if we can't determine it
-    let depth = 0;
+    // Lobsters nests comments via margin-left on parent li elements.
+    // Each nesting level adds ~18px. Walk up to the containing li and
+    // parse the margin to derive depth.
+    let depth = extract_comment_depth(html, container);
 
     let score_ids = dom::select_within(html, container, ".comment_score");
     let score = score_ids
@@ -166,6 +167,44 @@ fn extract_comment_meta(html: &Html, container: ego_tree::NodeId) -> (String, us
         .unwrap_or_default();
 
     (author, depth, score)
+}
+
+/// Extract comment nesting depth from the parent `li` element's
+/// `margin-left` style. Returns 0 if depth cannot be determined.
+fn extract_comment_depth(html: &Html, comment_id: ego_tree::NodeId) -> usize {
+    // Walk up to the parent <li> with class comments_subtree
+    let mut current = Some(comment_id);
+    while let Some(nid) = current {
+        if dom::has_class(html, nid, "comments_subtree") {
+            if let Some(style) = dom::get_attr(html, nid, "style") {
+                // Parse margin-left from CSS like "margin-left: 18px;"
+                // or "margin-left:36px; color: red"
+                let ml_value = style
+                    .split(';')
+                    .find_map(|decl| {
+                        let decl = decl.trim();
+                        let (prop, val) = decl.split_once(':')?;
+                        if prop.trim() == "margin-left" {
+                            Some(val.trim().to_string())
+                        } else {
+                            None
+                        }
+                    })
+                    .and_then(|v| {
+                        v.strip_suffix("px")
+                            .and_then(|n| n.trim().parse::<f64>().ok())
+                    });
+                if let Some(ml) = ml_value {
+                    // Lobsters uses ~18px per nesting level
+                    #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
+                    return ml.max(0.0).round() as usize / 18;
+                }
+            }
+            return 0;
+        }
+        current = dom::parent_element(html, nid);
+    }
+    0
 }
 
 // --- API fallback ---
