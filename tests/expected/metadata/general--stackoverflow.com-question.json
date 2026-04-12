@@ -1,0 +1,7 @@
+{
+  "author": "Lin Lin",
+  "language": "en",
+  "published": "2026-04-12 06:08:09Z",
+  "site": "Stack Overflow",
+  "title": "bridging python and C++, Fatal Python error: _Py_GetConfig: the function must be called with the GIL held"
+}

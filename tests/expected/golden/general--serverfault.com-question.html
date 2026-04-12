@@ -1,0 +1,43 @@
+<html><div class="stackoverflow post"><div class="post-content"><p>One failure moving our servers from deb12 to 13 was some packages moved to <code>contrib</code> repo.</p>
+<p>After some time debugging our failed upgrade, turns out <code>cloud-init</code> thinks a missing pacakge is no big deal ¯_(ツ)_/¯</p>
+<blockquote>
+<p>cloud-init.log:2026-04-11 22:28:00,694 - apt.py[DEBUG]: The following packages were not found by APT so APT will not attempt to install them: ['geoipupdate']</p>
+</blockquote>
+<p>tried to update our deployment following their <a href="https://docs.cloud-init.io/en/latest/reference/examples.html#additional-apt-configuration-and-repositories">example</a></p>
+<pre><code>apt:
+  preserve_sources_list: true
+  sources_list:
+    deb $MIRROR $RELEASE main contrib
+</code></pre>
+<p>but that doesn't seem to do absolutely anything. I see that line mentioned in <code>/var/log/cloud-init.log</code> but nothing else happens because of it. Nada changes in <code>/etc/apt/**</code>. And cloud-init continue to ignore that package.</p>
+<p>What's the right way to set the contrib repo? I don't want to add a full mirror url line since my provider image already have their local mirrors, so I would like to simply add a extra repo.</p>
+<p>also tried the older(?) format, with no success</p>
+<pre><code>apt:
+  sources:
+    debian.sources:
+      source: deb $MIRROR $RELEASE main contrib
+      suites:
+        - $RELEASE
+        - $RELEASE-security
+        - $RELEASE-updates
+  update: true
+  upgrade: true
+</code></pre>
+<p>edit:
+also tried</p>
+<pre><code>write_files:
+  - path: /etc/apt/sources.list.d/99_contrib.sources
+    content: |
+      Types: deb
+      URIs: mirror+file:///etc/apt/mirrors/debian.list
+      Suites: trixie trixie-updates trixie-backports
+      Components: contrib
+      Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
+
+      Types: deb
+      URIs: mirror+file:///etc/apt/mirrors/debian-security.list
+      Suites: trixie-security
+      Components: contrib
+      Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
+</code></pre>
+<p>and it shockingly did not work. If i save the same file and run <code>apt update</code> it does pick it up. if I just edit the cloud-init saved file with vim, and save, <code>apt update</code> get it. but if I just leave it as cloud init leaves, <code>apt update</code> completely ignores that file?!?! Am i going crazy now? same permission, ownership, everything.</p></div></div></html>
