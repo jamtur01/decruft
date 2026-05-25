@@ -238,8 +238,14 @@ pub fn count_words_html(html_str: &str) -> usize {
     count_words(&decoded)
 }
 
-/// Strip HTML tags and decode common HTML entities, producing plain
-/// text suitable for display.
+/// Strip HTML tags and decode HTML entities, producing plain text.
+///
+/// This is a lightweight, allocation-light utility, not an HTML parser.
+/// It drops everything between `<` and `>` with no awareness of
+/// `<script>`/`<style>` bodies, comments, or CDATA, and decodes numeric
+/// references (`&#38;`, `&#x26;`) plus the common named entities.
+/// Unrecognized entities and malformed markup pass through unchanged.
+/// For structural content extraction, use [`parse`](crate::parse).
 #[must_use]
 pub fn strip_html_tags(html: &str) -> String {
     let stripped = strip_tags(html);

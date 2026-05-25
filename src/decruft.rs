@@ -160,7 +160,16 @@ fn parse_internal(html_str: &str, options: &DecruftOptions) -> ParseResult {
     streaming_ssr::resolve_streaming_ssr(&mut html);
     standardize::strip_unsafe_elements(&mut html);
 
-    let main_content = resolve_content_root(&html, options);
+    let Some(main_content) = resolve_content_root(&html, options) else {
+        // content_selector was set but matched nothing — hard override:
+        // produce no content rather than auto-detecting a different node.
+        return ParseResult {
+            content: String::new(),
+            word_count: 0,
+            content_selector_path: String::new(),
+            removals,
+        };
+    };
     let content_selector_path = dom::selector_path(&html, main_content);
 
     run_cleanup_pipeline(&mut html, main_content, &mut removals, options);
@@ -490,14 +499,17 @@ fn sanitize_html_comments(html: &str) -> String {
     result
 }
 
-fn resolve_content_root(html: &Html, options: &DecruftOptions) -> NodeId {
+/// Resolve the content root node.
+///
+/// When `content_selector` is set it is a hard override: the first
+/// matching element, or `None` when nothing matches — no fall back to
+/// auto-detection (defuddle's "bypassing auto-detection"). When unset,
+/// auto-detect the main content.
+fn resolve_content_root(html: &Html, options: &DecruftOptions) -> Option<NodeId> {
     if let Some(ref sel) = options.content_selector {
-        dom::select_ids(html, sel)
-            .into_iter()
-            .next()
-            .unwrap_or_else(|| find_main(html))
+        dom::select_ids(html, sel).into_iter().next()
     } else {
-        find_main(html)
+        Some(find_main(html))
     }
 }
 
@@ -745,8 +757,12 @@ fn try_site_extractors(
     schema_data: Option<&serde_json::Value>,
     meta_tags: &[crate::types::MetaTag],
 ) -> Option<DecruftResult> {
-    let (extracted, extractor_name) =
-        extractors::try_extract(html, options.url.as_deref(), options.include_replies)?;
+    let (extracted, extractor_name) = extractors::try_extract(
+        html,
+        options.url.as_deref(),
+        options.include_replies,
+        options.allow_network,
+    )?;
     apply_extractor_metadata(&extracted, meta);
     let word_count = dom::count_words_html(&extracted.content);
     if word_count == 0 {

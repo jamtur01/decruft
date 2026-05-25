@@ -47,14 +47,18 @@ pub fn is_tweet_url(url: Option<&str>) -> bool {
 /// Tries the article extractor first. If the URL is a tweet and
 /// article extraction fails, falls back to the oEmbed API.
 #[must_use]
-pub fn extract_x_article(html: &Html, url: Option<&str>) -> Option<ExtractorResult> {
+pub fn extract_x_article(
+    html: &Html,
+    url: Option<&str>,
+    allow_network: bool,
+) -> Option<ExtractorResult> {
     if let Some(result) = try_article(html, url) {
         return Some(result);
     }
     if let Some(u) = url
         && is_tweet_url(Some(u))
     {
-        if let Some(result) = try_oembed(u) {
+        if allow_network && let Some(result) = try_oembed(u) {
             return Some(result);
         }
         // Fallback: extract metadata from HTML; only use if it
@@ -362,7 +366,7 @@ mod tests {
             </div>
         </body></html>"#;
         let html = Html::parse_document(doc);
-        let result = extract_x_article(&html, Some("https://x.com/testuser/article/999"));
+        let result = extract_x_article(&html, Some("https://x.com/testuser/article/999"), false);
         let result = result.unwrap();
         assert_eq!(result.title.as_deref(), Some("My Article"));
         assert!(result.content.contains("Article body text"));

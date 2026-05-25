@@ -119,7 +119,9 @@ assert!(!result.content.contains("Copyright"));
 
 ### Fetching pages
 
-The `fetch_page` function is available for fetching URLs with browser-like defaults:
+`parse` never performs network I/O — it is a pure function of the HTML you
+pass in. The `fetch_page` function fetches URLs with browser-like defaults so
+you can do network access explicitly:
 
 ```rust
 use decruft::{fetch_page, parse, DecruftOptions};
@@ -129,6 +131,11 @@ let mut options = DecruftOptions::default();
 options.url = Some("https://example.com/article".into());
 let result = parse(&html, &options);
 ```
+
+Some site extractors (Hacker News, Lobsters, Stack Overflow, GitHub, C2 Wiki)
+can enrich thin pages by fetching their public APIs. This is off by default;
+set `options.allow_network = true` to enable it (the CLI enables it for live
+URL fetches).
 
 ### What gets removed
 

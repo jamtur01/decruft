@@ -33,6 +33,11 @@ pub struct DecruftOptions {
     pub separate_markdown: bool,
     /// Include replies/comments in extracted content.
     pub include_replies: bool,
+    /// Allow site extractors to fetch from third-party APIs when local
+    /// HTML yields no usable content. Off by default so that `parse`
+    /// is a pure function of its HTML input. Equivalent to defuddle's
+    /// `useAsync`. The CLI enables this for live URL fetches.
+    pub allow_network: bool,
 }
 
 impl Default for DecruftOptions {
@@ -52,6 +57,7 @@ impl Default for DecruftOptions {
             markdown: false,
             separate_markdown: false,
             include_replies: true,
+            allow_network: false,
         }
     }
 }

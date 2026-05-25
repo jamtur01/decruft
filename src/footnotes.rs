@@ -443,8 +443,7 @@ fn collect_google_docs_footnotes(
     }
     pairs.sort_by_key(|(n, _)| *n);
 
-    let mut count = footnotes.len() + 1;
-    for (num, p_id) in &pairs {
+    for (count, (num, p_id)) in (footnotes.len() + 1..).zip(pairs.iter()) {
         let original_id = format!("ftnt{num}");
         let content = strip_backrefs_from_html(&dom::inner_html(html, *p_id));
 
@@ -455,7 +454,6 @@ fn collect_google_docs_footnotes(
                 original_id,
             },
         );
-        count += 1;
 
         containers.push(*p_id);
         // Also remove wrapper div if it has only this child
@@ -669,8 +667,7 @@ fn collect_loose_footnotes(
         return;
     };
 
-    let mut count = footnotes.len() + 1;
-    for (i, (num, def_id)) in paragraphs.iter().enumerate() {
+    for (count, (i, (num, def_id))) in (footnotes.len() + 1..).zip(paragraphs.iter().enumerate()) {
         let content_html = strip_marker_and_wrap(html, *def_id);
 
         // Collect continuation elements (between this def and next)
@@ -690,7 +687,6 @@ fn collect_loose_footnotes(
                 original_id: num.to_string(),
             },
         );
-        count += 1;
     }
 
     containers.extend(to_remove);

@@ -25,6 +25,7 @@ pub fn extract_github(
     html: &Html,
     url: Option<&str>,
     include_replies: bool,
+    allow_network: bool,
 ) -> Option<ExtractorResult> {
     if !is_github(html, url) {
         return None;
@@ -37,7 +38,8 @@ pub fn extract_github(
         extract_issue(html, url, include_replies)
     };
 
-    if dom::count_words_html(&result.content) < 10
+    if allow_network
+        && dom::count_words_html(&result.content) < 10
         && let Some(api_result) = try_api_fetch(url, include_replies)
     {
         return Some(api_result);
@@ -829,7 +831,7 @@ mod tests {
         let html = Html::parse_document(&html_str);
 
         assert!(is_github(&html, url.as_deref()));
-        let result = extract_github(&html, url.as_deref(), true).unwrap();
+        let result = extract_github(&html, url.as_deref(), true, false).unwrap();
 
         assert!(result.title.as_ref().unwrap().contains("Issue #56"));
         assert!(result.site.as_ref().unwrap().contains("GitHub"));
@@ -995,7 +997,7 @@ mod tests {
         let html = Html::parse_document(&html_str);
 
         assert!(is_github(&html, url.as_deref()));
-        let result = extract_github(&html, url.as_deref(), true).unwrap();
+        let result = extract_github(&html, url.as_deref(), true, false).unwrap();
 
         assert!(result.title.unwrap().contains("Pull Request #42"));
         assert_eq!(result.author.as_deref(), Some("author-one"));
