@@ -123,6 +123,9 @@ fn main() {
     options.markdown = matches!(cli.format, OutputFormat::Markdown);
     options.separate_markdown = matches!(cli.format, OutputFormat::Markdown);
     options.include_replies = !cli.no_replies;
+    // The CLI fetches live pages, so let site extractors enrich thin
+    // HTML from their APIs. Library callers opt in via DecruftOptions.
+    options.allow_network = true;
 
     let result = decruft::parse(&html, &options);
 

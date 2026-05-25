@@ -757,8 +757,12 @@ fn try_site_extractors(
     schema_data: Option<&serde_json::Value>,
     meta_tags: &[crate::types::MetaTag],
 ) -> Option<DecruftResult> {
-    let (extracted, extractor_name) =
-        extractors::try_extract(html, options.url.as_deref(), options.include_replies)?;
+    let (extracted, extractor_name) = extractors::try_extract(
+        html,
+        options.url.as_deref(),
+        options.include_replies,
+        options.allow_network,
+    )?;
     apply_extractor_metadata(&extracted, meta);
     let word_count = dom::count_words_html(&extracted.content);
     if word_count == 0 {

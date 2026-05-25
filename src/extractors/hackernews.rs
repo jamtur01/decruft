@@ -28,6 +28,7 @@ pub fn extract_hackernews(
     html: &Html,
     url: Option<&str>,
     include_replies: bool,
+    allow_network: bool,
 ) -> Option<ExtractorResult> {
     if !is_hackernews(html, url) {
         return None;
@@ -49,7 +50,8 @@ pub fn extract_hackernews(
 
     match result {
         Some(ref r) if dom::count_words_html(&r.content) >= 10 => result,
-        _ => try_api_fetch(url, include_replies).or(result),
+        _ if allow_network => try_api_fetch(url, include_replies).or(result),
+        _ => result,
     }
 }
 
@@ -613,13 +615,24 @@ mod tests {
     }
 
     #[test]
+    fn no_api_fetch_when_network_disabled() {
+        // No .fatitem → HTML extraction declines. With network
+        // disabled, the extractor must not reach the live API; it
+        // returns None without any network I/O.
+        let html = Html::parse_document("<html><body></body></html>");
+        let url = Some("https://news.ycombinator.com/item?id=1");
+        let result = extract_hackernews(&html, url, true, false);
+        assert!(result.is_none());
+    }
+
+    #[test]
     fn extract_hn_comment_page() {
         let html_str = load_fixture("general--news.ycombinator.com-item-id=12345678.html");
         let url = Some("https://news.ycombinator.com/item?id=12345678");
         let html = Html::parse_document(&html_str);
 
         assert!(is_hackernews(&html, url));
-        let result = extract_hackernews(&html, url, true).unwrap();
+        let result = extract_hackernews(&html, url, true, false).unwrap();
 
         assert!(result.title.unwrap().contains("testuser"));
         assert_eq!(result.author.as_deref(), Some("testuser"));
@@ -669,7 +682,7 @@ mod tests {
         let html = Html::parse_document(&html_str);
 
         assert!(is_hackernews(&html, url));
-        let result = extract_hackernews(&html, url, true).unwrap();
+        let result = extract_hackernews(&html, url, true, false).unwrap();
 
         assert_eq!(result.title.as_deref(), Some("A Sample Article"));
         assert_eq!(result.author.as_deref(), Some("author_one"));

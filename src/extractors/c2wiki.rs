@@ -22,7 +22,11 @@ pub fn is_c2wiki(_html: &Html, url: Option<&str>) -> bool {
 /// First tries the rendered `.page[data-title]` container (for saved
 /// pages). Falls back to fetching from the C2 Wiki JSON API.
 #[must_use]
-pub fn extract_c2wiki(html: &Html, url: Option<&str>) -> Option<ExtractorResult> {
+pub fn extract_c2wiki(
+    html: &Html,
+    url: Option<&str>,
+    allow_network: bool,
+) -> Option<ExtractorResult> {
     if !is_c2wiki(html, url) {
         return None;
     }
@@ -30,6 +34,10 @@ pub fn extract_c2wiki(html: &Html, url: Option<&str>) -> Option<ExtractorResult>
     // Try rendered content first
     if let Some(result) = try_rendered(html, url) {
         return Some(result);
+    }
+
+    if !allow_network {
+        return None;
     }
 
     // Fall back to API fetch

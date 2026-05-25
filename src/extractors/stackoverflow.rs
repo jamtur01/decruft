@@ -35,6 +35,7 @@ pub fn extract_stackoverflow(
     html: &Html,
     url: Option<&str>,
     include_replies: bool,
+    allow_network: bool,
 ) -> Option<ExtractorResult> {
     if !is_stackoverflow(url) {
         return None;
@@ -44,7 +45,8 @@ pub fn extract_stackoverflow(
 
     match result {
         Some(ref r) if dom::count_words_html(&r.content) >= 10 => result,
-        _ => try_api_fetch(url, include_replies).or(result),
+        _ if allow_network => try_api_fetch(url, include_replies).or(result),
+        _ => result,
     }
 }
 

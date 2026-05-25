@@ -23,6 +23,7 @@ pub fn extract_lobsters(
     html: &Html,
     url: Option<&str>,
     include_replies: bool,
+    allow_network: bool,
 ) -> Option<ExtractorResult> {
     if !is_lobsters(url) {
         return None;
@@ -32,7 +33,8 @@ pub fn extract_lobsters(
 
     match result {
         Some(ref r) if dom::count_words_html(&r.content) >= 10 => result,
-        _ => try_api_fetch(url, include_replies).or(result),
+        _ if allow_network => try_api_fetch(url, include_replies).or(result),
+        _ => result,
     }
 }
 
@@ -78,7 +80,7 @@ fn extract_from_html(html: &Html, include_replies: bool) -> Option<ExtractorResu
 }
 
 fn extract_title(html: &Html) -> String {
-    let ids = dom::select_ids(html, ".u-repost-of");
+    let ids = dom::select_ids(html, ".u-url");
     ids.first()
         .map(|&id| dom::text_content(html, id).trim().to_string())
         .unwrap_or_default()
@@ -93,7 +95,7 @@ fn extract_story_body(html: &Html) -> String {
 }
 
 fn extract_story_link(html: &Html) -> String {
-    let ids = dom::select_ids(html, ".u-repost-of");
+    let ids = dom::select_ids(html, ".u-url");
     ids.first()
         .and_then(|&id| dom::get_attr(html, id, "href"))
         .unwrap_or_default()
@@ -399,7 +401,7 @@ mod tests {
         let html_str = r#"
         <html>
         <body>
-        <a class="u-repost-of" href="https://example.com/article">
+        <a class="u-url" href="https://example.com/article">
             A Cool Story
         </a>
         <div class="comment">
@@ -465,5 +467,15 @@ mod tests {
         let result = try_api_fetch(Some(url), false);
         // Don't assert success — just verify it doesn't crash
         drop(result);
+    }
+
+    #[test]
+    fn no_api_fetch_when_network_disabled() {
+        // No story link or body → HTML extraction declines. With
+        // network disabled, the extractor must not reach the live API;
+        // it returns None without any network I/O.
+        let html = Html::parse_document("<html><body></body></html>");
+        let result = extract_lobsters(&html, Some("https://lobste.rs/s/abc/x"), true, false);
+        assert!(result.is_none());
     }
 }
