@@ -116,17 +116,18 @@ fn extract_comments(html: &Html) -> String {
 
         // Walk up to the .comment container to get metadata
         let container = find_comment_container(html, cid);
-        let (author, depth, score) = container.map_or_else(
-            || (String::new(), 0, String::new()),
-            |c| extract_comment_meta(html, c),
-        );
+        let meta = container.map_or_else(CommentMeta::default, |c| extract_comment_meta(html, c));
 
         comments.push(CommentData {
-            author,
-            date: String::new(),
+            author: meta.author,
+            date: meta.date,
             content: body,
-            depth,
-            score: if score.is_empty() { None } else { Some(score) },
+            depth: meta.depth,
+            score: if meta.score.is_empty() {
+                None
+            } else {
+                Some(meta.score)
+            },
             url: None,
         });
     }
@@ -150,11 +151,33 @@ fn find_comment_container(html: &Html, node_id: ego_tree::NodeId) -> Option<ego_
     None
 }
 
-fn extract_comment_meta(html: &Html, container: ego_tree::NodeId) -> (String, usize, String) {
-    let author_ids = dom::select_within(html, container, ".comment_author a");
-    let author = author_ids
+#[derive(Default)]
+struct CommentMeta {
+    author: String,
+    date: String,
+    score: String,
+    depth: usize,
+}
+
+fn extract_comment_meta(html: &Html, container: ego_tree::NodeId) -> CommentMeta {
+    // The author is the username link in the byline (`href="/~user"`),
+    // not the adjacent avatar link, which is aria-hidden and has no text.
+    let author = dom::select_within(html, container, ".byline a[href^=\"/~\"]")
+        .into_iter()
+        .map(|id| dom::text_content(html, id).trim().to_string())
+        .find(|t| !t.is_empty())
+        .unwrap_or_default();
+
+    let date = dom::select_within(html, container, ".byline time")
+        .first()
+        .and_then(|&id| dom::get_attr(html, id, "datetime"))
+        .unwrap_or_default();
+
+    let score = dom::select_within(html, container, ".voters .upvoter")
         .first()
         .map(|&id| dom::text_content(html, id).trim().to_string())
+        .filter(|s| !s.is_empty())
+        .map(|s| format!("{s} points"))
         .unwrap_or_default();
 
     // Lobsters nests comments via margin-left on parent li elements.
@@ -162,13 +185,12 @@ fn extract_comment_meta(html: &Html, container: ego_tree::NodeId) -> (String, us
     // parse the margin to derive depth.
     let depth = extract_comment_depth(html, container);
 
-    let score_ids = dom::select_within(html, container, ".comment_score");
-    let score = score_ids
-        .first()
-        .map(|&id| dom::text_content(html, id).trim().to_string())
-        .unwrap_or_default();
-
-    (author, depth, score)
+    CommentMeta {
+        author,
+        date,
+        score,
+        depth,
+    }
 }
 
 /// Extract comment nesting depth from the parent `li` element's
@@ -398,20 +420,31 @@ mod tests {
 
     #[test]
     fn extract_from_html_basic() {
+        // Mirrors real Lobsters comment markup: the author is the
+        // username link in `.byline` (not the adjacent aria-hidden
+        // avatar link), the score is `.voters .upvoter`, and the date
+        // is the `datetime` attribute of `<time>`.
         let html_str = r#"
         <html>
         <body>
         <a class="u-url" href="https://example.com/article">
             A Cool Story
         </a>
-        <div class="comment">
-            <span class="comment_author">
-                <a href="/u/alice">alice</a>
-            </span>
+        <li class="comments_subtree">
+          <div class="comment">
+            <div class="voters">
+                <a class="upvoter" title="17" href="/login">17</a>
+            </div>
+            <div class="details"><div class="byline">
+                <a aria-hidden="true" tabindex="-1" href="/~alice"><img class="avatar" alt="alice avatar"></a>
+                <a href="/~alice">alice</a>
+                <a href="/c/x"><time datetime="2025-01-01 10:00:00">1 day ago</time></a>
+            </div></div>
             <div class="comment_text">
                 <p>This is a great article.</p>
             </div>
-        </div>
+          </div>
+        </li>
         </body>
         </html>
         "#;
@@ -421,6 +454,12 @@ mod tests {
         assert_eq!(result.title.as_deref(), Some("A Cool Story"));
         assert!(result.content.contains("example.com/article"));
         assert!(result.content.contains("great article"));
+        assert!(result.content.contains("alice"), "author from byline");
+        assert!(result.content.contains("17 points"), "score from upvoter");
+        assert!(
+            result.content.contains("2025-01-01 10:00:00"),
+            "date from time datetime"
+        );
     }
 
     #[test]

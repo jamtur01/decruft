@@ -4,7 +4,7 @@
 
 ## Comments
 
-> · 
+> **mitchellh** · 2026-04-11 22:19:02 · 17 points
 > 
 > Open source is not a supply chain.
 > 
@@ -18,7 +18,7 @@
 > 
 > In lieu of that, I think the premise of this article as I read it makes complete sense: an ecosystem can provide the tools for YOU (the downstream) to audit your own dependencies, but the ecosystem itself is not responsible for the \[non-existent\] supply-chain.
 
-> · 
+> **technomancy** · 2026-04-11 17:15:54 · 14 points
 > 
 > > Rust gives build scripts and procedural macros full access to your PC. Worse, rust-analyzer runs cargo check when you open the project directory, so it can effectively become a 0-click RCE.
 > 
@@ -26,7 +26,7 @@
 > 
 > The idea that macros should be able to write to arbitrary files on disk is *completely insane* and I really hope future languages learn from these mistakes.
 
-> · 
+> **YogurtGuy** · 2026-04-11 18:46:24 · \~ points
 > 
 > > It's especially bad when you consider that the means for determining whether some code is trustworthy is often to open it in your text editor, so if that's configured to hit LSP automatically, you're toast.
 > 
@@ -34,7 +34,7 @@
 > 
 > This isn't limited to Rust. If you open a cmake project, the editor will execute arbitrary commands in order to determine what command-line options will be passed to the C compiler. For JVM projects (java, kotlin, scala, even clojure) opening a project in the IDE can trigger arbitrary code from the build system.
 
-> · 
+> **alurm** · 2026-04-11 19:06:50 · \~ points
 > 
 > Go is the only language I can name off of the top of my head which guarantees this doesn't happen.
 > 
@@ -42,7 +42,7 @@
 > 
 > I'm sure there are other security measures but those are which I'm aware of.
 
-> · 
+> **technomancy** · 2026-04-11 20:22:36 · \~ points
 > 
 > > Most editors will ask if you trust the authors of a project before executing arbitrary code from it.
 > 
@@ -52,7 +52,7 @@
 > 
 > I've tried to raise this as an issue with the author of clojure-lsp, but he doesn't seem that interested in fixing it: [https://github.com/clojure-lsp/clojure-lsp/issues/1747](https://github.com/clojure-lsp/clojure-lsp/issues/1747) The ironic thing in this case is that the Clojure LSP server bends over backwards to avoid evaluating macro code, but then can be trivially tricked into running arbitrary build code.
 
-> · 
+> **YogurtGuy** · 2026-04-11 22:42:07 · \~ points
 > 
 > > The only one I know which does this is VS Code.
 > 
@@ -62,19 +62,19 @@
 > 
 > Neat! But how does it manage to do that without impacting LSP operations? Like, does go-to-definition just fail for identifiers that come from a macro?
 
-> · 
+> **BenjaminRi** · 2026-04-11 19:37:16 · \~ points
 > 
 > I'm well aware of the problem, but such things are super common in build systems. Many build systems invoke `make`, `awk`, `python`, `perl`, `sh`, etc. If you've ever built an entire Linux distro, you're very familiar with the total madness of tools and random internet downloads that happen at build time. Could Rust have done it better? Perhaps. But despite the fact that `build.rs` should be avoided for plain Rust projects, it solves real issues with respect to interoperability and tool calls.
 
-> · 
+> **ossguy** · 2026-04-12 00:35:11 · \~ points
 > 
 > Which distro are you talking about? Debian doesn't allow any such thing for its builds - the whole distro must be able to be built offline. Are there other distros that don't follow this model?
 
-> · 
+> **thombles** · 2026-04-11 20:05:43 · \~ points
 > 
 > Say what one will about “capitalist hellscapes” - there’s something to be said for large programming environments that do pay their developers and are on the hook for the security of their expansive standard library. I’m increasingly preferring .NET and Go precisely because I don’t want to place undue expectations on hardworking volunteers. Until a well funded organisation decides to take on commercial support for a broad swathe of Rust crates these discussions will continue.
 
-> · 
+> **olliej** · 2026-04-12 00:53:56 · \~ points
 > 
 > Obviously no one owes you supply chain security, and corporations clearly and continuously abuse (through support demands and blame) unpaid volunteer maintainers.
 > 
