@@ -23,7 +23,7 @@ decruft is a Rust port of [defuddle](https://github.com/kepano/defuddle) — a w
 
 ## Code rules
 
-- No `unwrap()` or `expect()` in non-test code
+- No `unwrap()` or `expect()` in non-test code, except `expect()` on a compile-time-constant `Regex` in a `LazyLock` initializer (a failure there is a build-time bug, not a runtime path)
 - Functions max 100 lines — split into helpers
 - Clippy pedantic is enabled with `allow_attributes = "deny"`
 - Use `let...else` for early returns, not `.unwrap()`
@@ -32,10 +32,10 @@ decruft is a Rust port of [defuddle](https://github.com/kepano/defuddle) — a w
 
 ## Architecture rules
 
-- Internal modules are `pub(crate)` — only `parse()`, `parse_with_defaults()`, `strip_html_tags()`, and types are public
+- Internal modules are `pub(crate)` — the public API is `parse()`, `parse_with_defaults()`, `strip_html_tags()`, `fetch_page()`, `FetchError`, and the public types
 - `DecruftOptions` and `DecruftResult` are `#[non_exhaustive]` — construct via `Default::default()` + field mutation
-- Site extractors go in `src/extractors/{site}.rs` — follow the HTML-first, API-fallback pattern
-- All CSS selectors live in `src/selectors.rs` — use `fancy_regex` for lookbehind patterns
+- Site extractors go in `src/extractors/{site}.rs` — follow the HTML-first, API-fallback pattern; the API fallback only runs when `DecruftOptions::allow_network` is set (off by default)
+- Removal selectors live in `src/selectors.rs` (use `fancy_regex` for lookbehind). Other selector kinds stay with their feature: content entry-points in `src/content.rs`, metadata queries in `src/metadata.rs`, per-site selectors in their extractor
 - Scoring factors in `src/scorer.rs` must match defuddle's — don't change weights without justification
 
 ## Common pitfalls
@@ -44,7 +44,7 @@ decruft is a Rust port of [defuddle](https://github.com/kepano/defuddle) — a w
 - `ego-tree` doesn't support reparenting nodes easily — detach children first
 - `fancy_regex::is_match()` returns `Result<bool>`, not `bool`
 - HTML entities in JSON-LD need decoding (non-ASCII in `strip_json_comments`)
-- `content_selector` option is a hard override — retries skip when it's set
+- `content_selector` is a hard override — retries skip when it's set, and a selector matching nothing yields empty content (no fall back to auto-detection)
 
 ## Test structure
 
@@ -59,15 +59,13 @@ Six test files, each with a single concern:
 
 ## Test fixtures
 
-- 280 HTML fixtures in `tests/fixtures/` (flat — 144 from defuddle, 130 from Mozilla, 6 standalone)
-- 280 golden HTML files in `tests/expected/golden/`
-- 280 golden markdown files in `tests/expected/golden-markdown/`
-- 280 metadata JSON files in `tests/expected/metadata/`
+- 286 HTML fixtures in `tests/fixtures/` (flat — 130 from Mozilla, prefixed `mozilla--`; the rest from defuddle and standalone sources)
+- 286 golden HTML files in `tests/expected/golden/`
+- 286 golden markdown files in `tests/expected/golden-markdown/`
+- 286 metadata JSON files in `tests/expected/metadata/`
 - Every fixture MUST have all three expected files — tests fail on missing files
 - Mozilla fixtures are prefixed `mozilla--` (e.g. `mozilla--bbc-1.html`)
 
 ## Network tests
 
-Most network tests (GitHub, HN, Stack Overflow, Lobsters, C2 Wiki) run by default.
-The X/Twitter oEmbed test is `#[ignore]` because the API is frequently rate-limited.
-Run with `cargo test -- --ignored` to include it.
+The deterministic golden/metadata suites never touch the network: `DecruftOptions::allow_network` defaults to off, so `parse()` is a pure function of its HTML input. Site extractors' live API tests (e.g. `api_fetch_live` for HN, Lobsters, Stack Overflow, GitHub, C2 Wiki) do hit third-party APIs, but tolerate failure and never assert success. The X/Twitter oEmbed test is `#[ignore]` (frequently rate-limited); run `cargo test -- --ignored` to include it.
