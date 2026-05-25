@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1776010905810,
+  "lastUpdate": 1779672034212,
   "repoUrl": "https://github.com/jamtur01/decruft",
   "entries": {
     "decruft benchmarks": [
@@ -1499,6 +1499,66 @@ window.BENCHMARK_DATA = {
             "name": "large_page_no_scoring (1.1MB)",
             "value": 246915463,
             "range": "± 4204510",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "james@lovedthanlost.net",
+            "name": "James Turnbull",
+            "username": "jamtur01"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "017f20babf94835bf19575381e48a66b34fb367b",
+          "message": "Merge pull request #27 from jamtur01/determinism-and-review-fixes\n\nMake parse() pure by default; fix content_selector, clippy, and docs",
+          "timestamp": "2026-05-24T21:16:56-04:00",
+          "tree_id": "9a08b9414b120febbc1795aa78a6a023e58133a6",
+          "url": "https://github.com/jamtur01/decruft/commit/017f20babf94835bf19575381e48a66b34fb367b"
+        },
+        "date": 1779672033692,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "small_page (12KB blog)",
+            "value": 2698505,
+            "range": "± 10972",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "medium_page (317KB stephango)",
+            "value": 3714682,
+            "range": "± 34329",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "large_page (1.1MB wikipedia)",
+            "value": 401584763,
+            "range": "± 4570707",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "github_issue (267KB)",
+            "value": 4135199,
+            "range": "± 24160",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "markdown_output (12KB blog)",
+            "value": 2857518,
+            "range": "± 28743",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "large_page_no_scoring (1.1MB)",
+            "value": 246719757,
+            "range": "± 1448407",
             "unit": "ns/iter"
           }
         ]
