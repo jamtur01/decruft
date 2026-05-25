@@ -123,9 +123,10 @@ fn main() {
     options.markdown = matches!(cli.format, OutputFormat::Markdown);
     options.separate_markdown = matches!(cli.format, OutputFormat::Markdown);
     options.include_replies = !cli.no_replies;
-    // The CLI fetches live pages, so let site extractors enrich thin
-    // HTML from their APIs. Library callers opt in via DecruftOptions.
-    options.allow_network = true;
+    // Let site extractors enrich thin HTML from their APIs only when we
+    // are fetching a live URL — never for local file/stdin input, so
+    // local parsing stays deterministic. Library callers opt in directly.
+    options.allow_network = is_url;
 
     let result = decruft::parse(&html, &options);
 
