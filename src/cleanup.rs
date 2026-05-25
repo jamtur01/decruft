@@ -448,10 +448,7 @@ fn is_descendant_of_set(html: &Html, node_id: NodeId, set: &HashSet<NodeId>) -> 
 fn collect_ancestors(html: &Html, node_id: NodeId) -> HashSet<NodeId> {
     let mut ancestors = HashSet::new();
     let mut current = node_id;
-    loop {
-        let Some(node_ref) = html.tree.get(current) else {
-            break;
-        };
+    while let Some(node_ref) = html.tree.get(current) {
         let Some(parent) = node_ref.parent() else {
             break;
         };
