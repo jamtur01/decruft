@@ -231,28 +231,23 @@ fn content_selector_selects_the_specified_element() {
 }
 
 #[test]
-fn content_selector_falls_back_to_auto_detection_on_no_match() {
+fn content_selector_no_match_is_hard_override_yielding_empty() {
+    // A content_selector that matches nothing is a hard override:
+    // parse must not silently fall back to auto-detection (defuddle:
+    // "bypassing auto-detection"). The result is empty content.
     let html = fixture_html();
-    let auto_result = parse(&html, &opts_debug(FIXTURE_URL));
-    let fallback_result = parse(&html, &{
+    let result = parse(&html, &{
         let mut o = opts_debug(FIXTURE_URL);
         o.content_selector = Some(".nonexistent-class-xyz".into());
         o
     });
 
     assert!(
-        !fallback_result.content.is_empty(),
-        "should produce content via fallback"
+        result.content.trim().is_empty(),
+        "no-match selector should yield empty content, got {} chars",
+        result.content.len()
     );
-    assert_eq!(
-        fallback_result
-            .debug
-            .as_ref()
-            .expect("debug")
-            .content_selector,
-        auto_result.debug.as_ref().expect("debug").content_selector,
-        "fallback selector should match auto-detection"
-    );
+    assert_eq!(result.word_count, 0);
 }
 
 #[test]
