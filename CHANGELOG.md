@@ -1,3 +1,14 @@
+## v0.2.0
+
+- release: v0.2.0
+- Merge pull request #27 from jamtur01/determinism-and-review-fixes
+- fix: enable CLI network only for live URL input
+- fix: extract Lobsters comment author, date, and score from real markup
+- docs: reconcile public API, selector layout, and const-regex rule
+- feat: make site-extractor API fallback opt-in via allow_network
+- feat: make content_selector a hard override on no match
+- fix: resolve clippy while_let_loop and explicit_counter_loop lints
+- Update CHANGELOG for v0.1.4
 ## v0.1.4
 
 - release: v0.1.4
