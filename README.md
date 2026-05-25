@@ -25,7 +25,7 @@ Or add to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-decruft = "0.1"
+decruft = "0.2"
 ```
 
 ## CLI
